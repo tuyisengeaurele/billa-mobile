@@ -1596,7 +1596,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('login-2fa-code')), findsOneWidget);
-    expect(find.text('login-email'), findsNothing);
+    expect(find.byKey(const Key('login-email')), findsNothing);
   });
 
   testWidgets('forgot password always shows the same confirmation message', (tester) async {
