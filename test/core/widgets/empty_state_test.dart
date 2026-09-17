@@ -21,4 +21,14 @@ void main() {
     await tester.tap(find.text('Add customer'));
     expect(tapped, isTrue);
   });
+
+  testWidgets('renders with no button when no action is given', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: const EmptyState(icon: Icons.description_outlined, message: 'No documents yet'),
+    ));
+
+    expect(find.text('No documents yet'), findsOneWidget);
+    expect(find.byType(FilledButton), findsNothing);
+  });
 }
