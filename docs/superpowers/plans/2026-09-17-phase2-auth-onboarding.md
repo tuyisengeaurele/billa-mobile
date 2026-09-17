@@ -2345,8 +2345,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final logoService = LogoPipelineService(ref.watch(apiClientProvider).dio);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Step ${_step + 1} of 2'),
@@ -2376,8 +2374,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   },
                   onSkip: () => setState(() => _step = 1),
                 )
+              // Constructed here, not eagerly at the top of build(), so this screen
+              // is testable on step 0 without ever needing a real ApiClient.
               : LogoStep(
-                  service: logoService,
+                  service: LogoPipelineService(ref.watch(apiClientProvider).dio),
                   onDone: _completeAndRefresh,
                   onSkip: _completeAndRefresh,
                 ),
