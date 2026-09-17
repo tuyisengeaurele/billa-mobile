@@ -1605,7 +1605,7 @@ void main() {
   Widget buildApp() {
     return ProviderScope(
       overrides: [customerRepositoryProvider.overrideWithValue(repository)],
-      child: const MaterialApp(theme: AppTheme.light, home: CustomerDetailScreen(customerId: 'c1')),
+      child: MaterialApp(theme: AppTheme.light, home: const CustomerDetailScreen(customerId: 'c1')),
     );
   }
 
@@ -1706,7 +1706,11 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     );
     if (confirmed != true) return;
     await ref.read(customerRepositoryProvider).update(customer.id, isActive: !customer.isActive);
-    setState(() => _future = _load());
+    // A block body, not `=>` — the arrow form would make the closure return the
+    // Future itself, and setState() explicitly rejects a callback that does that.
+    setState(() {
+      _future = _load();
+    });
   }
 
   @override
@@ -1719,7 +1723,9 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           if (snapshot.hasError) {
             return ErrorState(
               message: "Couldn't load this customer",
-              onRetry: () => setState(() => _future = _load()),
+              onRetry: () => setState(() {
+                _future = _load();
+              }),
             );
           }
           if (!snapshot.hasData) {
