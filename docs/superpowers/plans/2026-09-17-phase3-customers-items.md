@@ -74,6 +74,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:billa_mobile/core/pagination/paginated_list_controller.dart';
 import 'package:billa_mobile/core/pagination/paginated_result.dart';
+import 'package:billa_mobile/core/pagination/paginated_state.dart';
 
 class _Item {
   const _Item(this.id);
@@ -206,6 +207,7 @@ abstract class PaginatedListController<T> extends AsyncNotifier<PaginatedState<T
   bool _includeInactive = false;
   int _page = 1;
   Timer? _debounceTimer;
+  bool _disposed = false;
 
   Future<PaginatedResult<T>> fetchPage({
     required String search,
@@ -215,7 +217,10 @@ abstract class PaginatedListController<T> extends AsyncNotifier<PaginatedState<T
 
   @override
   Future<PaginatedState<T>> build() async {
-    ref.onDispose(() => _debounceTimer?.cancel());
+    ref.onDispose(() {
+      _disposed = true;
+      _debounceTimer?.cancel();
+    });
     return _fetchFresh();
   }
 
@@ -233,11 +238,11 @@ abstract class PaginatedListController<T> extends AsyncNotifier<PaginatedState<T
     _debounceTimer?.cancel();
     // Debounced so a fast typist doesn't fire one request per keystroke.
     _debounceTimer = Timer(_searchDebounce, () {
-      if (!ref.mounted) return;
+      if (_disposed) return;
       _search = value;
       state = const AsyncLoading();
       _fetchFresh().then((next) {
-        if (ref.mounted) state = AsyncData(next);
+        if (!_disposed) state = AsyncData(next);
       });
     });
   }
