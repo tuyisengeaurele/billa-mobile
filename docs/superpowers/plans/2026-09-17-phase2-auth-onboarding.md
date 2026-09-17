@@ -947,7 +947,7 @@ git commit -m "feat: add firebase auth service and error message mapper"
 
 **Interfaces:**
 - Consumes: `AuthRepository` (Task 3).
-- Produces: `final authControllerProvider = AsyncNotifierProvider<AuthController, AuthStatus>(AuthController.new);` where `class AuthController extends AsyncNotifier<AuthStatus> { Future<void> exchangeSession({required String idToken, String? businessName}); Future<void> submitTwoFactorChallenge({required String challengeId, required String code}); Future<void> logout(); }` (all three call the repository then set `state = AsyncData(result)`, matching what the router redirect and screens react to). `AuthController` reads its `AuthRepository` from a plain `Provider<AuthRepository>` — not defined by this task; Task 8 provides it alongside the router wiring.
+- Produces: `authRepositoryProvider` (`Provider<AuthRepository>`, defined right alongside `AuthController` in this same file — it needs `apiClientProvider`, wired in Task 8's `main.dart` change, but the provider declaration itself lives here) and `final authControllerProvider = AsyncNotifierProvider<AuthController, AuthStatus>(AuthController.new);` where `class AuthController extends AsyncNotifier<AuthStatus> { Future<void> exchangeSession({required String idToken, String? businessName}); Future<void> submitTwoFactorChallenge({required String challengeId, required String code}); Future<void> logout(); }` (all three call the repository then set `state = AsyncData(result)`, matching what the router redirect and screens react to).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1089,6 +1089,8 @@ git commit -m "feat: add auth controller bootstrapping session state"
 ---
 
 ### Task 8: Router guard, bootstrap screen, and wiring `main.dart`
+
+**Execution-order note:** this task's `router.dart` imports `LoginScreen`, `RegisterScreen`, and `OnboardingScreen`, which aren't built until Tasks 10–12. Do Tasks 9 through 12 first, then come back and do this task last, immediately before Task 13's final verification — despite the number, it's the integration point that ties every screen together, not a prerequisite for them.
 
 **Files:**
 - Create: `lib/app/theme/bootstrap_screen.dart`
