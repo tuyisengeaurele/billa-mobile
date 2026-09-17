@@ -391,6 +391,8 @@ import 'package:billa_mobile/app/theme/app_theme.dart';
 import 'package:billa_mobile/app/theme/app_typography.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
@@ -408,11 +410,13 @@ void main() {
   });
 
   test('display styles use Fraunces and body styles use Plus Jakarta Sans', () {
+    // GoogleFonts appends a weight suffix to the family name when it loads a
+    // specific weight variant (e.g. "Fraunces_600"), so match the prefix.
     final textTheme = AppTypography.textTheme(Brightness.light);
-    expect(textTheme.displayLarge!.fontFamily, 'Fraunces');
-    expect(textTheme.headlineSmall!.fontFamily, 'Fraunces');
-    expect(textTheme.bodyLarge!.fontFamily, 'Plus Jakarta Sans');
-    expect(textTheme.labelLarge!.fontFamily, 'Plus Jakarta Sans');
+    expect(textTheme.displayLarge!.fontFamily, startsWith('Fraunces'));
+    expect(textTheme.headlineSmall!.fontFamily, startsWith('Fraunces'));
+    expect(textTheme.bodyLarge!.fontFamily, startsWith('PlusJakartaSans'));
+    expect(textTheme.labelLarge!.fontFamily, startsWith('PlusJakartaSans'));
   });
 }
 ```
