@@ -1132,10 +1132,15 @@ class BootstrapScreen extends StatelessWidget {
 
 - [ ] **Step 2: Write the failing router test**
 
+A plain `test()` can't observe `go_router`'s redirect resolution — its internal navigation processing needs a pumped widget tree and `pumpAndSettle()` to flush, even for a synchronous redirect callback. Use `testWidgets`:
+
 ```dart
 // test/app/router_test.dart
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:billa_mobile/app/router.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 import 'package:billa_mobile/features/auth/domain/auth_user.dart';
@@ -1144,41 +1149,54 @@ import 'package:billa_mobile/features/onboarding/domain/business.dart';
 
 const _user = AuthUser(id: 'u1', email: 'a@b.com', totpEnabled: false, isAdmin: false);
 
+Future<GoRouter> _pumpRouter(WidgetTester tester, ProviderContainer container) async {
+  final router = container.read(appRouterProvider);
+  await tester.pumpWidget(UncontrolledProviderScope(
+    container: container,
+    child: MaterialApp.router(routerConfig: router),
+  ));
+  await tester.pumpAndSettle();
+  return router;
+}
+
 void main() {
-  test('unauthenticated is redirected from home to /login', () async {
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
+  testWidgets('unauthenticated is redirected from home to /login', (tester) async {
     final container = ProviderContainer(overrides: [
       authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.unauthenticated())),
     ]);
     addTearDown(container.dispose);
-    await container.read(authControllerProvider.future); // let the fake bootstrap resolve first
-    final router = container.read(appRouterProvider);
-    router.go('/');
+
+    final router = await _pumpRouter(tester, container);
 
     expect(router.routerDelegate.currentConfiguration.uri.toString(), '/login');
   });
 
-  test('authenticated without onboarding completed goes to /onboarding', () async {
+  testWidgets('authenticated without onboarding completed goes to /onboarding', (tester) async {
     const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: null);
     final container = ProviderContainer(overrides: [
       authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
     ]);
     addTearDown(container.dispose);
-    await container.read(authControllerProvider.future);
-    final router = container.read(appRouterProvider);
-    router.go('/');
+
+    final router = await _pumpRouter(tester, container);
 
     expect(router.routerDelegate.currentConfiguration.uri.toString(), '/onboarding');
   });
 
-  test('authenticated with onboarding completed reaches home, not the auth screens', () async {
+  testWidgets('authenticated with onboarding completed reaches home, not the auth screens', (tester) async {
     const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
     final container = ProviderContainer(overrides: [
       authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
     ]);
     addTearDown(container.dispose);
-    await container.read(authControllerProvider.future);
-    final router = container.read(appRouterProvider);
+
+    final router = await _pumpRouter(tester, container);
     router.go('/login');
+    await tester.pumpAndSettle();
 
     expect(router.routerDelegate.currentConfiguration.uri.toString(), '/');
   });
@@ -1210,7 +1228,6 @@ The bootstrap gate lives in the redirect itself (a dedicated `/bootstrap` route)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../features/auth/domain/auth_status.dart';
 import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
@@ -1251,7 +1268,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 class GoRouterRefreshNotifier extends ChangeNotifier {
   GoRouterRefreshNotifier(Ref ref) {
-    ref.listen(authControllerProvider, (_, __) => notifyListeners());
+    ref.listen(authControllerProvider, (_, _) => notifyListeners());
   }
 }
 
