@@ -8,6 +8,8 @@ import '../features/customers/domain/customer.dart';
 import '../features/customers/presentation/screens/customer_detail_screen.dart';
 import '../features/customers/presentation/screens/customer_form_screen.dart';
 import '../features/customers/presentation/screens/customer_list_screen.dart';
+import '../features/documents/presentation/screens/document_detail_screen.dart';
+import '../features/documents/presentation/screens/document_list_screen.dart';
 import '../features/items/domain/item.dart';
 import '../features/items/presentation/screens/item_form_screen.dart';
 import '../features/items/presentation/screens/item_list_screen.dart';
@@ -58,6 +60,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/items/:id/edit',
         builder: (context, state) => ItemFormScreen(existing: state.extra as Item?),
       ),
+      GoRoute(path: '/documents', builder: (context, state) => const DocumentListScreen()),
+      GoRoute(
+        path: '/documents/:id',
+        builder: (context, state) => DocumentDetailScreen(documentId: state.pathParameters['id']!),
+      ),
     ],
   );
 });
@@ -90,6 +97,12 @@ class _PlaceholderHomeScreen extends StatelessWidget {
               key: const Key('home-nav-items'),
               onPressed: () => context.push('/items'),
               child: const Text('Items'),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              key: const Key('home-nav-documents'),
+              onPressed: () => context.push('/documents'),
+              child: const Text('Documents'),
             ),
           ],
         ),

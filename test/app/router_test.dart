@@ -12,6 +12,8 @@ import 'package:billa_mobile/features/auth/domain/auth_user.dart';
 import 'package:billa_mobile/features/auth/presentation/providers/auth_controller.dart';
 import 'package:billa_mobile/features/customers/domain/customer_repository.dart';
 import 'package:billa_mobile/features/customers/presentation/providers/customer_repository_provider.dart';
+import 'package:billa_mobile/features/documents/domain/document_repository.dart';
+import 'package:billa_mobile/features/documents/presentation/providers/document_repository_provider.dart';
 import 'package:billa_mobile/features/items/domain/item_repository.dart';
 import 'package:billa_mobile/features/items/presentation/providers/item_repository_provider.dart';
 import 'package:billa_mobile/features/onboarding/domain/business.dart';
@@ -20,6 +22,7 @@ const _user = AuthUser(id: 'u1', email: 'a@b.com', totpEnabled: false, isAdmin: 
 
 class _MockCustomerRepository extends Mock implements CustomerRepository {}
 class _MockItemRepository extends Mock implements ItemRepository {}
+class _MockDocumentRepository extends Mock implements DocumentRepository {}
 
 Future<GoRouter> _pumpRouter(WidgetTester tester, ProviderContainer container) async {
   final router = container.read(appRouterProvider);
@@ -109,6 +112,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No items yet'), findsOneWidget);
+  });
+
+  testWidgets('home screen navigates to the documents list', (tester) async {
+    final documentRepository = _MockDocumentRepository();
+    when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
+    );
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      documentRepositoryProvider.overrideWithValue(documentRepository),
+    ]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No documents yet'), findsOneWidget);
   });
 }
 
