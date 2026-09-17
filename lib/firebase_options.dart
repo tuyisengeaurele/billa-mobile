@@ -56,13 +56,13 @@ class DefaultFirebaseOptions {
     projectId: 'billa-7bfbd',
     storageBucket: 'billa-7bfbd.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCvt1dhOe-x3WqDgnTOmsyE1HFmCvuQFx8',
     appId: '1:1080574285488:ios:763ec936d1f1223f578d75',
     messagingSenderId: '1080574285488',
     projectId: 'billa-7bfbd',
     storageBucket: 'billa-7bfbd.firebasestorage.app',
+    androidClientId: '1080574285488-l79prd6tdafqjgigqncjqjds0ghdrmvr.apps.googleusercontent.com',
     iosClientId: '1080574285488-eh12afcbc1qhjfne06lompjrahs6sfrn.apps.googleusercontent.com',
     iosBundleId: 'rw.billa.mobile',
   );

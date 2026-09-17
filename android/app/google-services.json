@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1080574285488-l79prd6tdafqjgigqncjqjds0ghdrmvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "rw.billa.mobile",
+            "certificate_hash": "ebea77a4ede304df5e5474143a04234ac9723801"
+          }
+        },
+        {
           "client_id": "1080574285488-6tl19tnhq5k5jb5n0eli9nq00k3msskb.apps.googleusercontent.com",
           "client_type": 3
         }
