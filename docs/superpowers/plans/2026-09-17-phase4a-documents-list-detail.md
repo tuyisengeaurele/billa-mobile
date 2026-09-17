@@ -295,8 +295,12 @@ part 'document.g.dart';
 double _decimalFromJson(dynamic value) => double.parse(value as String);
 String _decimalToJson(double value) => value.toStringAsFixed(2);
 
-double? _nullableDecimalFromJson(dynamic value) => value == null ? null : double.parse(value as String);
-String? _nullableDecimalToJson(double? value) => value == null ? null : value.toStringAsFixed(2);
+double? _nullableDecimalFromJson(dynamic value) {
+  if (value == null) return null;
+  return double.parse(value as String);
+}
+
+String? _nullableDecimalToJson(double? value) => value?.toStringAsFixed(2);
 
 @freezed
 class DocumentRef with _$DocumentRef {
@@ -378,7 +382,20 @@ class Document with _$Document {
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-- [ ] **Step 5: Run it to confirm it passes**
+- [ ] **Step 5: Silence the `invalid_annotation_target` false positive**
+
+`@JsonKey` on a freezed constructor parameter (used above for the Decimal-as-string fields and the enum converters) is a supported, common pattern that the plain analyzer can't distinguish from a genuinely misplaced annotation — `flutter analyze` will otherwise report 8 `invalid_annotation_target` warnings, one per `@JsonKey` usage. Add this to `analysis_options.yaml`, right after the `include:` line:
+
+```yaml
+analyzer:
+  errors:
+    # @JsonKey on a freezed constructor parameter is a supported, common
+    # pattern (used for the Decimal-as-string document fields) that the
+    # plain analyzer can't distinguish from a genuine misplaced annotation.
+    invalid_annotation_target: ignore
+```
+
+- [ ] **Step 6: Run it to confirm it passes**
 
 ```bash
 flutter test test/features/documents/domain/document_test.dart
@@ -386,10 +403,10 @@ flutter test test/features/documents/domain/document_test.dart
 
 Expected: PASS (4 tests). If it fails on missing generated files, re-run Step 4.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add lib/features/documents/domain/document.dart lib/features/documents/domain/document.freezed.dart lib/features/documents/domain/document.g.dart test/features/documents/domain/document_test.dart
+git add lib/features/documents/domain/document.dart lib/features/documents/domain/document.freezed.dart lib/features/documents/domain/document.g.dart test/features/documents/domain/document_test.dart analysis_options.yaml
 git commit -m "feat: add document domain models with decimal-string parsing"
 ```
 
