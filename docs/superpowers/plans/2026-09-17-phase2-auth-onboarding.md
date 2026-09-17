@@ -1396,9 +1396,9 @@ import 'package:billa_mobile/features/auth/presentation/widgets/password_require
 
 void main() {
   testWidgets('shows all five requirement labels', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
+    await tester.pumpWidget(MaterialApp(
       theme: AppTheme.light,
-      home: Scaffold(body: PasswordRequirementsList(password: '')),
+      home: const Scaffold(body: PasswordRequirementsList(password: '')),
     ));
 
     expect(find.text('At least 8 characters'), findsOneWidget);
@@ -1409,18 +1409,18 @@ void main() {
   });
 
   testWidgets('marks a met requirement with a check icon', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
+    await tester.pumpWidget(MaterialApp(
       theme: AppTheme.light,
-      home: Scaffold(body: PasswordRequirementsList(password: 'Abcdef1!')),
+      home: const Scaffold(body: PasswordRequirementsList(password: 'Abcdef1!')),
     ));
 
     expect(find.byIcon(Icons.check_circle), findsNWidgets(5));
   });
 
   testWidgets('leaves unmet requirements unchecked', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
+    await tester.pumpWidget(MaterialApp(
       theme: AppTheme.light,
-      home: Scaffold(body: PasswordRequirementsList(password: 'abc')),
+      home: const Scaffold(body: PasswordRequirementsList(password: '')),
     ));
 
     expect(find.byIcon(Icons.check_circle), findsNothing);
@@ -1566,7 +1566,7 @@ void main() {
         authRepositoryProvider.overrideWithValue(authRepository),
         firebaseAuthServiceProvider.overrideWithValue(firebaseAuthService),
       ],
-      child: const MaterialApp(theme: AppTheme.light, home: LoginScreen()),
+      child: MaterialApp(theme: AppTheme.light, home: const LoginScreen()),
     );
   }
 
@@ -1871,7 +1871,7 @@ void main() {
         authRepositoryProvider.overrideWithValue(authRepository),
         firebaseAuthServiceProvider.overrideWithValue(firebaseAuthService),
       ],
-      child: const MaterialApp(theme: AppTheme.light, home: RegisterScreen()),
+      child: MaterialApp(theme: AppTheme.light, home: const RegisterScreen()),
     );
   }
 
@@ -2295,7 +2295,7 @@ void main() {
         authRepositoryProvider.overrideWithValue(authRepository),
         businessRepositoryProvider.overrideWithValue(businessRepository),
       ],
-      child: const MaterialApp(theme: AppTheme.light, home: OnboardingScreen()),
+      child: MaterialApp(theme: AppTheme.light, home: const OnboardingScreen()),
     ));
     await tester.pumpAndSettle();
 
