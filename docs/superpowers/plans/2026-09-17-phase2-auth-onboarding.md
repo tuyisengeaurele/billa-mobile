@@ -201,11 +201,11 @@ void main() {
     const business = Business(id: 'b1', name: 'Acme');
     const status = AuthStatus.authenticated(user, business);
 
-    final label = switch (status) {
-      Unauthenticated() => 'out',
-      TwoFactorRequired() => '2fa',
-      Authenticated(user: final u, business: final b) => '${u.email}/${b.name}',
-    };
+    final label = status.when(
+      unauthenticated: () => 'out',
+      twoFactorRequired: (challengeId) => '2fa',
+      authenticated: (u, b) => '${u.email}/${b.name}',
+    );
     expect(label, 'a@b.com/Acme');
   });
 
@@ -1226,16 +1226,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final path = state.uri.path;
       if (status == null) return path == '/bootstrap' ? null : '/bootstrap';
 
-      switch (status) {
-        case Unauthenticated():
-          return _authRoutes.contains(path) ? null : '/login';
-        case TwoFactorRequired():
-          return null; // handled inline by login_screen.dart, never a route-level redirect
-        case Authenticated(business: final business):
+      return status.when(
+        unauthenticated: () => _authRoutes.contains(path) ? null : '/login',
+        // Handled inline by login_screen.dart — never a route-level redirect.
+        twoFactorRequired: (challengeId) => null,
+        authenticated: (user, business) {
           final needsOnboarding = business.onboardingCompletedAt == null;
           if (needsOnboarding) return path == '/onboarding' ? null : '/onboarding';
           return (_authRoutes.contains(path) || path == '/onboarding') ? '/' : null;
-      }
+        },
+      );
     },
     routes: [
       GoRoute(path: '/bootstrap', builder: (context, state) => const BootstrapScreen()),
