@@ -132,8 +132,8 @@ void main() {
   });
 
   test('lerp at t=0 returns the start, at t=1 returns the end', () {
-    final start = AppColors.lerp(AppColors.light, AppColors.dark, 0);
-    final end = AppColors.lerp(AppColors.light, AppColors.dark, 1);
+    final start = AppColors.light.lerp(AppColors.dark, 0);
+    final end = AppColors.light.lerp(AppColors.dark, 1);
     expect(start.page, AppColors.light.page);
     expect(end.page, AppColors.dark.page);
   });
