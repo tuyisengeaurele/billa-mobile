@@ -869,6 +869,8 @@ Expected: PASS (7 tests).
 
 - [ ] **Step 5: Implement `FirebaseAuthService`**
 
+The installed `google_sign_in` resolved to v7, which replaced the old constructor-based, nullable-return `signIn()` API with a singleton (`GoogleSignIn.instance`) that must be `initialize()`d exactly once before use, and an `authenticate()` method that throws `GoogleSignInException` (code `canceled`) instead of returning null when the user backs out — write against that real API, not the older one:
+
 ```dart
 // lib/features/auth/data/firebase_auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
@@ -877,10 +879,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 class FirebaseAuthService {
   FirebaseAuthService({FirebaseAuth? auth, GoogleSignIn? googleSignIn})
       : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
+  bool _googleSignInReady = false;
 
   Future<String> _idTokenOf(UserCredential credential) async {
     final token = await credential.user!.getIdToken();
@@ -898,15 +901,22 @@ class FirebaseAuthService {
   }
 
   Future<String> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) {
-      throw FirebaseAuthException(code: 'google-sign-in-cancelled', message: 'Sign-in was cancelled.');
+    if (!_googleSignInReady) {
+      await _googleSignIn.initialize();
+      _googleSignInReady = true;
     }
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+
+    final GoogleSignInAccount account;
+    try {
+      account = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw FirebaseAuthException(code: 'google-sign-in-cancelled', message: 'Sign-in was cancelled.');
+      }
+      rethrow;
+    }
+
+    final credential = GoogleAuthProvider.credential(idToken: account.authentication.idToken);
     final userCredential = await _auth.signInWithCredential(credential);
     return _idTokenOf(userCredential);
   }
