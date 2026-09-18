@@ -4,6 +4,8 @@ import '../domain/document.dart';
 import '../domain/document_draft_input.dart';
 import '../domain/document_enums.dart';
 import '../domain/document_repository.dart';
+import '../domain/payment.dart';
+import '../domain/payment_input.dart';
 
 class DocumentRepositoryImpl implements DocumentRepository {
   DocumentRepositoryImpl(this._dio);
@@ -84,5 +86,50 @@ class DocumentRepositoryImpl implements DocumentRepository {
   Future<List<int>> fetchPdfBytes(String id) async {
     final response = await _dio.get<List<int>>('/documents/$id/pdf', options: Options(responseType: ResponseType.bytes));
     return response.data!;
+  }
+
+  @override
+  Future<Document> recordPayment(String documentId, PaymentInput input) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$documentId/payments', data: input.toJson());
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Document> voidPayment(String documentId, String paymentId, String reason) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/documents/$documentId/payments/$paymentId/void',
+      data: {'voidReason': reason},
+    );
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<Payment>> listPayments(String documentId) async {
+    final response = await _dio.get<Map<String, dynamic>>('/documents/$documentId/payments');
+    return (response.data!['payments'] as List).map((json) => Payment.fromJson(json as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<Document> writeOff(String documentId, String reason) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/documents/$documentId/write-off',
+      data: {'writeOffReason': reason},
+    );
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Document> reactivate(String documentId) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$documentId/reactivate');
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<String> uploadPaymentReceipt(List<int> bytes, String filename) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/documents/payments/receipt',
+      data: FormData.fromMap({'receipt': MultipartFile.fromBytes(bytes, filename: filename)}),
+    );
+    return response.data!['url'] as String;
   }
 }

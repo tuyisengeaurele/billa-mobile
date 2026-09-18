@@ -2,6 +2,8 @@ import '../../../core/pagination/paginated_result.dart';
 import 'document.dart';
 import 'document_draft_input.dart';
 import 'document_enums.dart';
+import 'payment.dart';
+import 'payment_input.dart';
 
 abstract class DocumentRepository {
   Future<PaginatedResult<Document>> list({
@@ -21,4 +23,10 @@ abstract class DocumentRepository {
   Future<String> send(String id);
   Future<void> delete(String id);
   Future<List<int>> fetchPdfBytes(String id);
+  Future<Document> recordPayment(String documentId, PaymentInput input);
+  Future<Document> voidPayment(String documentId, String paymentId, String reason);
+  Future<List<Payment>> listPayments(String documentId);
+  Future<Document> writeOff(String documentId, String reason);
+  Future<Document> reactivate(String documentId);
+  Future<String> uploadPaymentReceipt(List<int> bytes, String filename);
 }

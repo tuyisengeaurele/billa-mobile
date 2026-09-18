@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/features/documents/data/document_repository_impl.dart';
 import 'package:billa_mobile/features/documents/domain/document_draft_input.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
+import 'package:billa_mobile/features/documents/domain/payment_input.dart';
 
 class _MockDio extends Mock implements Dio {}
 
@@ -192,5 +193,90 @@ void main() {
     final bytes = await repository.fetchPdfBytes('d1');
 
     expect(bytes, [1, 2, 3]);
+  });
+
+  test('recordPayment posts to /payments and returns the updated document', () async {
+    final options = RequestOptions(path: '/documents/d1/payments');
+    const input = PaymentInput(amount: 5000, method: PaymentMethod.cash, paidOn: '2026-01-05');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/payments', data: input.toJson())).thenAnswer(
+      (_) async => _response(201, {
+        'payment': {'id': 'pay1'},
+        'document': _documentJson(),
+      }, options),
+    );
+
+    final document = await repository.recordPayment('d1', input);
+
+    expect(document.id, 'd1');
+  });
+
+  test('voidPayment posts the void reason and returns the updated document', () async {
+    final options = RequestOptions(path: '/documents/d1/payments/pay1/void');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/payments/pay1/void', data: {'voidReason': 'Mistake'}))
+        .thenAnswer((_) async => _response(200, {'document': _documentJson()}, options));
+
+    final document = await repository.voidPayment('d1', 'pay1', 'Mistake');
+
+    expect(document.id, 'd1');
+  });
+
+  test('listPayments fetches and maps the payments list', () async {
+    final options = RequestOptions(path: '/documents/d1/payments');
+    when(() => dio.get<Map<String, dynamic>>('/documents/d1/payments')).thenAnswer(
+      (_) async => _response(200, {
+        'payments': [
+          {
+            'id': 'pay1',
+            'amount': 5000,
+            'method': 'CASH',
+            'paidOn': '2026-01-05T00:00:00.000Z',
+            'notes': null,
+            'referenceNumber': null,
+            'payerName': null,
+            'receiptImageUrl': null,
+            'receiptDocumentId': null,
+            'voidedAt': null,
+            'voidReason': null,
+            'createdAt': '2026-01-05T00:00:00.000Z',
+          },
+        ],
+      }, options),
+    );
+
+    final payments = await repository.listPayments('d1');
+
+    expect(payments.single.id, 'pay1');
+  });
+
+  test('writeOff posts the reason and returns the updated document', () async {
+    final options = RequestOptions(path: '/documents/d1/write-off');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/write-off', data: {'writeOffReason': 'Bad debt'}))
+        .thenAnswer((_) async => _response(200, {'document': _documentJson()}, options));
+
+    final document = await repository.writeOff('d1', 'Bad debt');
+
+    expect(document.id, 'd1');
+  });
+
+  test('reactivate posts to /reactivate and returns the updated document', () async {
+    final options = RequestOptions(path: '/documents/d1/reactivate');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/reactivate')).thenAnswer(
+      (_) async => _response(200, {'document': _documentJson()}, options),
+    );
+
+    final document = await repository.reactivate('d1');
+
+    expect(document.id, 'd1');
+  });
+
+  test('uploadPaymentReceipt posts multipart form data and returns the url', () async {
+    final options = RequestOptions(path: '/documents/payments/receipt');
+    when(() => dio.post<Map<String, dynamic>>('/documents/payments/receipt', data: any(named: 'data'))).thenAnswer(
+      (_) async => _response(201, {'url': '/uploads/b1/receipt.png'}, options),
+    );
+
+    final url = await repository.uploadPaymentReceipt([1, 2, 3], 'receipt.png');
+
+    expect(url, '/uploads/b1/receipt.png');
   });
 }
