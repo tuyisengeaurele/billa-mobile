@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/features/documents/data/document_repository_impl.dart';
+import 'package:billa_mobile/features/documents/domain/document_draft_input.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
 
 class _MockDio extends Mock implements Dio {}
@@ -87,6 +88,53 @@ void main() {
     );
 
     final document = await repository.get('d1');
+
+    expect(document.id, 'd1');
+  });
+
+  test('list includes a customerId filter when provided', () async {
+    final options = RequestOptions(path: '/documents');
+    when(() => dio.get<Map<String, dynamic>>('/documents', queryParameters: {
+          'customerId': 'c1',
+          'page': 1,
+          'pageSize': 20,
+        })).thenAnswer((_) async => _response(200, {'results': [], 'total': 0, 'page': 1, 'pageSize': 20}, options));
+
+    final result = await repository.list(customerId: 'c1');
+
+    expect(result.results, isEmpty);
+  });
+
+  test('create posts the draft and returns the created document', () async {
+    final options = RequestOptions(path: '/documents');
+    const input = DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-08-19',
+      lines: [],
+    );
+    when(() => dio.post<Map<String, dynamic>>('/documents', data: input.toJson())).thenAnswer(
+      (_) async => _response(201, {'document': _documentJson()}, options),
+    );
+
+    final document = await repository.create(input);
+
+    expect(document.id, 'd1');
+  });
+
+  test('update patches the draft and returns the updated document', () async {
+    final options = RequestOptions(path: '/documents/d1');
+    const input = DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-08-20',
+      lines: [],
+    );
+    when(() => dio.patch<Map<String, dynamic>>('/documents/d1', data: input.toJson())).thenAnswer(
+      (_) async => _response(200, {'document': _documentJson()}, options),
+    );
+
+    final document = await repository.update('d1', input);
 
     expect(document.id, 'd1');
   });
