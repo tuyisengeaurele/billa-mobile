@@ -751,13 +751,23 @@ git commit -m "feat: map payment and write-off error codes to user-facing messag
 
 ### Task 4: Payments section, Write-off, and Reactivate on `DocumentDetailScreen`
 
+**Execute this task's code changes after Task 5, not before**, even
+though it's numbered first: Task 4's implementation imports
+`paymentMethodLabel` from Task 5's `record_payment_screen.dart`, so
+writing Task 4's Step 3 before that file exists breaks compilation, not
+just the intended "test fails for the right reason." Task 5 has no
+dependency on Task 4 (its own Interfaces list only Task 1/Task 2/Phase
+4a), so it's safe to build first. Task 4's *tests* can still be written
+first if you want the red step recorded before Task 5's — only the
+implementation step needs to wait.
+
 **Files:**
 - Modify: `lib/features/documents/presentation/screens/document_detail_screen.dart`
 - Modify: `test/features/documents/presentation/screens/document_detail_screen_test.dart`
 
 **Interfaces:**
 - Consumes: `DocumentRepository.listPayments`/`.voidPayment`/`.writeOff`/`.reactivate`
-  (Task 2), `Payment`/`PaymentMethod` (Task 1).
+  (Task 2), `Payment`/`PaymentMethod` (Task 1), `paymentMethodLabel` (Task 5).
 - Produces: a "Payments" section (list + per-payment Void), a "Record
   Payment" button, Write-off/Reactivate actions.
 
