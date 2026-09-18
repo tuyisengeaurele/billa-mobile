@@ -1237,7 +1237,13 @@ void main() {
     router.push('/payment');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Record Payment'));
+    // Two problems with a plain text tap here: the AppBar title is also
+    // "Record Payment" (ambiguous finder), and the button sits below the
+    // fold of this long scrollable form (tap without scrolling first hits
+    // nothing and no-ops with a hit-test warning rather than failing loud).
+    await tester.ensureVisible(find.byKey(const Key('payment-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('payment-submit')));
     await tester.pumpAndSettle();
 
     verify(() => repository.recordPayment('d1', any())).called(1);
@@ -1459,7 +1465,12 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               Text(_errorMessage!),
             ],
             const SizedBox(height: 16),
-            AppButton(label: 'Record Payment', isLoading: _isSaving, onPressed: _save),
+            AppButton(
+              key: const Key('payment-submit'),
+              label: 'Record Payment',
+              isLoading: _isSaving,
+              onPressed: _save,
+            ),
           ],
         ),
       ),
