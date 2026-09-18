@@ -1988,7 +1988,19 @@ git commit -m "feat: add document editor screen"
 
 - [ ] **Step 1: Write the failing list-screen test**
 
-Add to `test/features/documents/presentation/screens/document_list_screen_test.dart`:
+First add a `/documents/new` route to the existing `buildApp()` helper in
+`test/features/documents/presentation/screens/document_list_screen_test.dart`
+(this test file builds its own isolated router, separate from the app's
+real one, so it needs the route too):
+
+```dart
+      GoRoute(
+        path: '/documents/new',
+        builder: (context, state) => Scaffold(body: Text('new document screen: ${state.extra}')),
+      ),
+```
+
+placed before the existing `/documents/:id` route. Then add the test:
 
 ```dart
   testWidgets('the new-document FAB opens a type picker that navigates to the editor', (tester) async {
@@ -2001,10 +2013,10 @@ Add to `test/features/documents/presentation/screens/document_list_screen_test.d
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Invoice'));
+    await tester.tap(find.text('Invoice').last); // the type-picker sheet's row, not the list screen's filter chip
     await tester.pumpAndSettle();
 
-    expect(find.text('New Invoice'), findsOneWidget);
+    expect(find.text('new document screen: DocumentType.invoice'), findsOneWidget);
   });
 ```
 
@@ -2158,19 +2170,52 @@ Add routes, placed before `/documents/:id` isn't required for correctness (go_ro
       ),
 ```
 
-- [ ] **Step 10: Run the full suite**
+- [ ] **Step 10: Add an end-to-end router test through the real `appRouterProvider`**
+
+Every isolated screen test above proves its own screen works, but none of
+them prove the *real* app router (with its auth redirect logic) actually
+reaches the new routes. Add to `test/app/router_test.dart`, alongside the
+existing "home screen navigates to..." cases:
+
+```dart
+  testWidgets('the documents list FAB reaches the real document editor screen', (tester) async {
+    final documentRepository = _MockDocumentRepository();
+    when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
+    );
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      documentRepositoryProvider.overrideWithValue(documentRepository),
+    ]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Invoice').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Invoice'), findsOneWidget);
+    expect(find.text('Choose a customer'), findsOneWidget);
+  });
+```
+
+- [ ] **Step 11: Run the full suite**
 
 ```bash
 flutter test
 ```
 
-Expected: every test passes, including the router's existing six cases (unaffected by this task).
+Expected: every test passes, including the router's now-seven cases.
 
-- [ ] **Step 11: Analyze and commit**
+- [ ] **Step 12: Analyze and commit**
 
 ```bash
 flutter analyze
-git add lib/features/documents/presentation/screens/document_list_screen.dart lib/features/documents/presentation/screens/document_detail_screen.dart lib/app/router.dart test/features/documents/presentation/screens/document_list_screen_test.dart test/features/documents/presentation/screens/document_detail_screen_test.dart
+git add lib/features/documents/presentation/screens/document_list_screen.dart lib/features/documents/presentation/screens/document_detail_screen.dart lib/app/router.dart test/features/documents/presentation/screens/document_list_screen_test.dart test/features/documents/presentation/screens/document_detail_screen_test.dart test/app/router_test.dart
 git commit -m "feat: wire the document editor into the list, detail, and router"
 ```
 
