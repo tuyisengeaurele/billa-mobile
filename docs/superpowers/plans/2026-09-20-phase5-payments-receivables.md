@@ -342,11 +342,25 @@ flutter test test/features/documents/domain/payment_test.dart test/features/docu
 
 Expected: PASS (6 tests).
 
+If `build_runner` fails with a syntax error in
+`document_repository_impl.dart` around the `'customerId': ?customerId,`
+line: that null-aware map-entry syntax (from a `dart fix` applied during
+Phase 4c) is newer than `build_runner`'s pinned `analyzer` (6.4.1, held
+back by the same riverpod/freezed version constraints from Phase 1),
+even though the Flutter SDK's own analyzer accepts it fine. Revert that
+one line to `if (customerId != null) 'customerId': customerId,` and add
+this to `analysis_options.yaml`'s `linter: rules:` section to keep
+`flutter analyze` clean about the resulting lint:
+
+```yaml
+    use_null_aware_elements: false
+```
+
 - [ ] **Step 9: Analyze and commit**
 
 ```bash
 flutter analyze
-git add lib/features/documents/domain/ lib/features/receivables/domain/ test/features/documents/domain/ test/features/receivables/domain/
+git add lib/features/documents/domain/ lib/features/receivables/domain/ test/features/documents/domain/ test/features/receivables/domain/ lib/features/documents/data/document_repository_impl.dart analysis_options.yaml
 git commit -m "feat: add payment method enum and payment/receivables domain models"
 ```
 
