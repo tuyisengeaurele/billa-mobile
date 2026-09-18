@@ -65,3 +65,16 @@ String? discountTypeToJson(DiscountType? value) => switch (value) {
       DiscountType.percent => 'PERCENT',
       DiscountType.flat => 'FLAT',
     };
+
+enum DocumentLanguage { en, fr }
+
+DocumentLanguage documentLanguageFromJson(String value) => switch (value) {
+      'EN' => DocumentLanguage.en,
+      'FR' => DocumentLanguage.fr,
+      _ => throw ArgumentError('Unknown document language: $value'),
+    };
+
+String documentLanguageToJson(DocumentLanguage value) => switch (value) {
+      DocumentLanguage.en => 'EN',
+      DocumentLanguage.fr => 'FR',
+    };
