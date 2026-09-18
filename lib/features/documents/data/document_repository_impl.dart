@@ -23,7 +23,7 @@ class DocumentRepositoryImpl implements DocumentRepository {
       if (types != null && types.isNotEmpty) 'type': types.map(documentTypeToJson).join(','),
       if (status != null) 'status': documentStatusToJson(status),
       if (search != null && search.isNotEmpty) 'search': search,
-      'customerId': ?customerId,
+      if (customerId != null) 'customerId': customerId,
       'page': page,
       'pageSize': pageSize,
     });

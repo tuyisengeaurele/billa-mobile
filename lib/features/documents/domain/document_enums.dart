@@ -78,3 +78,22 @@ String documentLanguageToJson(DocumentLanguage value) => switch (value) {
       DocumentLanguage.en => 'EN',
       DocumentLanguage.fr => 'FR',
     };
+
+enum PaymentMethod { cash, bankTransfer, mobileMoney, cheque, other }
+
+PaymentMethod paymentMethodFromJson(String value) => switch (value) {
+      'CASH' => PaymentMethod.cash,
+      'BANK_TRANSFER' => PaymentMethod.bankTransfer,
+      'MOBILE_MONEY' => PaymentMethod.mobileMoney,
+      'CHEQUE' => PaymentMethod.cheque,
+      'OTHER' => PaymentMethod.other,
+      _ => throw ArgumentError('Unknown payment method: $value'),
+    };
+
+String paymentMethodToJson(PaymentMethod value) => switch (value) {
+      PaymentMethod.cash => 'CASH',
+      PaymentMethod.bankTransfer => 'BANK_TRANSFER',
+      PaymentMethod.mobileMoney => 'MOBILE_MONEY',
+      PaymentMethod.cheque => 'CHEQUE',
+      PaymentMethod.other => 'OTHER',
+    };
