@@ -269,7 +269,7 @@ Expected: FAIL — `document_action_errors.dart` doesn't exist yet.
 import 'package:dio/dio.dart';
 
 String describeDocumentActionError(Object error) {
-  final code = error is DioException ? error.response?.data?['error'] as String? : null;
+  final code = error is DioException ? (error.response?.data?['error'] as String?) : null;
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',
     'finalize_requires_approval' => 'Only the business owner can finalize documents',
