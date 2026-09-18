@@ -1284,7 +1284,11 @@ class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
   void _onSearchChanged(String value) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(_debounce, () {
-      if (mounted) setState(() => _results = widget.fetch(value));
+      if (mounted) {
+        setState(() {
+          _results = widget.fetch(value);
+        });
+      }
     });
   }
 
@@ -1447,7 +1451,7 @@ void main() {
   testWidgets('picking a customer triggers an autosave', (tester) async {
     when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
 
-    await tester.pumpWidget(buildApp(const DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Choose a customer'));
@@ -1461,7 +1465,7 @@ void main() {
   });
 
   testWidgets('picking an item fills the line description, price, and tax', (tester) async {
-    await tester.pumpWidget(buildApp(const DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Add line'));
@@ -1475,7 +1479,7 @@ void main() {
   });
 
   testWidgets('a credit note cannot autosave without a chosen reference invoice', (tester) async {
-    await tester.pumpWidget(buildApp(const DocumentEditorScreen.create(type: DocumentType.creditNote)));
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.creditNote)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Choose a customer'));
@@ -1521,9 +1525,11 @@ String _formatDisplayDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
 class DocumentEditorScreen extends ConsumerStatefulWidget {
-  const DocumentEditorScreen.create({super.key, required DocumentType type}) : args = DocumentEditorArgs.create(type);
-  const DocumentEditorScreen.edit({super.key, required String documentId})
-      : args = DocumentEditorArgs.edit(documentId);
+  // Not const: the initializer calls DocumentEditorArgs.create(type), and a
+  // const constructor can't invoke another const constructor with one of
+  // its own formal parameters as the argument.
+  DocumentEditorScreen.create({super.key, required DocumentType type}) : args = DocumentEditorArgs.create(type);
+  DocumentEditorScreen.edit({super.key, required String documentId}) : args = DocumentEditorArgs.edit(documentId);
 
   final DocumentEditorArgs args;
 
