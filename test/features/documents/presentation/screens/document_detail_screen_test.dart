@@ -121,4 +121,177 @@ void main() {
 
     expect(find.byIcon(Icons.edit), findsNothing);
   });
+
+  testWidgets('Finalize appears for a draft and reloads on success', (tester) async {
+    const draft = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      status: DocumentStatus.draft,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 0,
+      taxTotal: 0,
+      total: 0,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      lines: [_line],
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => draft);
+    when(() => repository.finalize('d1')).thenAnswer(
+      (_) async => draft.copyWith(status: DocumentStatus.finalized, number: 'INV-0001'),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Finalize'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finalize').last);
+    await tester.pumpAndSettle();
+
+    verify(() => repository.finalize('d1')).called(1);
+    verify(() => repository.get('d1')).called(2); // initial load + reload after finalize
+  });
+
+  testWidgets('Convert to Invoice appears for a finalized proforma with no convertedTo, and navigates on success', (tester) async {
+    const proforma = Document(
+      id: 'd1',
+      type: DocumentType.proforma,
+      number: 'PRO-0001',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 0,
+      taxTotal: 0,
+      total: 0,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    const newInvoice = Document(
+      id: 'd2',
+      type: DocumentType.invoice,
+      status: DocumentStatus.draft,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 0,
+      taxTotal: 0,
+      total: 0,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => proforma);
+    when(() => repository.convert('d1')).thenAnswer((_) async => newInvoice);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Convert to Invoice'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Convert').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('converted-from screen'), findsOneWidget);
+  });
+
+  testWidgets('Send is disabled when the customer has no email', (tester) async {
+    const noEmailCustomer = DocumentCustomerRef(name: 'Acme');
+    const finalized = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0001',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: noEmailCustomer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 0,
+      taxTotal: 0,
+      total: 0,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => finalized);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    final sendButton = tester.widget<OutlinedButton>(find.byKey(const Key('document-send')));
+    expect(sendButton.onPressed, isNull);
+  });
+
+  testWidgets('Send confirms and reloads on success when the customer has an email', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+    when(() => repository.send('d1')).thenAnswer((_) async => '2026-01-02T00:00:00.000Z');
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('document-send')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send').last);
+    await tester.pumpAndSettle();
+
+    verify(() => repository.send('d1')).called(1);
+    verify(() => repository.get('d1')).called(2);
+  });
+
+  testWidgets('Share PDF fetches the document bytes', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+    when(() => repository.fetchPdfBytes('d1')).thenAnswer((_) async => [1, 2, 3]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('document-share-pdf')));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.fetchPdfBytes('d1')).called(1);
+  });
+
+  testWidgets('the overflow Delete action appears only for drafts, confirms, and pops back to the list', (tester) async {
+    const draft = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      status: DocumentStatus.draft,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 0,
+      taxTotal: 0,
+      total: 0,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => draft);
+    when(() => repository.delete('d1')).thenAnswer((_) async {});
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: Text('list screen'))),
+      GoRoute(path: '/documents/d1', builder: (context, state) => const DocumentDetailScreen(documentId: 'd1')),
+    ]);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [documentRepositoryProvider.overrideWithValue(repository)],
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+    router.push('/documents/d1');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('list screen'), findsOneWidget);
+    verify(() => repository.delete('d1')).called(1);
+  });
 }

@@ -314,7 +314,7 @@ git commit -m "feat: map document action error codes to user-facing messages"
 **Interfaces:**
 - Consumes: `DocumentRepository` (Task 1), `describeDocumentActionError`
   (Task 2), `documentListControllerProvider` (Phase 4a), `AppButton`
-  (Phase 1), `share_plus`'s `Share.shareXFiles`, `path_provider`'s
+  (Phase 1), `share_plus`'s `SharePlus.instance.share`, `path_provider`'s
   `getTemporaryDirectory`.
 - Produces: context-sensitive Finalize / Convert to Invoice / Share PDF
   / Send buttons and an overflow Delete action on `DocumentDetailScreen`.
@@ -635,7 +635,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
       final bytes = await ref.read(documentRepositoryProvider).fetchPdfBytes(widget.documentId);
       final dir = await getTemporaryDirectory();
       final file = await File('${dir.path}/${widget.documentId}.pdf').writeAsBytes(bytes);
-      await Share.shareXFiles([XFile(file.path)]);
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     });
   }
 
