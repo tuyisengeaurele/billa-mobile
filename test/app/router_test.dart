@@ -132,6 +132,30 @@ void main() {
 
     expect(find.text('No documents yet'), findsOneWidget);
   });
+
+  testWidgets('the documents list FAB reaches the real document editor screen', (tester) async {
+    final documentRepository = _MockDocumentRepository();
+    when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
+    );
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      documentRepositoryProvider.overrideWithValue(documentRepository),
+    ]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Invoice').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Invoice'), findsOneWidget);
+    expect(find.text('Choose a customer'), findsOneWidget);
+  });
 }
 
 class _FakeAuthController extends AuthController {

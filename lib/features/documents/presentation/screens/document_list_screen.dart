@@ -55,12 +55,32 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
     ref.read(documentListControllerProvider.notifier).setStatusFilter(status);
   }
 
+  Future<void> _createDocument() async {
+    final type = await showModalBottomSheet<DocumentType>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final type in DocumentType.values)
+              ListTile(
+                title: Text(documentTypeLabel(type)),
+                onTap: () => Navigator.of(context).pop(type),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (type != null && mounted) context.push('/documents/new', extra: type);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(documentListControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Documents')),
+      floatingActionButton: FloatingActionButton(onPressed: _createDocument, child: const Icon(Icons.add)),
       body: Column(
         children: [
           Padding(
