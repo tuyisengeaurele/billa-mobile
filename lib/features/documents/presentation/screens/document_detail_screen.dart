@@ -12,10 +12,12 @@ import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../../core/widgets/money_text.dart';
 import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
+import '../../domain/payment.dart';
 import '../document_action_errors.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
 import '../widgets/document_status_pill.dart';
+import 'record_payment_screen.dart' show paymentMethodLabel;
 
 String _lineDiscountLabel(DocumentLine line) {
   if (line.discountType == null || line.discountValue == null) return '';
@@ -35,6 +37,7 @@ class DocumentDetailScreen extends ConsumerStatefulWidget {
 
 class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   late Future<Document> _future;
+  late Future<List<Payment>> _paymentsFuture;
   bool _actionInProgress = false;
   String? _actionError;
   Future<void> Function()? _lastAction;
@@ -43,13 +46,50 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   void initState() {
     super.initState();
     _future = _load();
+    _paymentsFuture = _loadPayments();
   }
 
   Future<Document> _load() => ref.read(documentRepositoryProvider).get(widget.documentId);
 
+  // Fetching payments unconditionally (regardless of document type) is
+  // deliberate: the backend's GET /:id/payments has no type restriction
+  // (only the mutating POST does), so it simply returns an empty list for
+  // a non-invoice document — no special-casing needed here.
+  Future<List<Payment>> _loadPayments() => ref.read(documentRepositoryProvider).listPayments(widget.documentId);
+
   void _reload() => setState(() {
         _future = _load();
       });
+
+  void _reloadAll() => setState(() {
+        _future = _load();
+        _paymentsFuture = _loadPayments();
+      });
+
+  Future<String?> _promptText(String title, String label, String confirmLabel) {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(labelText: label),
+            autofocus: true,
+            onChanged: (_) => setDialogState(() {}),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: controller.text.trim().isEmpty ? null : () => Navigator.pop(context, controller.text.trim()),
+              child: Text(confirmLabel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _runAction(Future<void> Function() action) async {
     _lastAction = action;
@@ -131,6 +171,37 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     });
   }
 
+  Future<void> _voidPayment(String paymentId) async {
+    final reason = await _promptText('Void this payment?', 'Reason', 'Void');
+    if (reason == null) return;
+    await _runAction(() async {
+      await ref.read(documentRepositoryProvider).voidPayment(widget.documentId, paymentId, reason);
+      _reloadAll();
+    });
+  }
+
+  Future<void> _openRecordPayment(Document document) async {
+    final recorded = await context.push<bool>('/documents/${document.id}/payments/new', extra: document);
+    if (recorded == true) _reloadAll();
+  }
+
+  Future<void> _writeOff() async {
+    final reason = await _promptText('Write off this invoice?', 'Reason', 'Write off');
+    if (reason == null) return;
+    await _runAction(() async {
+      await ref.read(documentRepositoryProvider).writeOff(widget.documentId, reason);
+      _reload();
+    });
+  }
+
+  Future<void> _reactivate() async {
+    if (!await _confirm('Reactivate this invoice?', 'This clears the write-off.', 'Reactivate')) return;
+    await _runAction(() async {
+      await ref.read(documentRepositoryProvider).reactivate(widget.documentId);
+      _reload();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Document>(
@@ -162,6 +233,15 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
         final isConvertible = isFinalized &&
             (document.type == DocumentType.proforma || document.type == DocumentType.quote) &&
             document.convertedTo == null;
+        final isInvoice = document.type == DocumentType.invoice;
+        // Deliberately excludes writtenOff as well as paid — showing
+        // Write-off and Reactivate at once for the same invoice would be
+        // a contradictory pair of actions on screen at the same time.
+        final hasOutstandingBalance =
+            document.paymentStatus == PaymentStatus.unpaid || document.paymentStatus == PaymentStatus.partiallyPaid;
+        final canRecordPayment = isFinalized && isInvoice && hasOutstandingBalance;
+        final canWriteOff = isFinalized && isInvoice && hasOutstandingBalance;
+        final canReactivate = document.paymentStatus == PaymentStatus.writtenOff;
         final colors = Theme.of(context).extension<AppColors>()!;
         return Scaffold(
           appBar: AppBar(
@@ -255,6 +335,47 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                     onPressed: () => context.push('/documents/${document.referencedDocument!.id}'),
                     child: Text('References ${document.referencedDocument!.number ?? document.referencedDocument!.id}'),
                   ),
+                if (isInvoice) ...[
+                  const SizedBox(height: 24),
+                  Text('Payments', style: Theme.of(context).textTheme.titleMedium),
+                  FutureBuilder<List<Payment>>(
+                    future: _paymentsFuture,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: LoadingSkeleton(height: 40));
+                      }
+                      final payments = snapshot.data!;
+                      if (payments.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text('No payments recorded yet'),
+                        );
+                      }
+                      return Column(
+                        children: [
+                          for (final payment in payments)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: MoneyText(payment.amount),
+                              subtitle: Text(
+                                '${paymentMethodLabel(payment.method)} · ${payment.paidOn.split('T').first}'
+                                '${payment.voidedAt != null ? ' · Voided' : ''}',
+                              ),
+                              trailing: payment.voidedAt == null
+                                  ? TextButton(onPressed: () => _voidPayment(payment.id), child: const Text('Void'))
+                                  : null,
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                  if (canRecordPayment)
+                    AppButton(
+                      label: 'Record Payment',
+                      isLoading: _actionInProgress,
+                      onPressed: () => _openRecordPayment(document),
+                    ),
+                ],
                 if (_actionError != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -303,6 +424,14 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                       ),
                     ],
                   ),
+                ],
+                if (canWriteOff) ...[
+                  const SizedBox(height: 8),
+                  AppButton(label: 'Write off', isLoading: _actionInProgress, onPressed: _writeOff),
+                ],
+                if (canReactivate) ...[
+                  const SizedBox(height: 8),
+                  AppButton(label: 'Reactivate', isLoading: _actionInProgress, onPressed: _reactivate),
                 ],
               ],
             ),
