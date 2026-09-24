@@ -4,7 +4,7 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../auth/domain/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../providers/avatar_picker_provider.dart';
+import '../../../../core/media/image_picker_provider.dart';
 import '../providers/current_user_provider.dart';
 import '../providers/profile_repository_provider.dart';
 import '../widgets/user_avatar.dart';
@@ -83,7 +83,7 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
   });
 
   Future<void> _changeAvatar() async {
-    final picked = await ref.read(avatarPickerProvider)();
+    final picked = await ref.read(imagePickerProvider)();
     if (picked == null) return;
     await _runAction(() async {
       final url = await ref.read(profileRepositoryProvider).uploadAvatar(picked.bytes, picked.name);
