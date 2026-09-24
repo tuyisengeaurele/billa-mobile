@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Git commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>` (already configured locally) — never add co-author trailers, never mention AI/Claude/assistant in commits, code comments, or the app itself.
+- Git commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>` (already configured locally) — never add co-author trailers or any tooling attribution in commits, code comments, or the app itself.
 - Commit messages: lowercase conventional-commit prefix, imperative mood, no trailing period, one logical change per commit.
 - Comments in code explain *why*, never *what* — omit any comment a reader wouldn't need.
 - Application id: `rw.billa.mobile` (Android `applicationId` and iOS `PRODUCT_BUNDLE_IDENTIFIER`).

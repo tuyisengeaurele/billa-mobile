@@ -17,7 +17,7 @@
 - No hard delete anywhere — "delete" in the UI is always phrased as deactivate/reactivate (`PATCH isActive`), never destructive language.
 - Items have no `GET /:id` — never introduce a fetch-by-id call for items; edit screens receive the tapped `Item` via `state.extra`.
 - List response envelope: `{ results, total, page, pageSize }`. Customer detail/create/update envelope: `{ customer }`. Item create/update envelope: `{ item }`. Payment-stats is a **bare** response (`{ paidInvoiceCount, averageDaysToPay, onTimeRate }`, no wrapper).
-- Comments explain *why*, never *what*; no AI-narration comments; conventional-commit messages, no trailing period.
+- Comments explain *why*, never *what*; no narrating comments; conventional-commit messages, no trailing period.
 - Every task ends with `flutter analyze` clean and `flutter test` passing for files touched so far.
 
 ---

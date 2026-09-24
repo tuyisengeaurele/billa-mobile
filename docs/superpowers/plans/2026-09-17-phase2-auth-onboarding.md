@@ -18,7 +18,7 @@
 - Signup never collects a business name — always sends `businessName: "My Business"` as the placeholder.
 - Onboarding is exactly two steps (details, logo), each skippable, converging on one `POST /business/onboarding/complete` call.
 - Template/numbering/banking settings are out of scope for this phase.
-- Comments explain *why*, never *what*; no AI-narration comments; conventional-commit messages, no trailing period.
+- Comments explain *why*, never *what*; no narrating comments; conventional-commit messages, no trailing period.
 - Every task ends with `flutter analyze` clean and `flutter test` passing for files touched so far.
 
 ---

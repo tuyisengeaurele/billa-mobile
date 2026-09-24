@@ -23,7 +23,7 @@ create and edit.
 
 ## Global Constraints
 
-- Commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>`; never a `Co-authored-by` trailer; never mention Claude/AI anywhere.
+- Commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>`; never a `Co-authored-by` trailer; no tooling attribution anywhere.
 - Small, single-sentence, conventional-commit-style messages, one logical change per commit.
 - Comments explain *why*, never *what*.
 - No dead ends: every tap leads somewhere, every error has a retry, nothing silently fails.
