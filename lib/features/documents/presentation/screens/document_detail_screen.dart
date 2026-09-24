@@ -14,6 +14,8 @@ import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/payment.dart';
 import '../../../../core/errors/action_errors.dart';
+import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/text_prompt_dialog.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
 import '../widgets/document_status_pill.dart';
@@ -66,30 +68,8 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
         _paymentsFuture = _loadPayments();
       });
 
-  Future<String?> _promptText(String title, String label, String confirmLabel) {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(labelText: label),
-            autofocus: true,
-            onChanged: (_) => setDialogState(() {}),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            TextButton(
-              onPressed: controller.text.trim().isEmpty ? null : () => Navigator.pop(context, controller.text.trim()),
-              child: Text(confirmLabel),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Future<String?> _promptText(String title, String label, String confirmLabel) =>
+      showTextPromptDialog(context, title: title, label: label, confirmLabel: confirmLabel);
 
   Future<void> _runAction(Future<void> Function() action) async {
     _lastAction = action;
@@ -106,20 +86,8 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     }
   }
 
-  Future<bool> _confirm(String title, String? content, String confirmLabel) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: content == null ? null : Text(content),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(confirmLabel)),
-        ],
-      ),
-    );
-    return confirmed == true;
-  }
+  Future<bool> _confirm(String title, String? content, String confirmLabel) =>
+      showConfirmDialog(context, title: title, content: content, confirmLabel: confirmLabel);
 
   Future<void> _finalize() async {
     if (!await _confirm(
