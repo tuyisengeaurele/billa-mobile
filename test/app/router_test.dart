@@ -24,6 +24,10 @@ import 'package:billa_mobile/features/businesses/domain/businesses_repository.da
 import 'package:billa_mobile/features/businesses/presentation/providers/businesses_repository_provider.dart';
 import 'package:billa_mobile/features/team/domain/team_repository.dart';
 import 'package:billa_mobile/features/team/presentation/providers/team_repository_provider.dart';
+import 'package:billa_mobile/features/account/domain/profile_repository.dart';
+import 'package:billa_mobile/features/account/domain/security_repository.dart';
+import 'package:billa_mobile/features/account/presentation/providers/profile_repository_provider.dart';
+import 'package:billa_mobile/features/account/presentation/providers/security_repository_provider.dart';
 
 const _user = AuthUser(id: 'u1', email: 'a@b.com', totpEnabled: false, isAdmin: false);
 
@@ -34,6 +38,8 @@ class _MockReceivablesRepository extends Mock implements ReceivablesRepository {
 class _MockBusinessesRepository extends Mock implements BusinessesRepository {}
 
 class _MockTeamRepository extends Mock implements TeamRepository {}
+class _MockProfileRepository extends Mock implements ProfileRepository {}
+class _MockSecurityRepository extends Mock implements SecurityRepository {}
 
 ProviderContainer _homeContainer(
   List<BusinessSummary> summaries, {
@@ -248,6 +254,51 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No pending invites'), findsOneWidget);
+  });
+
+  testWidgets('the account icon opens settings with the signed-in email', (tester) async {
+    final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-account')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('a@b.com'), findsOneWidget);
+    expect(find.text('Sign out'), findsOneWidget);
+  });
+
+  testWidgets('settings rows open profile, security, notifications, and appearance', (tester) async {
+    final profileRepository = _MockProfileRepository();
+    when(() => profileRepository.notificationPreferences()).thenAnswer((_) async => {});
+    final securityRepository = _MockSecurityRepository();
+    final businessesRepository = _MockBusinessesRepository();
+    when(() => businessesRepository.list()).thenAnswer(
+      (_) async => [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
+    );
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      businessesRepositoryProvider.overrideWithValue(businessesRepository),
+      profileRepositoryProvider.overrideWithValue(profileRepository),
+      securityRepositoryProvider.overrideWithValue(securityRepository),
+    ]);
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    for (final (key, marker) in [
+      ('settings-profile', 'Change photo'),
+      ('settings-security', 'Signed-in devices'),
+      ('settings-notifications', 'Payment received'),
+      ('settings-appearance', 'System default'),
+    ]) {
+      router.go('/settings');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+
+      expect(find.text(marker), findsOneWidget);
+    }
   });
 }
 
