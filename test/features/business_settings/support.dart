@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
@@ -39,4 +40,14 @@ Widget businessSettingsApp({
     overrides: [authControllerProvider.overrideWith(FakeAuthController.new), ...overrides],
     child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
   );
+}
+
+/// A tall viewport so long forms lay out fully; ListView builds lazily, so
+/// off-screen fields and buttons would otherwise not exist to be tapped.
+Future<void> pumpSettings(WidgetTester tester, Widget app) async {
+  tester.view.physicalSize = const Size(800, 2400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(app);
+  await tester.pumpAndSettle();
 }
