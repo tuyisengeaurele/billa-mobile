@@ -138,4 +138,59 @@ void main() {
 
     expect(document.id, 'd1');
   });
+
+  test('finalize posts to /finalize and returns the finalized document', () async {
+    final options = RequestOptions(path: '/documents/d1/finalize');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/finalize')).thenAnswer(
+      (_) async => _response(200, {'document': _documentJson()}, options),
+    );
+
+    final document = await repository.finalize('d1');
+
+    expect(document.id, 'd1');
+  });
+
+  test('convert posts to /convert and returns the new invoice', () async {
+    final options = RequestOptions(path: '/documents/d1/convert');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/convert')).thenAnswer(
+      (_) async => _response(201, {'document': _documentJson()}, options),
+    );
+
+    final document = await repository.convert('d1');
+
+    expect(document.id, 'd1');
+  });
+
+  test('send posts to /send and returns the sentAt timestamp', () async {
+    final options = RequestOptions(path: '/documents/d1/send');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/send')).thenAnswer(
+      (_) async => _response(200, {'sentAt': '2026-01-02T00:00:00.000Z'}, options),
+    );
+
+    final sentAt = await repository.send('d1');
+
+    expect(sentAt, '2026-01-02T00:00:00.000Z');
+  });
+
+  test('delete sends a DELETE request', () async {
+    final options = RequestOptions(path: '/documents/d1');
+    when(() => dio.delete<void>('/documents/d1')).thenAnswer(
+      (_) async => Response(statusCode: 204, requestOptions: options),
+    );
+
+    await repository.delete('d1');
+
+    verify(() => dio.delete<void>('/documents/d1')).called(1);
+  });
+
+  test('fetchPdfBytes requests bytes and returns the raw response', () async {
+    final options = RequestOptions(path: '/documents/d1/pdf');
+    when(() => dio.get<List<int>>('/documents/d1/pdf', options: any(named: 'options'))).thenAnswer(
+      (_) async => Response(statusCode: 200, data: [1, 2, 3], requestOptions: options),
+    );
+
+    final bytes = await repository.fetchPdfBytes('d1');
+
+    expect(bytes, [1, 2, 3]);
+  });
 }
