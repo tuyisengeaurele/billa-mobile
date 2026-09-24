@@ -40,6 +40,10 @@ void main() {
   Widget buildApp() {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const DocumentListScreen()),
+      GoRoute(
+        path: '/documents/new',
+        builder: (context, state) => Scaffold(body: Text('new document screen: ${state.extra}')),
+      ),
       GoRoute(path: '/documents/:id', builder: (context, state) => const Scaffold(body: Text('document detail screen'))),
     ]);
     return ProviderScope(
@@ -86,5 +90,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('document detail screen'), findsOneWidget);
+  });
+
+  testWidgets('the new-document FAB opens a type picker that navigates to the editor', (tester) async {
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Invoice').last); // the type-picker sheet's row, not the list screen's filter chip
+    await tester.pumpAndSettle();
+
+    expect(find.text('new document screen: DocumentType.invoice'), findsOneWidget);
   });
 }

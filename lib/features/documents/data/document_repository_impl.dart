@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../core/pagination/paginated_result.dart';
 import '../domain/document.dart';
+import '../domain/document_draft_input.dart';
 import '../domain/document_enums.dart';
 import '../domain/document_repository.dart';
 
@@ -14,6 +15,7 @@ class DocumentRepositoryImpl implements DocumentRepository {
     List<DocumentType>? types,
     DocumentStatus? status,
     String? search,
+    String? customerId,
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -21,6 +23,7 @@ class DocumentRepositoryImpl implements DocumentRepository {
       if (types != null && types.isNotEmpty) 'type': types.map(documentTypeToJson).join(','),
       if (status != null) 'status': documentStatusToJson(status),
       if (search != null && search.isNotEmpty) 'search': search,
+      'customerId': ?customerId,
       'page': page,
       'pageSize': pageSize,
     });
@@ -39,6 +42,18 @@ class DocumentRepositoryImpl implements DocumentRepository {
   @override
   Future<Document> get(String id) async {
     final response = await _dio.get<Map<String, dynamic>>('/documents/$id');
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Document> create(DocumentDraftInput input) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents', data: input.toJson());
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Document> update(String id, DocumentDraftInput input) async {
+    final response = await _dio.patch<Map<String, dynamic>>('/documents/$id', data: input.toJson());
     return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
   }
 }

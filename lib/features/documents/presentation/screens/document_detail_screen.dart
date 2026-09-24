@@ -38,27 +38,42 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Document')),
-      body: FutureBuilder<Document>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return ErrorState(
+    return FutureBuilder<Document>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Document')),
+            body: ErrorState(
               message: "Couldn't load this document",
               onRetry: () => setState(() {
                 _future = _load();
               }),
-            );
-          }
-          if (!snapshot.hasData) {
-            return const Padding(
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Document')),
+            body: const Padding(
               padding: EdgeInsets.all(16),
               child: Column(children: [LoadingSkeleton(height: 24), SizedBox(height: 12), LoadingSkeleton(height: 200)]),
-            );
-          }
-          final document = snapshot.data!;
-          return SingleChildScrollView(
+            ),
+          );
+        }
+        final document = snapshot.data!;
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Document'),
+            actions: [
+              if (document.status == DocumentStatus.draft)
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => context.push('/documents/${document.id}/edit'),
+                ),
+            ],
+          ),
+          body: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -134,9 +149,9 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                   ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

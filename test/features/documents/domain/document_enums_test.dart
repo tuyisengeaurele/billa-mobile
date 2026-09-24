@@ -36,4 +36,11 @@ void main() {
     expect(discountTypeFromJson('PERCENT'), DiscountType.percent);
     expect(discountTypeFromJson('FLAT'), DiscountType.flat);
   });
+
+  test('DocumentLanguage round-trips both values', () {
+    expect(documentLanguageFromJson('EN'), DocumentLanguage.en);
+    expect(documentLanguageFromJson('FR'), DocumentLanguage.fr);
+    expect(documentLanguageToJson(DocumentLanguage.en), 'EN');
+    expect(documentLanguageToJson(DocumentLanguage.fr), 'FR');
+  });
 }
