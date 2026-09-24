@@ -37,6 +37,19 @@ void main() {
       describeActionError(_error('subscription_required')),
       'Subscription required to record payments',
     );
+    expect(describeActionError(_error('read_only_role')), 'Your role on this business is read-only');
+    expect(describeActionError(_error('business_limit_reached')), "You've reached the limit of 3 businesses");
+    expect(describeActionError(_error('already_member')), 'That person is already on this team');
+    expect(describeActionError(_error('no_access')), "You don't have access to that business");
+    expect(describeActionError(_error('owner_cannot_leave')), "Owners can't leave their own business");
+    expect(describeActionError(_error('not_a_member')), "You're not a member of this business");
+    expect(
+      describeActionError(_error('email_mismatch')),
+      'This invite was sent to a different email address',
+    );
+    expect(describeActionError(_error('expired')), 'This invite has expired');
+    expect(describeActionError(_error('already_accepted')), 'This invite was already accepted');
+    expect(describeActionError(_error('not_found')), "We couldn't find that — it may have been removed");
   });
 
   test('falls back to a generic message for an unknown code', () {
