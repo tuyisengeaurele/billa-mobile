@@ -7,6 +7,7 @@ import 'package:billa_mobile/app/theme/app_theme.dart';
 import 'package:billa_mobile/features/documents/domain/document.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
 import 'package:billa_mobile/features/documents/domain/document_repository.dart';
+import 'package:billa_mobile/features/documents/domain/payment.dart';
 import 'package:billa_mobile/features/documents/presentation/providers/document_repository_provider.dart';
 import 'package:billa_mobile/features/documents/presentation/screens/document_detail_screen.dart';
 
@@ -48,6 +49,7 @@ void main() {
   setUp(() {
     repository = _MockDocumentRepository();
     when(() => repository.get('d1')).thenAnswer((_) async => _document);
+    when(() => repository.listPayments('d1')).thenAnswer((_) async => []);
   });
 
   Widget buildApp() {
@@ -293,5 +295,157 @@ void main() {
 
     expect(find.text('list screen'), findsOneWidget);
     verify(() => repository.delete('d1')).called(1);
+  });
+
+  testWidgets('the Payments section lists recorded payments with a Void action', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+    when(() => repository.listPayments('d1')).thenAnswer((_) async => [
+          const Payment(
+            id: 'pay1',
+            amount: 5000,
+            method: PaymentMethod.cash,
+            paidOn: '2026-01-05T00:00:00.000Z',
+            createdAt: '2026-01-05T00:00:00.000Z',
+          ),
+        ]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('RWF 5,000'), findsOneWidget);
+    expect(find.text('Void'), findsOneWidget);
+  });
+
+  testWidgets('voiding a payment confirms with a reason and reloads', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+    when(() => repository.listPayments('d1')).thenAnswer((_) async => [
+          const Payment(
+            id: 'pay1',
+            amount: 5000,
+            method: PaymentMethod.cash,
+            paidOn: '2026-01-05T00:00:00.000Z',
+            createdAt: '2026-01-05T00:00:00.000Z',
+          ),
+        ]);
+    when(() => repository.voidPayment('d1', 'pay1', 'Mistake')).thenAnswer((_) async => _document);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Void'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Mistake');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Void').last);
+    await tester.pumpAndSettle();
+
+    verify(() => repository.voidPayment('d1', 'pay1', 'Mistake')).called(1);
+  });
+
+  testWidgets('Record Payment appears for an unpaid finalized invoice and opens the record screen', (tester) async {
+    const unpaidInvoice = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0001',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 9000,
+      taxTotal: 1620,
+      total: 10620,
+      amountPaid: 0,
+      paymentStatus: PaymentStatus.unpaid,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => unpaidInvoice);
+    when(() => repository.listPayments('d1')).thenAnswer((_) async => []);
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const DocumentDetailScreen(documentId: 'd1')),
+      GoRoute(
+        path: '/documents/:id/payments/new',
+        builder: (context, state) => const Scaffold(body: Text('record payment screen')),
+      ),
+    ]);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [documentRepositoryProvider.overrideWithValue(repository)],
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Record Payment'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('record payment screen'), findsOneWidget);
+  });
+
+  testWidgets('Write off appears for an unpaid finalized invoice and succeeds with a reason', (tester) async {
+    const unpaidInvoice = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0001',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 9000,
+      taxTotal: 1620,
+      total: 10620,
+      amountPaid: 0,
+      paymentStatus: PaymentStatus.unpaid,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => unpaidInvoice);
+    when(() => repository.writeOff('d1', 'Bad debt')).thenAnswer(
+      (_) async => unpaidInvoice.copyWith(paymentStatus: PaymentStatus.writtenOff),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Write off'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Bad debt');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Write off').last);
+    await tester.pumpAndSettle();
+
+    verify(() => repository.writeOff('d1', 'Bad debt')).called(1);
+  });
+
+  testWidgets('Reactivate appears for a written-off invoice and succeeds', (tester) async {
+    const writtenOffInvoice = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0001',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 9000,
+      taxTotal: 1620,
+      total: 10620,
+      amountPaid: 0,
+      paymentStatus: PaymentStatus.writtenOff,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => writtenOffInvoice);
+    when(() => repository.reactivate('d1')).thenAnswer(
+      (_) async => writtenOffInvoice.copyWith(paymentStatus: PaymentStatus.unpaid),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Reactivate'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reactivate').last);
+    await tester.pumpAndSettle();
+
+    verify(() => repository.reactivate('d1')).called(1);
   });
 }
