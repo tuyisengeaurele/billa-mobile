@@ -5,6 +5,7 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../businesses/presentation/providers/my_businesses_provider.dart';
 import '../providers/current_user_provider.dart';
 import '../widgets/user_avatar.dart';
 
@@ -43,6 +44,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final isOwner = ref.watch(isOwnerOfActiveBusinessProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -56,6 +58,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: user.name?.isNotEmpty == true ? Text(user.email) : null,
             ),
           const Divider(),
+          if (isOwner)
+            ListTile(
+              key: const Key('settings-business'),
+              leading: const Icon(Icons.storefront_outlined),
+              title: const Text('Business settings'),
+              onTap: () => context.push('/settings/business'),
+            ),
           ListTile(
             key: const Key('settings-profile'),
             leading: const Icon(Icons.person_outline),

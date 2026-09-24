@@ -9,6 +9,12 @@ import '../features/account/presentation/screens/sessions_screen.dart';
 import '../features/account/presentation/screens/settings_screen.dart';
 import '../features/account/presentation/screens/two_factor_setup_screen.dart';
 import '../features/auth/domain/auth_status.dart';
+import '../features/business_settings/presentation/screens/business_details_screen.dart';
+import '../features/business_settings/presentation/screens/business_settings_screen.dart';
+import '../features/business_settings/presentation/screens/document_settings_screen.dart';
+import '../features/business_settings/presentation/screens/logo_screen.dart';
+import '../features/business_settings/presentation/screens/numbering_screen.dart';
+import '../features/business_settings/presentation/screens/payments_screen.dart';
 import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
@@ -105,6 +111,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/security/sessions', builder: (context, state) => const SessionsScreen()),
       GoRoute(path: '/settings/notifications', builder: (context, state) => const NotificationPreferencesScreen()),
       GoRoute(path: '/settings/appearance', builder: (context, state) => const AppearanceScreen()),
+      GoRoute(path: '/settings/business', builder: (context, state) => const BusinessSettingsScreen()),
+      GoRoute(path: '/settings/business/details', builder: (context, state) => const BusinessDetailsScreen()),
+      GoRoute(path: '/settings/business/payments', builder: (context, state) => const PaymentsScreen()),
+      GoRoute(path: '/settings/business/documents', builder: (context, state) => const DocumentSettingsScreen()),
+      GoRoute(path: '/settings/business/numbering', builder: (context, state) => const NumberingScreen()),
+      GoRoute(path: '/settings/business/logo', builder: (context, state) => const LogoScreen()),
     ],
   );
 });
