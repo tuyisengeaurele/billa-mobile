@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/features/account/domain/profile_repository.dart';
 import 'package:billa_mobile/features/account/domain/user_profile.dart';
-import 'package:billa_mobile/features/account/presentation/providers/avatar_picker_provider.dart';
+import 'package:billa_mobile/core/media/image_picker_provider.dart';
 import 'package:billa_mobile/features/account/presentation/providers/current_user_provider.dart';
 import 'package:billa_mobile/features/account/presentation/providers/profile_repository_provider.dart';
 import 'package:billa_mobile/features/account/presentation/screens/profile_screen.dart';
@@ -35,7 +35,7 @@ void main() {
       overrides: [
         authControllerProvider.overrideWith(() => auth),
         profileRepositoryProvider.overrideWithValue(repository),
-        avatarPickerProvider.overrideWithValue(() async => picked),
+        imagePickerProvider.overrideWithValue(() async => picked),
       ],
     );
   }

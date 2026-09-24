@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:billa_mobile/features/businesses/presentation/providers/my_businesses_provider.dart';
 import 'package:billa_mobile/features/account/presentation/screens/settings_screen.dart';
 import 'package:billa_mobile/features/auth/presentation/providers/auth_controller.dart';
 import '../../support.dart';
@@ -11,10 +12,13 @@ void main() {
     auth = FakeAuthController();
   });
 
-  Widget buildApp() => accountApp(
+  Widget buildApp({bool owner = false}) => accountApp(
         screen: const SettingsScreen(),
         path: '/settings',
-        overrides: [authControllerProvider.overrideWith(() => auth)],
+        overrides: [
+          authControllerProvider.overrideWith(() => auth),
+          isOwnerOfActiveBusinessProvider.overrideWith((ref) => owner),
+        ],
       );
 
   testWidgets('shows the signed-in name and email', (tester) async {
@@ -64,5 +68,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(auth.loggedOut, isFalse);
+  });
+
+  testWidgets('business settings is offered to an owner and opens its hub', (tester) async {
+    await tester.pumpWidget(buildApp(owner: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-business')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('stub /settings/business'), findsOneWidget);
+  });
+
+  testWidgets('business settings is hidden from a non-owner', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('settings-business')), findsNothing);
   });
 }

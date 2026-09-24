@@ -28,6 +28,10 @@ import 'package:billa_mobile/features/account/domain/profile_repository.dart';
 import 'package:billa_mobile/features/account/domain/security_repository.dart';
 import 'package:billa_mobile/features/account/presentation/providers/profile_repository_provider.dart';
 import 'package:billa_mobile/features/account/presentation/providers/security_repository_provider.dart';
+import 'package:billa_mobile/features/business_settings/domain/business_settings.dart';
+import 'package:billa_mobile/features/business_settings/domain/business_settings_repository.dart';
+import 'package:billa_mobile/features/business_settings/domain/subscription_status.dart';
+import 'package:billa_mobile/features/business_settings/presentation/providers/business_settings_repository_provider.dart';
 
 const _user = AuthUser(id: 'u1', email: 'a@b.com', totpEnabled: false, isAdmin: false);
 
@@ -40,10 +44,12 @@ class _MockBusinessesRepository extends Mock implements BusinessesRepository {}
 class _MockTeamRepository extends Mock implements TeamRepository {}
 class _MockProfileRepository extends Mock implements ProfileRepository {}
 class _MockSecurityRepository extends Mock implements SecurityRepository {}
+class _MockBusinessSettingsRepository extends Mock implements BusinessSettingsRepository {}
 
 ProviderContainer _homeContainer(
   List<BusinessSummary> summaries, {
   TeamRepository? teamRepository,
+  List<Override> extraOverrides = const [],
 }) {
   final businessesRepository = _MockBusinessesRepository();
   when(() => businessesRepository.list()).thenAnswer((_) async => summaries);
@@ -52,6 +58,7 @@ ProviderContainer _homeContainer(
     authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
     businessesRepositoryProvider.overrideWithValue(businessesRepository),
     if (teamRepository != null) teamRepositoryProvider.overrideWithValue(teamRepository),
+    ...extraOverrides,
   ]);
 }
 
@@ -298,6 +305,41 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(marker), findsOneWidget);
+    }
+  });
+
+  testWidgets('an owner reaches every business settings section from settings', (tester) async {
+    final settingsRepository = _MockBusinessSettingsRepository();
+    when(() => settingsRepository.get()).thenAnswer((_) async => const BusinessSettings(id: 'b1', name: 'Acme'));
+    when(() => settingsRepository.subscription()).thenAnswer(
+      (_) async => const SubscriptionStatus(trialEndsAt: '2026-03-01T00:00:00.000Z'),
+    );
+    when(() => settingsRepository.sequences()).thenAnswer((_) async => []);
+    final container = _homeContainer(
+      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
+      extraOverrides: [businessSettingsRepositoryProvider.overrideWithValue(settingsRepository)],
+    );
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    router.go('/settings');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-business')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Free trial until 2026-03-01'), findsOneWidget);
+    for (final (key, marker) in [
+      ('bs-details', 'Business name'),
+      ('bs-payments', 'Bank name (optional)'),
+      ('bs-documents', 'Default template'),
+      ('bs-numbering', 'The next document of each type is numbered from these settings.'),
+      ('bs-logo', 'Current logo'),
+    ]) {
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+      expect(find.text(marker), findsOneWidget, reason: key);
+      router.pop();
+      await tester.pumpAndSettle();
     }
   });
 }
