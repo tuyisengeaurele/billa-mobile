@@ -17,7 +17,7 @@
 - `referencingDocuments` does not exist on the wire — never add it to the model.
 - No Edit/Finalize action anywhere in this phase — those don't exist until 4b/4c, and a button with nowhere to go is exactly what the project's non-negotiables forbid.
 - Dates (`issueDate`, `dueDate`, `sentAt`, `createdAt`, `updatedAt`) are full ISO datetime strings — keep as raw `String` in the model, same as every other phase so far.
-- Comments explain *why*, never *what*; no AI-narration comments; conventional-commit messages, no trailing period.
+- Comments explain *why*, never *what*; no narrating comments; conventional-commit messages, no trailing period.
 - Every task ends with `flutter analyze` clean and `flutter test` passing for files touched so far.
 
 ---
