@@ -22,7 +22,7 @@ to user-facing messages.
 
 ## Global Constraints
 
-- Commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>`; never a `Co-authored-by` trailer; never mention Claude/AI anywhere.
+- Commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>`; never a `Co-authored-by` trailer; no tooling attribution anywhere.
 - Small, single-sentence, conventional-commit-style messages, one logical change per commit.
 - Comments explain *why*, never *what*.
 - No dead ends: every action has a specific, actionable error message and a retry path — never a silent failure or a generic "something went wrong" when a real cause is known.
