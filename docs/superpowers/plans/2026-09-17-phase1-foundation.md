@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Git commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>` (already configured locally) — never add co-author trailers, never mention AI/Claude/assistant in commits, code comments, or the app itself.
+- Git commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>` (already configured locally) — never add co-author trailers or any tooling attribution in commits, code comments, or the app itself.
 - Commit messages: lowercase conventional-commit prefix, imperative mood, no trailing period, one logical change per commit.
 - Comments in code explain *why*, never *what* — omit any comment a reader wouldn't need.
 - Application id: `rw.billa.mobile` (Android `applicationId` and iOS `PRODUCT_BUNDLE_IDENTIFIER`).
@@ -132,8 +132,8 @@ void main() {
   });
 
   test('lerp at t=0 returns the start, at t=1 returns the end', () {
-    final start = AppColors.lerp(AppColors.light, AppColors.dark, 0);
-    final end = AppColors.lerp(AppColors.light, AppColors.dark, 1);
+    final start = AppColors.light.lerp(AppColors.dark, 0);
+    final end = AppColors.light.lerp(AppColors.dark, 1);
     expect(start.page, AppColors.light.page);
     expect(end.page, AppColors.dark.page);
   });
@@ -391,6 +391,8 @@ import 'package:billa_mobile/app/theme/app_theme.dart';
 import 'package:billa_mobile/app/theme/app_typography.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
@@ -408,11 +410,13 @@ void main() {
   });
 
   test('display styles use Fraunces and body styles use Plus Jakarta Sans', () {
+    // GoogleFonts appends a weight suffix to the family name when it loads a
+    // specific weight variant (e.g. "Fraunces_600"), so match the prefix.
     final textTheme = AppTypography.textTheme(Brightness.light);
-    expect(textTheme.displayLarge!.fontFamily, 'Fraunces');
-    expect(textTheme.headlineSmall!.fontFamily, 'Fraunces');
-    expect(textTheme.bodyLarge!.fontFamily, 'Plus Jakarta Sans');
-    expect(textTheme.labelLarge!.fontFamily, 'Plus Jakarta Sans');
+    expect(textTheme.displayLarge!.fontFamily, startsWith('Fraunces'));
+    expect(textTheme.headlineSmall!.fontFamily, startsWith('Fraunces'));
+    expect(textTheme.bodyLarge!.fontFamily, startsWith('PlusJakartaSans'));
+    expect(textTheme.labelLarge!.fontFamily, startsWith('PlusJakartaSans'));
   });
 }
 ```
@@ -1534,8 +1538,8 @@ Expected: FAIL — `app.dart` doesn't exist yet.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// System-following by default; Phase 7's settings screen will expose the
-// manual override this provider already has somewhere to plug into.
+// System-following by default; nothing sets a manual override yet, but this
+// provider is the one place a settings screen would plug one in.
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 ```
 
