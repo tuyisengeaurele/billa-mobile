@@ -28,7 +28,7 @@ outside onboarding), `path_provider` (already a dependency).
 
 ## Global Constraints
 
-- Commits authored as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>`; never a `Co-authored-by` trailer; never mention Claude/AI anywhere.
+- Commits authored solely as `Ange Aurele TUYISENGE <tuyisengeauris@gmail.com>`; no `Co-authored-by` trailer and no tooling attribution anywhere.
 - Small, single-sentence, conventional-commit-style messages, one logical change per commit.
 - Comments explain *why*, never *what*.
 - No dead ends: every action has a specific, actionable error message and a retry path — never a silent failure.
