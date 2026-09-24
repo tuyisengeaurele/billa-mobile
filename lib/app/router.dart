@@ -4,6 +4,13 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
+import '../features/customers/domain/customer.dart';
+import '../features/customers/presentation/screens/customer_detail_screen.dart';
+import '../features/customers/presentation/screens/customer_form_screen.dart';
+import '../features/customers/presentation/screens/customer_list_screen.dart';
+import '../features/items/domain/item.dart';
+import '../features/items/presentation/screens/item_form_screen.dart';
+import '../features/items/presentation/screens/item_list_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'theme/bootstrap_screen.dart';
 
@@ -35,6 +42,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/customers', builder: (context, state) => const CustomerListScreen()),
+      GoRoute(path: '/customers/new', builder: (context, state) => const CustomerFormScreen()),
+      GoRoute(
+        path: '/customers/:id/edit',
+        builder: (context, state) => CustomerFormScreen(existing: state.extra as Customer?),
+      ),
+      GoRoute(
+        path: '/customers/:id',
+        builder: (context, state) => CustomerDetailScreen(customerId: state.pathParameters['id']!),
+      ),
+      GoRoute(path: '/items', builder: (context, state) => const ItemListScreen()),
+      GoRoute(path: '/items/new', builder: (context, state) => const ItemFormScreen()),
+      GoRoute(
+        path: '/items/:id/edit',
+        builder: (context, state) => ItemFormScreen(existing: state.extra as Item?),
+      ),
     ],
   );
 });
@@ -52,7 +75,24 @@ class _PlaceholderHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text('Billa', style: Theme.of(context).textTheme.displayMedium),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Billa', style: Theme.of(context).textTheme.displayMedium),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              key: const Key('home-nav-customers'),
+              onPressed: () => context.push('/customers'),
+              child: const Text('Customers'),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              key: const Key('home-nav-items'),
+              onPressed: () => context.push('/items'),
+              child: const Text('Items'),
+            ),
+          ],
+        ),
       ),
     );
   }
