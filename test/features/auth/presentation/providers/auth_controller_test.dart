@@ -49,4 +49,24 @@ void main() {
     expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
     verify(() => repository.logout()).called(1);
   });
+
+  test('setBusiness swaps the business and keeps the user', () async {
+    when(() => repository.me()).thenAnswer((_) async => const AuthStatus.authenticated(_user, _business));
+    await container.read(authControllerProvider.future);
+
+    container.read(authControllerProvider.notifier).setBusiness(const Business(id: 'b2', name: 'Other'));
+
+    expect(
+      container.read(authControllerProvider).value,
+      const AuthStatus.authenticated(_user, Business(id: 'b2', name: 'Other')),
+    );
+  });
+
+  test('setBusiness does nothing when not authenticated', () async {
+    await container.read(authControllerProvider.future);
+
+    container.read(authControllerProvider.notifier).setBusiness(const Business(id: 'b2', name: 'Other'));
+
+    expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
+  });
 }
