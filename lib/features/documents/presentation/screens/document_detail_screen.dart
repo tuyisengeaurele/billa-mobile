@@ -13,7 +13,7 @@ import '../../../../core/widgets/money_text.dart';
 import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/payment.dart';
-import '../document_action_errors.dart';
+import '../../../../core/errors/action_errors.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
 import '../widgets/document_status_pill.dart';
@@ -100,7 +100,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     try {
       await action();
     } catch (e) {
-      setState(() => _actionError = describeDocumentActionError(e));
+      setState(() => _actionError = describeActionError(e));
     } finally {
       if (mounted) setState(() => _actionInProgress = false);
     }

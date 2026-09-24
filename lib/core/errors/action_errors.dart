@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-String describeDocumentActionError(Object error) {
+String describeActionError(Object error) {
   final code = error is DioException ? (error.response?.data?['error'] as String?) : null;
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',
