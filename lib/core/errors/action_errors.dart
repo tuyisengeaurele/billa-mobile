@@ -35,6 +35,8 @@ String describeActionError(Object error) {
     'upload_failed' => 'The upload failed — try again',
     'invalid_file_type' => 'Choose a PNG, JPG, or WebP image',
     'no_file' => 'Choose an image first',
+    'not_owner' => 'Only the business owner can change this',
+    'forbidden' => "You don't have permission to use that file",
     _ => 'Something went wrong — try again',
   };
 }
