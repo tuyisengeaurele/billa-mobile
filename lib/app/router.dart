@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/account/presentation/screens/appearance_screen.dart';
+import '../features/account/presentation/screens/notification_preferences_screen.dart';
+import '../features/account/presentation/screens/profile_screen.dart';
+import '../features/account/presentation/screens/security_screen.dart';
+import '../features/account/presentation/screens/sessions_screen.dart';
+import '../features/account/presentation/screens/settings_screen.dart';
+import '../features/account/presentation/screens/two_factor_setup_screen.dart';
 import '../features/auth/domain/auth_status.dart';
 import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -91,6 +98,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/businesses', builder: (context, state) => const BusinessesScreen()),
       GoRoute(path: '/businesses/join', builder: (context, state) => const JoinBusinessScreen()),
       GoRoute(path: '/team', builder: (context, state) => const TeamScreen()),
+      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: '/settings/profile', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/settings/security', builder: (context, state) => const SecurityScreen()),
+      GoRoute(path: '/settings/security/two-factor', builder: (context, state) => const TwoFactorSetupScreen()),
+      GoRoute(path: '/settings/security/sessions', builder: (context, state) => const SessionsScreen()),
+      GoRoute(path: '/settings/notifications', builder: (context, state) => const NotificationPreferencesScreen()),
+      GoRoute(path: '/settings/appearance', builder: (context, state) => const AppearanceScreen()),
     ],
   );
 });
@@ -110,6 +124,16 @@ class _PlaceholderHomeScreen extends ConsumerWidget {
     final businessName = auth is Authenticated ? auth.business.name : null;
     final isOwner = ref.watch(isOwnerOfActiveBusinessProvider);
     return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            key: const Key('home-account'),
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Account',
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
