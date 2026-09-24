@@ -29,6 +29,12 @@ String describeActionError(Object error) {
     'expired' => 'This invite has expired',
     'already_accepted' => 'This invite was already accepted',
     'not_found' => "We couldn't find that — it may have been removed",
+    'invalid_code' => "That code isn't right — try again",
+    'not_enabled' => "Two-factor sign-in isn't turned on",
+    'has_admin_history' => "This account can't be deleted because it has administrator history",
+    'upload_failed' => 'The upload failed — try again',
+    'invalid_file_type' => 'Choose a PNG, JPG, or WebP image',
+    'no_file' => 'Choose an image first',
     _ => 'Something went wrong — try again',
   };
 }
