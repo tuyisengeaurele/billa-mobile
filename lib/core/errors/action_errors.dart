@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-String describeDocumentActionError(Object error) {
+String describeActionError(Object error) {
   final code = error is DioException ? (error.response?.data?['error'] as String?) : null;
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',
@@ -19,6 +19,16 @@ String describeDocumentActionError(Object error) {
     'already_paid' => 'This invoice is already fully paid',
     'not_written_off' => "This invoice hasn't been written off",
     'subscription_required' => 'Subscription required to record payments',
+    'read_only_role' => 'Your role on this business is read-only',
+    'business_limit_reached' => "You've reached the limit of 3 businesses",
+    'already_member' => 'That person is already on this team',
+    'no_access' => "You don't have access to that business",
+    'owner_cannot_leave' => "Owners can't leave their own business",
+    'not_a_member' => "You're not a member of this business",
+    'email_mismatch' => 'This invite was sent to a different email address',
+    'expired' => 'This invite has expired',
+    'already_accepted' => 'This invite was already accepted',
+    'not_found' => "We couldn't find that — it may have been removed",
     _ => 'Something went wrong — try again',
   };
 }

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../domain/auth_repository.dart';
 import '../../domain/auth_status.dart';
+import '../../../onboarding/domain/business.dart';
 import '../../../../core/network/api_client_provider.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -22,6 +23,15 @@ class AuthController extends AsyncNotifier<AuthStatus> {
   Future<void> submitTwoFactorChallenge({required String challengeId, required String code}) async {
     final repository = ref.read(authRepositoryProvider);
     state = AsyncData(await repository.submitTwoFactorChallenge(challengeId: challengeId, code: code));
+  }
+
+  // Switch, create, join, and leave each re-issue the session server-side, so
+  // the only client state to update is which business the session points at.
+  void setBusiness(Business business) {
+    final current = state.valueOrNull;
+    if (current is Authenticated) {
+      state = AsyncData(AuthStatus.authenticated(current.user, business));
+    }
   }
 
   Future<void> logout() async {

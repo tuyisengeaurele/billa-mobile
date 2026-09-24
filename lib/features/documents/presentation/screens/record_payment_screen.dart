@@ -7,7 +7,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/payment_input.dart';
-import '../document_action_errors.dart';
+import '../../../../core/errors/action_errors.dart';
 import '../providers/document_repository_provider.dart';
 
 String paymentMethodLabel(PaymentMethod method) => switch (method) {
@@ -74,7 +74,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
       final url = await ref.read(documentRepositoryProvider).uploadPaymentReceipt(bytes, picked.name);
       if (mounted) setState(() => _receiptImageUrl = url);
     } catch (e) {
-      if (mounted) setState(() => _errorMessage = describeDocumentActionError(e));
+      if (mounted) setState(() => _errorMessage = describeActionError(e));
     } finally {
       if (mounted) setState(() => _uploadingReceipt = false);
     }
@@ -106,7 +106,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
           );
       if (mounted) context.pop(true);
     } catch (e) {
-      setState(() => _errorMessage = describeDocumentActionError(e));
+      setState(() => _errorMessage = describeActionError(e));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
