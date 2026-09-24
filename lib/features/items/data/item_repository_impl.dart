@@ -49,8 +49,8 @@ class ItemRepositoryImpl implements ItemRepository {
       'unit': unit,
       'taxRate': taxRate,
     };
-    // Deliberately omitted rather than sent as null — see the plan's global
-    // constraints for why clearing an already-set category isn't supported yet.
+    // Omitted rather than sent as null: null here means "not provided", so it
+    // can't express clearing an already-set category, which mobile doesn't support yet.
     if (category != null) data['category'] = category;
 
     final response = await _dio.post<Map<String, dynamic>>('/items', data: data);
