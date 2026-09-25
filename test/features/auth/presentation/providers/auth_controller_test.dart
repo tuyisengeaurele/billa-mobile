@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -98,5 +99,71 @@ void main() {
 
     expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
     verifyNever(() => repository.logout());
+  });
+
+  group('refreshIfStale', () {
+    const signedIn = AuthStatus.authenticated(_user, _business);
+    late DateTime now;
+
+    setUp(() {
+      now = DateTime.utc(2026, 1, 1, 12);
+      when(() => repository.me()).thenAnswer((_) async => signedIn);
+      container = ProviderContainer(overrides: [
+        authRepositoryProvider.overrideWithValue(repository),
+        authClockProvider.overrideWithValue(() => now),
+      ]);
+      addTearDown(container.dispose);
+    });
+
+    test('refreshes once the session has been idle for more than ten minutes', () async {
+      when(() => repository.refreshSession()).thenAnswer((_) async => true);
+      await container.read(authControllerProvider.future);
+
+      now = now.add(const Duration(minutes: 11));
+      await container.read(authControllerProvider.notifier).refreshIfStale();
+
+      verify(() => repository.refreshSession()).called(1);
+    });
+
+    test('does nothing when the session was refreshed recently', () async {
+      await container.read(authControllerProvider.future);
+
+      now = now.add(const Duration(minutes: 5));
+      await container.read(authControllerProvider.notifier).refreshIfStale();
+
+      verifyNever(() => repository.refreshSession());
+    });
+
+    test('a rejected refresh signs the user out', () async {
+      when(() => repository.refreshSession()).thenAnswer((_) async => false);
+      await container.read(authControllerProvider.future);
+
+      now = now.add(const Duration(minutes: 30));
+      await container.read(authControllerProvider.notifier).refreshIfStale();
+
+      expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
+    });
+
+    test('a network failure leaves the user signed in', () async {
+      when(() => repository.refreshSession()).thenAnswer(
+        (_) async => throw DioException(requestOptions: RequestOptions(path: '/auth/refresh'), type: DioExceptionType.connectionError),
+      );
+      await container.read(authControllerProvider.future);
+
+      now = now.add(const Duration(minutes: 30));
+      await container.read(authControllerProvider.notifier).refreshIfStale();
+
+      expect(container.read(authControllerProvider).value, signedIn);
+    });
+
+    test('does nothing while signed out', () async {
+      when(() => repository.me()).thenAnswer((_) async => const AuthStatus.unauthenticated());
+      await container.read(authControllerProvider.future);
+
+      now = now.add(const Duration(hours: 2));
+      await container.read(authControllerProvider.notifier).refreshIfStale();
+
+      verifyNever(() => repository.refreshSession());
+    });
   });
 }

@@ -10,20 +10,52 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(ref.watch(apiClientProvider).dio);
 });
 
+/// Injectable so tests can move time; the app uses the real clock.
+final authClockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
+
 class AuthController extends AsyncNotifier<AuthStatus> {
+  static const _staleAfter = Duration(minutes: 10);
+
+  DateTime? _lastRefreshAt;
+
   @override
-  Future<AuthStatus> build() {
-    return ref.read(authRepositoryProvider).me();
+  Future<AuthStatus> build() async {
+    final status = await ref.read(authRepositoryProvider).me();
+    _lastRefreshAt = ref.read(authClockProvider)();
+    return status;
+  }
+
+  /// Keeps an idle session alive: when the app comes back after a while, the
+  /// access token has usually lapsed, and refreshing here means the user never
+  /// meets a 401 in the middle of doing something. Only a refresh token that
+  /// is actually rejected signs them out; being offline changes nothing.
+  Future<void> refreshIfStale() async {
+    if (state.valueOrNull is! Authenticated) return;
+    final now = ref.read(authClockProvider)();
+    final last = _lastRefreshAt;
+    if (last != null && now.difference(last) < _staleAfter) return;
+    try {
+      final refreshed = await ref.read(authRepositoryProvider).refreshSession();
+      if (refreshed) {
+        _lastRefreshAt = now;
+      } else {
+        state = const AsyncData(AuthStatus.unauthenticated());
+      }
+    } catch (_) {
+      // Offline or the server is down: the next request will retry.
+    }
   }
 
   Future<void> exchangeSession({required String idToken, String? businessName}) async {
     final repository = ref.read(authRepositoryProvider);
     state = AsyncData(await repository.exchangeSession(idToken: idToken, businessName: businessName));
+    _lastRefreshAt = ref.read(authClockProvider)();
   }
 
   Future<void> submitTwoFactorChallenge({required String challengeId, required String code}) async {
     final repository = ref.read(authRepositoryProvider);
     state = AsyncData(await repository.submitTwoFactorChallenge(challengeId: challengeId, code: code));
+    _lastRefreshAt = ref.read(authClockProvider)();
   }
 
   // Switch, create, join, and leave each re-issue the session server-side, so
