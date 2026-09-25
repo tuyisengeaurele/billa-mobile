@@ -1,3 +1,4 @@
+import '../../../../core/widgets/app_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
@@ -75,6 +76,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
       title: 'Remove ${member.email}?',
       content: 'They lose access to this business immediately.',
       confirmLabel: 'Remove',
+      destructive: true,
     );
     if (!confirmed) return;
     await _runAction(() async {
@@ -84,46 +86,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
   }
 
   Future<(String, TeamRole)?> _promptInvite() {
-    final emailController = TextEditingController();
-    var role = TeamRole.member;
-    return showDialog<(String, TeamRole)>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final email = emailController.text.trim();
-          return AlertDialog(
-            title: const Text('Invite someone'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  key: const Key('invite-email'),
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  autofocus: true,
-                  onChanged: (_) => setDialogState(() {}),
-                ),
-                const SizedBox(height: 12),
-                DropdownButton<TeamRole>(
-                  value: role,
-                  isExpanded: true,
-                  items: [for (final r in _assignableRoles) DropdownMenuItem(value: r, child: Text(teamRoleLabel(r)))],
-                  onChanged: (value) => setDialogState(() => role = value!),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-              TextButton(
-                onPressed: email.contains('@') ? () => Navigator.pop(context, (email, role)) : null,
-                child: const Text('Send invite'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+    return showAppSheet<(String, TeamRole)>(context, builder: (context) => const _InviteSheet());
   }
 
   Future<void> _invite() async {
@@ -146,6 +109,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
       context,
       title: 'Revoke the invite to ${invite.email}?',
       confirmLabel: 'Revoke',
+      destructive: true,
     );
     if (!confirmed) return;
     await _runAction(() async {
@@ -261,6 +225,54 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InviteSheet extends StatefulWidget {
+  const _InviteSheet();
+
+  @override
+  State<_InviteSheet> createState() => _InviteSheetState();
+}
+
+class _InviteSheetState extends State<_InviteSheet> {
+  final _email = TextEditingController();
+  var _role = TeamRole.member;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final email = _email.text.trim();
+    return AppSheetContent(
+      title: 'Invite someone',
+      message: 'They get an email with a link to join this business.',
+      actions: SheetActions(
+        confirmLabel: 'Send invite',
+        onCancel: () => Navigator.pop(context),
+        onConfirm: email.contains('@') ? () => Navigator.pop(context, (email, _role)) : null,
+      ),
+      children: [
+        TextField(
+          key: const Key('invite-email'),
+          controller: _email,
+          decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+          keyboardType: TextInputType.emailAddress,
+          autofocus: true,
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 16),
+        SegmentedButton<TeamRole>(
+          segments: [for (final role in _assignableRoles) ButtonSegment(value: role, label: Text(teamRoleLabel(role)))],
+          selected: {_role},
+          onSelectionChanged: (selection) => setState(() => _role = selection.first),
+        ),
+      ],
     );
   }
 }
