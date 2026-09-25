@@ -46,6 +46,18 @@ abstract class PaginatedListController<T> extends AsyncNotifier<PaginatedState<T
     );
   }
 
+  /// Puts the search and the inactive toggle back to their defaults without
+  /// fetching, and says whether anything was different. The controller lives
+  /// longer than any one screen, so a screen calls this when it opens: its own
+  /// search box and toggle always start empty, and the list has to match.
+  bool resetViewState() {
+    final changed = _search.isNotEmpty || _includeInactive;
+    _debounceTimer?.cancel();
+    _search = '';
+    _includeInactive = false;
+    return changed;
+  }
+
   void setSearch(String value) {
     _debounceTimer?.cancel();
     // Debounced so a fast typist doesn't fire one request per keystroke.
