@@ -94,4 +94,17 @@ void main() {
     expect(find.text('Check your connection and try again'), findsOneWidget);
     expect(tester.widget<AppButton>(find.byKey(const Key('login-submit'))).isLoading, isFalse);
   });
+
+  testWidgets('cancelling the Google account picker shows no error and leaves the form usable', (tester) async {
+    when(() => firebaseAuthService.signInWithGoogle())
+        .thenAnswer((_) async => throw FirebaseAuthException(code: 'google-sign-in-cancelled'));
+
+    await tester.pumpWidget(buildApp());
+    await tester.tap(find.text('Continue with Google'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Something went wrong'), findsNothing);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    verifyNever(() => authRepository.exchangeSession(idToken: any(named: 'idToken'), businessName: any(named: 'businessName')));
+  });
 }

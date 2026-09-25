@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'firebase_auth_error.dart';
 
 class FirebaseAuthService {
   FirebaseAuthService({FirebaseAuth? auth, GoogleSignIn? googleSignIn})
@@ -36,7 +37,7 @@ class FirebaseAuthService {
       account = await _googleSignIn.authenticate();
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        throw FirebaseAuthException(code: 'google-sign-in-cancelled', message: 'Sign-in was cancelled.');
+        throw FirebaseAuthException(code: googleSignInCancelledCode, message: 'Sign-in was cancelled.');
       }
       rethrow;
     }
