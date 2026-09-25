@@ -91,6 +91,23 @@ abstract class PaginatedListController<T> extends AsyncNotifier<PaginatedState<T
     ));
   }
 
+  /// Refetches without swapping the list for a skeleton, so a pull-down keeps
+  /// what is on screen until fresh data replaces it. Returns false when the
+  /// refetch failed and there was data to keep; with nothing on screen the
+  /// failure becomes the normal error state instead.
+  Future<bool> pullToRefresh() async {
+    if (!state.hasValue) {
+      await refresh();
+      return !state.hasError;
+    }
+    try {
+      state = AsyncData(await _fetchFresh());
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = AsyncData(await _fetchFresh());
