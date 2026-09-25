@@ -27,6 +27,10 @@ class _NewCustomer extends _QuickAction {
   const _NewCustomer();
 }
 
+class _NewItem extends _QuickAction {
+  const _NewItem();
+}
+
 class _RecordPayment extends _QuickAction {
   const _RecordPayment();
 }
@@ -65,29 +69,38 @@ Future<void> showQuickCreate(BuildContext context, WidgetRef ref) async {
     builder: (context) => AppSheetContent(
       title: 'Create',
       children: [
-        for (final type in DocumentType.values)
-          ListTile(
-            key: Key('quick-create-${type.name}'),
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(documentTypeIcon(type)),
-            title: Text('New ${documentTypeLabel(type).toLowerCase()}'),
-            onTap: () => Navigator.of(context).pop(_NewDocument(type)),
+        const _SectionLabel('Documents'),
+        _TileGrid(children: [
+          for (final type in DocumentType.values)
+            _CreateTile(
+              key: Key('quick-create-${type.name}'),
+              icon: documentTypeIcon(type),
+              label: documentTypeLabel(type),
+              onTap: () => Navigator.of(context).pop(_NewDocument(type)),
+            ),
+        ]),
+        const SizedBox(height: 20),
+        const _SectionLabel('More'),
+        _TileGrid(children: [
+          _CreateTile(
+            key: const Key('quick-create-customer'),
+            icon: Icons.person_add_alt_outlined,
+            label: 'Customer',
+            onTap: () => Navigator.of(context).pop(const _NewCustomer()),
           ),
-        const Divider(),
-        ListTile(
-          key: const Key('quick-create-customer'),
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.person_add_alt_outlined),
-          title: const Text('New customer'),
-          onTap: () => Navigator.of(context).pop(const _NewCustomer()),
-        ),
-        ListTile(
-          key: const Key('quick-create-payment'),
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.payments_outlined),
-          title: const Text('Record a payment'),
-          onTap: () => Navigator.of(context).pop(const _RecordPayment()),
-        ),
+          _CreateTile(
+            key: const Key('quick-create-item'),
+            icon: Icons.inventory_2_outlined,
+            label: 'Item',
+            onTap: () => Navigator.of(context).pop(const _NewItem()),
+          ),
+          _CreateTile(
+            key: const Key('quick-create-payment'),
+            icon: Icons.payments_outlined,
+            label: 'Payment',
+            onTap: () => Navigator.of(context).pop(const _RecordPayment()),
+          ),
+        ]),
       ],
     ),
   );
@@ -98,8 +111,89 @@ Future<void> showQuickCreate(BuildContext context, WidgetRef ref) async {
       context.push('/documents/new', extra: type);
     case _NewCustomer():
       context.push('/customers/new');
+    case _NewItem():
+      context.push('/items/new');
     case _RecordPayment():
       await startRecordPayment(context, ref);
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(text.toUpperCase(), style: Theme.of(context).textTheme.labelMedium?.copyWith(color: colors.neutral500)),
+    );
+  }
+}
+
+/// Three tiles to a row, whatever the screen width.
+class _TileGrid extends StatelessWidget {
+  const _TileGrid({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    const gap = 12.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - gap * 2) / 3;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [for (final child in children) SizedBox(width: width, child: child)],
+        );
+      },
+    );
+  }
+}
+
+class _CreateTile extends StatelessWidget {
+  const _CreateTile({super.key, required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Material(
+      color: colors.neutral50,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: colors.primary100, shape: BoxShape.circle),
+                child: Icon(icon, color: colors.primary700, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

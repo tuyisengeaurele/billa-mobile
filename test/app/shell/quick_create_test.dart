@@ -63,6 +63,7 @@ void main() {
       GoRoute(path: '/', builder: (context, state) => const Scaffold(body: Center(child: QuickCreateButton()))),
       GoRoute(path: '/documents/new', builder: (context, state) => stub('new document ${(state.extra as DocumentType).name}')),
       GoRoute(path: '/customers/new', builder: (context, state) => stub('new customer')),
+      GoRoute(path: '/items/new', builder: (context, state) => stub('new item')),
       GoRoute(
         path: '/documents/:id/payments/new',
         builder: (context, state) => stub('payment for ${(state.extra as Document).number}'),
@@ -92,7 +93,16 @@ void main() {
       expect(find.byKey(Key('quick-create-${type.name}')), findsOneWidget);
     }
     expect(find.byKey(const Key('quick-create-customer')), findsOneWidget);
+    expect(find.byKey(const Key('quick-create-item')), findsOneWidget);
     expect(find.byKey(const Key('quick-create-payment')), findsOneWidget);
+  });
+
+  testWidgets('new item opens the item form', (tester) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('quick-create-item')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('new item'), findsOneWidget);
   });
 
   testWidgets('a document type opens the editor for that type', (tester) async {
