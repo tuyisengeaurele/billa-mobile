@@ -44,7 +44,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         HapticFeedback.lightImpact();
       }
     } on FirebaseAuthException catch (e) {
-      setState(() => _errorMessage = mapFirebaseAuthError(e.code));
+      if (e.code != googleSignInCancelledCode) {
+        setState(() => _errorMessage = mapFirebaseAuthError(e.code));
+      }
     } catch (e) {
       // Firebase accepted the sign-in but our own session request failed
       // (offline, server error); that has its own cause and message.
@@ -96,7 +98,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         HapticFeedback.lightImpact();
       }
     } on FirebaseAuthException catch (e) {
-      setState(() => _errorMessage = mapFirebaseAuthError(e.code));
+      if (e.code != googleSignInCancelledCode) {
+        setState(() => _errorMessage = mapFirebaseAuthError(e.code));
+      }
     } catch (e) {
       // Firebase accepted the sign-in but our own session request failed
       // (offline, server error); that has its own cause and message.
