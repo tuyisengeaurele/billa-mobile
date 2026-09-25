@@ -1,3 +1,4 @@
+import '../widgets/item_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/error_state.dart';
@@ -310,38 +311,22 @@ class _LineCardState extends ConsumerState<_LineCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: TextFormField(
-                    key: ValueKey('line-description-${line.localId}'),
+                  child: ItemSearchField(
+                    fieldKey: ValueKey('line-description-${line.localId}'),
                     controller: _descriptionController,
-                    decoration: InputDecoration(
-                      labelText: 'Description',
-                      errorText: line.description.trim().isEmpty ? 'Enter a description' : null,
-                    ),
+                    errorText: line.description.trim().isEmpty ? 'Enter a description' : null,
+                    searchItems: (query) async => (await ref.read(itemRepositoryProvider).list(search: query)).results,
                     // Typing here decouples the line from any linked item,
                     // matching the production web editor's ItemPicker.
-                    onChanged: (value) => controller.setLineDescription(line.localId, value),
+                    onTextChanged: (value) => controller.setLineDescription(line.localId, value),
+                    onItemSelected: (item) => controller.selectLineItem(
+                      line.localId,
+                      itemId: item.id,
+                      description: item.description,
+                      unitPrice: item.unitPrice,
+                      taxRate: item.taxRate,
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  tooltip: 'Choose an item',
-                  onPressed: () async {
-                    final item = await showSearchPickerSheet(
-                      context: context,
-                      title: 'Choose an item',
-                      fetch: (search) async => (await ref.read(itemRepositoryProvider).list(search: search)).results,
-                      itemBuilder: (item) => ListTile(title: Text(item.description)),
-                    );
-                    if (item != null) {
-                      controller.selectLineItem(
-                        line.localId,
-                        itemId: item.id,
-                        description: item.description,
-                        unitPrice: item.unitPrice,
-                        taxRate: item.taxRate,
-                      );
-                    }
-                  },
                 ),
                 IconButton(icon: const Icon(Icons.close), onPressed: () => controller.removeLine(line.localId)),
               ],
