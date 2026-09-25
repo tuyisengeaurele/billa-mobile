@@ -1,3 +1,4 @@
+import '../../../../core/widgets/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,19 +28,36 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
 
   Future<List<OutstandingInvoice>> _load() => ref.read(receivablesRepositoryProvider).list();
 
+  Future<bool> _refresh() async {
+    try {
+      final fresh = await _load();
+      if (!mounted) return true;
+      setState(() {
+        _future = Future.value(fresh);
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Receivables')),
-      body: FutureBuilder<List<OutstandingInvoice>>(
+      body: PullToRefresh(
+        onRefresh: _refresh,
+        child: FutureBuilder<List<OutstandingInvoice>>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return ErrorState(
-              message: "Couldn't load receivables",
-              onRetry: () => setState(() {
-                _future = _load();
-              }),
+            return ScrollableFill(
+              child: ErrorState(
+                message: "Couldn't load receivables",
+                onRetry: () => setState(() {
+                  _future = _load();
+                }),
+              ),
             );
           }
           if (!snapshot.hasData) {
@@ -50,12 +68,15 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
           }
           final invoices = snapshot.data!;
           if (invoices.isEmpty) {
-            return const EmptyState(
-              icon: Icons.check_circle_outline,
-              message: 'Nothing outstanding. All invoices are paid up',
+            return const ScrollableFill(
+              child: EmptyState(
+                icon: Icons.check_circle_outline,
+                message: 'Nothing outstanding. All invoices are paid up',
+              ),
             );
           }
           return ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: invoices.length,
             itemBuilder: (context, index) {
               final invoice = invoices[index];
@@ -76,6 +97,7 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
             },
           );
         },
+        ),
       ),
     );
   }

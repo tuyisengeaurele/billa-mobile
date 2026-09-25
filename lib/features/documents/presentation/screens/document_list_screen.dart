@@ -1,3 +1,4 @@
+import '../../../../core/widgets/pull_to_refresh.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -160,16 +161,19 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
+            child: PullToRefresh(
+            onRefresh: () => ref.read(documentListControllerProvider.notifier).pullToRefresh(),
             child: FadeSwitcher(
               child: KeyedSubtree(
                 key: ValueKey(asyncViewKind(state, isEmpty: (data) => data.items.isEmpty)),
                 child: switch (state) {
-              AsyncData(value: final data) when data.items.isEmpty => const EmptyState(
+              AsyncData(value: final data) when data.items.isEmpty => ScrollableFill(child: const EmptyState(
                   icon: Icons.description_outlined,
                   message: 'No documents yet',
-                ),
+                )),
               AsyncData(value: final data) => ListView.builder(
                   controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: data.items.length + (data.isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index >= data.items.length) {
@@ -185,17 +189,18 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
                     );
                   },
                 ),
-              AsyncError() => ErrorState(
+              AsyncError() => ScrollableFill(child: ErrorState(
                   message: "Couldn't load your documents",
                   onRetry: () => ref.read(documentListControllerProvider.notifier).refresh(),
-                ),
-              _ => const Padding(
+                )),
+              _ => ScrollableFill(child: const Padding(
                   padding: EdgeInsets.all(16),
                   child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
-                ),
+                )),
             },
               ),
-            ),
+            )
+          ),
           ),
         ],
       ),
