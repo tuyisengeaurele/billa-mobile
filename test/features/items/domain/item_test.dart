@@ -31,4 +31,17 @@ void main() {
     expect(item.taxRate, 18.0);
     expect(item.category, 'Materials');
   });
+
+  test('Item.fromJson reads a taxRate the server sends as a decimal string', () {
+    final item = Item.fromJson({
+      'id': 'i3',
+      'description': 'Consulting',
+      'unitPrice': 5000,
+      'unit': 'hour',
+      'taxRate': '18.00',
+      'isActive': true,
+    });
+
+    expect(item.taxRate, 18.0);
+  });
 }
