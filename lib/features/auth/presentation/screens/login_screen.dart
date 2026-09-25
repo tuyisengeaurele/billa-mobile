@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -38,6 +39,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final status = ref.read(authControllerProvider).value;
       if (status is TwoFactorRequired) {
         setState(() => _challengeId = status.challengeId);
+      } else if (status is Authenticated) {
+        HapticFeedback.lightImpact();
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = mapFirebaseAuthError(e.code));
@@ -55,6 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authControllerProvider.notifier)
           .submitTwoFactorChallenge(challengeId: _challengeId!, code: _codeController.text.trim());
+      HapticFeedback.lightImpact();
     } catch (_) {
       setState(() => _errorMessage = 'That code is incorrect or expired.');
     } finally {
@@ -83,6 +87,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final status = ref.read(authControllerProvider).value;
       if (status is TwoFactorRequired) {
         setState(() => _challengeId = status.challengeId);
+      } else if (status is Authenticated) {
+        HapticFeedback.lightImpact();
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = mapFirebaseAuthError(e.code));
