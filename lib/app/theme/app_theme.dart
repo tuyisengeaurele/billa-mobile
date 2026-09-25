@@ -56,6 +56,13 @@ class AppTheme {
       extensions: [colors],
       inputDecorationTheme: _inputTheme(colors),
       appBarTheme: _appBarTheme(colors, brightness),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: colors.neutral300,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.large))),
+      ),
       // Forward pushes move along one axis so depth reads as "deeper into the
       // app", matching the same motion on both platforms.
       pageTransitionsTheme: const PageTransitionsTheme(builders: {
