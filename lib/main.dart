@@ -7,6 +7,7 @@ import 'app/theme/theme_preference_store.dart';
 import 'core/network/api_client.dart';
 import 'core/network/api_client_provider.dart';
 import 'core/platform/glass_support.dart';
+import 'features/auth/data/session_snapshot_store.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -21,6 +22,7 @@ void main() async {
       apiClientProvider.overrideWithValue(apiClient),
       themePreferenceStoreProvider.overrideWithValue(SharedPreferencesThemePreferenceStore(preferences)),
       glassBlurEnabledProvider.overrideWithValue(glassBlur),
+      sessionSnapshotStoreProvider.overrideWithValue(SharedPreferencesSessionSnapshotStore(preferences)),
     ],
     child: const App(),
   ));
