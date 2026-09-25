@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../providers/customer_list_controller.dart';
@@ -81,7 +82,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
           ),
           Expanded(
-            child: switch (state) {
+            child: FadeSwitcher(
+              child: KeyedSubtree(
+                key: ValueKey(asyncViewKind(state, isEmpty: (data) => data.items.isEmpty)),
+                child: switch (state) {
               AsyncData(value: final data) when data.items.isEmpty => EmptyState(
                   icon: Icons.people_outline,
                   message: 'No customers yet',
@@ -114,6 +118,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
                 ),
             },
+              ),
+            ),
           ),
         ],
       ),
