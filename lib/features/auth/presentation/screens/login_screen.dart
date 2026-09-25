@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../data/firebase_auth_error.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
@@ -44,6 +45,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = mapFirebaseAuthError(e.code));
+    } catch (e) {
+      // Firebase accepted the sign-in but our own session request failed
+      // (offline, server error); that has its own cause and message.
+      setState(() => _errorMessage = describeActionError(e));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -92,6 +97,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = mapFirebaseAuthError(e.code));
+    } catch (e) {
+      // Firebase accepted the sign-in but our own session request failed
+      // (offline, server error); that has its own cause and message.
+      setState(() => _errorMessage = describeActionError(e));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
