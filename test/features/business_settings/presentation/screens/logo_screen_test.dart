@@ -5,10 +5,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/core/media/image_picker_provider.dart';
 import 'package:billa_mobile/features/business_settings/domain/business_settings_repository.dart';
 import 'package:billa_mobile/features/business_settings/presentation/providers/business_settings_repository_provider.dart';
-import 'package:billa_mobile/features/business_settings/presentation/providers/logo_pipeline_provider.dart';
 import 'package:billa_mobile/features/business_settings/presentation/screens/logo_screen.dart';
 import 'package:billa_mobile/features/onboarding/data/logo_pipeline_service.dart';
 import 'package:billa_mobile/features/onboarding/domain/logo_pipeline_step.dart';
+import 'package:billa_mobile/features/onboarding/presentation/providers/logo_pipeline_provider.dart';
 import '../../support.dart';
 
 class _MockBusinessSettingsRepository extends Mock implements BusinessSettingsRepository {}
