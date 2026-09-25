@@ -12,6 +12,7 @@ import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 import 'package:billa_mobile/features/auth/presentation/providers/auth_controller.dart';
 import 'package:billa_mobile/features/auth/presentation/providers/firebase_auth_service_provider.dart';
 import 'package:billa_mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:billa_mobile/features/auth/presentation/widgets/auth_layout.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
 class _MockFirebaseAuthService extends Mock implements FirebaseAuthService {}
@@ -167,5 +168,28 @@ void main() {
     );
 
     expect(find.text('Check your connection and try again'), findsOneWidget);
+  });
+
+  testWidgets('shows the welcome heading, the Google option, and a way to sign up', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text("Don't have an account? Sign up"), findsOneWidget);
+  });
+
+  testWidgets('a sign-in error appears in the inline error block', (tester) async {
+    when(() => firebaseAuthService.signInWithEmailAndPassword('a@b.com', 'wrong'))
+        .thenThrow(FirebaseAuthException(code: 'wrong-password'));
+
+    await tester.pumpWidget(buildApp());
+    await tester.enterText(find.byKey(const Key('login-email')), 'a@b.com');
+    await tester.enterText(find.byKey(const Key('login-password')), 'wrong');
+    await tester.tap(find.byKey(const Key('login-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AuthError), findsOneWidget);
+    expect(find.descendant(of: find.byType(AuthError), matching: find.text("That password doesn't match this account.")), findsOneWidget);
   });
 }
