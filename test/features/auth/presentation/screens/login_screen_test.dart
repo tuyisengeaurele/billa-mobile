@@ -143,21 +143,21 @@ void main() {
   testWidgets('a wrong verification code says the code is wrong and stays on the code form', (tester) async {
     await submitCode(tester, challengeError(401, 'invalid_code'));
 
-    expect(find.text("That code isn't right — try again"), findsOneWidget);
+    expect(find.text("That code isn't right. Try again"), findsOneWidget);
     expect(find.byKey(const Key('login-2fa-code')), findsOneWidget);
   });
 
   testWidgets('an expired sign-in returns to the login form and says so', (tester) async {
     await submitCode(tester, challengeError(401, 'invalid_challenge'));
 
-    expect(find.text('This sign-in expired — log in again'), findsOneWidget);
+    expect(find.text('This sign-in expired. Log in again'), findsOneWidget);
     expect(find.byKey(const Key('login-email')), findsOneWidget);
   });
 
   testWidgets('being rate limited is reported as such, not as a wrong code', (tester) async {
     await submitCode(tester, challengeError(429, 'too_many_requests'));
 
-    expect(find.text('Too many attempts — wait a few minutes and try again'), findsOneWidget);
+    expect(find.text('Too many attempts. Wait a few minutes and try again'), findsOneWidget);
     expect(find.textContaining('incorrect'), findsNothing);
   });
 

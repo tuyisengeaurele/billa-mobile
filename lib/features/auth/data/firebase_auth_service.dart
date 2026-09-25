@@ -48,8 +48,8 @@ class FirebaseAuthService {
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
-    // Errors are intentionally swallowed by the caller (login_screen.dart), not here —
-    // the UI always shows the same message so it never reveals whether the email exists.
+    // Errors are intentionally swallowed by the caller (login_screen.dart), not here.
+    // The UI always shows the same message so it never reveals whether the email exists.
     await _auth.sendPasswordResetEmail(email: email);
   }
 }

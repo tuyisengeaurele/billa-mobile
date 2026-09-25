@@ -59,7 +59,7 @@ void main() {
     await tester.pumpAndSettle();
     await enterCode(tester, '000000');
 
-    expect(find.text("That code isn't right — try again"), findsOneWidget);
+    expect(find.text("That code isn't right. Try again"), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
   });
 

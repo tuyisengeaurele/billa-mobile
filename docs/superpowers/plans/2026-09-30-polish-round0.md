@@ -29,7 +29,7 @@
 **Files:** every `lib/**/*.dart` and `test/**/*.dart` file containing one (25 in `lib`, 21 in `test`).
 
 - [ ] **Step 1:** Replace each in context: a pause before a clause becomes a comma or full stop, an explanation becomes a colon, a paired aside becomes commas or parentheses. User-facing examples: "Too many attempts, wait a few minutes and try again", "That code isn't right, try again", "This sign-in expired, log in again", "Nothing outstanding. All invoices are paid up".
-- [ ] **Step 2:** Update the matching test expectations, `grep -rn "—" lib test` must return nothing, run analyze and the full suite, commit `fix: remove em dashes from the app's copy and comments`.
+- [ ] **Step 2:** Update the matching test expectations, searching `lib` and `test` for the em dash character must find nothing, run analyze and the full suite, commit `fix: remove em dashes from the app's copy and comments`.
 
 ---
 

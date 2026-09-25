@@ -52,7 +52,7 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
           if (invoices.isEmpty) {
             return const EmptyState(
               icon: Icons.check_circle_outline,
-              message: 'Nothing outstanding — all invoices are paid up',
+              message: 'Nothing outstanding. All invoices are paid up',
             );
           }
           return ListView.builder(

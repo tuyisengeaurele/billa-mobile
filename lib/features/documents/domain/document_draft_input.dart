@@ -23,7 +23,7 @@ class DocumentLineInput with _$DocumentLineInput {
 class DocumentDraftInput with _$DocumentDraftInput {
   // Without this, toJson() leaves nested DocumentLineInput objects
   // unconverted (relying on dart:convert's jsonEncode to call their own
-  // toJson() later) — fine for Dio in practice, but it means toJson()'s
+  // toJson() later), fine for Dio in practice, but it means toJson()'s
   // own return value can't be inspected as plain maps, which the tests do.
   @JsonSerializable(explicitToJson: true)
   const factory DocumentDraftInput({

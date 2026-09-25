@@ -15,7 +15,7 @@ class DocumentEditorArgs {
   final DocumentType? type;
   final String? documentId;
 
-  // Riverpod's family caches providers by this value's equality — without
+  // Riverpod's family caches providers by this value's equality, without
   // this override, every rebuild would look like a brand-new document and
   // drop whatever draft state was already in progress.
   @override
@@ -126,7 +126,7 @@ class DocumentEditorState {
   bool get referencedDocumentAllowed => type == DocumentType.deliveryNote || referencedDocumentRequired;
 
   // Mirrors documentLineSchema exactly, so autosave never sends the server
-  // a payload it would reject with 400 — validation and save-readiness are
+  // a payload it would reject with 400, validation and save-readiness are
   // the same check, not two parallel implementations.
   bool get _linesValid => lines.every((line) =>
       line.description.trim().isNotEmpty &&
@@ -271,7 +271,7 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
       );
 
   // Editing the description by hand decouples the line from any linked
-  // item — the same behavior the production web editor's ItemPicker uses.
+  // item, the same behavior the production web editor's ItemPicker uses.
   void setLineDescription(int localId, String text) =>
       _updateLine(localId, (line) => _cloneLine(line, description: text, itemId: null));
 
@@ -304,7 +304,7 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
     final current = state.value;
     if (current == null || !current.isSavable) return;
 
-    // A save already in flight is never raced — a debounce firing mid-save
+    // A save already in flight is never raced, a debounce firing mid-save
     // just queues one more run after it settles, rather than starting a
     // second overlapping request (which would silently create a duplicate
     // draft via a second create()).

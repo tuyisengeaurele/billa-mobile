@@ -74,7 +74,7 @@ void main() {
     await tester.tap(find.text('Turn off').last);
     await tester.pumpAndSettle();
 
-    expect(find.text("That code isn't right — try again"), findsOneWidget);
+    expect(find.text("That code isn't right. Try again"), findsOneWidget);
     expect(container(tester).read(currentUserProvider)!.totpEnabled, isTrue);
   });
 

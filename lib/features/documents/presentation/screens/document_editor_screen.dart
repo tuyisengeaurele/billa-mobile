@@ -221,7 +221,7 @@ class _DocumentEditorForm extends ConsumerWidget {
           Text('Line items', style: Theme.of(context).textTheme.titleMedium),
           for (var i = 0; i < state.lines.length; i++)
             // calculateDocumentTotals preserves list order, so index i's
-            // LineTotals always matches index i's line — computed once here
+            // LineTotals always matches index i's line, computed once here
             // rather than re-derived per card, so a card's total can never
             // drift from what the footer's subtotal actually sums.
             _LineCard(args: args, line: state.lines[i], lineTotal: totals.lines[i]),
@@ -246,7 +246,7 @@ class _DocumentEditorForm extends ConsumerWidget {
 
 // A line's description/unit price/tax rate can change from OUTSIDE this
 // widget's own typing (picking an item overwrites all three at once), so
-// plain `TextFormField(initialValue: ...)` isn't enough — Flutter only
+// plain `TextFormField(initialValue: ...)` isn't enough, Flutter only
 // applies `initialValue` on first build, not on later rebuilds carrying a
 // new value in from the controller. This owns real TextEditingControllers
 // and re-syncs them in didUpdateWidget whenever the incoming value differs
@@ -317,8 +317,8 @@ class _LineCardState extends ConsumerState<_LineCard> {
                       labelText: 'Description',
                       errorText: line.description.trim().isEmpty ? 'Enter a description' : null,
                     ),
-                    // Typing here decouples the line from any linked item —
-                    // matches the production web editor's ItemPicker.
+                    // Typing here decouples the line from any linked item,
+                    // matching the production web editor's ItemPicker.
                     onChanged: (value) => controller.setLineDescription(line.localId, value),
                   ),
                 ),

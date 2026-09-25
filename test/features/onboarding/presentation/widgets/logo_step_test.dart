@@ -156,7 +156,7 @@ void main() {
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Something went wrong — try again'), findsOneWidget);
+    expect(find.text('Something went wrong. Try again'), findsOneWidget);
     expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm')).onPressed, isNotNull);
   });
 }
