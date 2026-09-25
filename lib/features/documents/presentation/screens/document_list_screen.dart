@@ -84,7 +84,7 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
           for (final type in DocumentType.values)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(_documentTypeIcon(type)),
+              leading: Icon(documentTypeIcon(type)),
               title: Text(documentTypeLabel(type)),
               onTap: () => Navigator.of(context).pop(type),
             ),
@@ -207,12 +207,3 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
     );
   }
 }
-
-IconData _documentTypeIcon(DocumentType type) => switch (type) {
-      DocumentType.invoice => Icons.receipt_long_outlined,
-      DocumentType.proforma => Icons.description_outlined,
-      DocumentType.deliveryNote => Icons.local_shipping_outlined,
-      DocumentType.quote => Icons.request_quote_outlined,
-      DocumentType.receipt => Icons.payments_outlined,
-      DocumentType.creditNote => Icons.assignment_return_outlined,
-    };

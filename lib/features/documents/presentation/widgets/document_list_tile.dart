@@ -13,6 +13,15 @@ String documentTypeLabel(DocumentType type) => switch (type) {
       DocumentType.creditNote => 'Credit note',
     };
 
+IconData documentTypeIcon(DocumentType type) => switch (type) {
+      DocumentType.invoice => Icons.receipt_long_outlined,
+      DocumentType.proforma => Icons.description_outlined,
+      DocumentType.deliveryNote => Icons.local_shipping_outlined,
+      DocumentType.quote => Icons.request_quote_outlined,
+      DocumentType.receipt => Icons.payments_outlined,
+      DocumentType.creditNote => Icons.assignment_return_outlined,
+    };
+
 class DocumentListTile extends StatelessWidget {
   const DocumentListTile({super.key, required this.document, required this.onTap});
 
