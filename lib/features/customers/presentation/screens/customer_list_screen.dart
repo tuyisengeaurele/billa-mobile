@@ -52,10 +52,6 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Customers')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/customers/new'),
-        child: const Icon(Icons.add),
-      ),
       body: Column(
         children: [
           Padding(
