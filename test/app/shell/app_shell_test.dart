@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:billa_mobile/app/shell/app_shell.dart';
+import 'package:billa_mobile/core/widgets/app_sheet.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
 import 'package:billa_mobile/features/dashboard/presentation/providers/dashboard_provider.dart';
 
@@ -140,6 +141,18 @@ void main() {
     GoRouter.of(context).pop();
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('nav-tab-0')).hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('a sheet opened from a tab covers the tab bar instead of sliding under it', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byKey(const Key('counter-home')));
+    showAppSheet<void>(context, builder: (context) => const SizedBox(height: 120, child: Text('sheet content')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('sheet content'), findsOneWidget);
+    expect(find.byKey(const Key('nav-tab-0')).hitTestable(), findsNothing);
   });
 
   testWidgets('screens are told the bar footprint so their last row can stay clear of it', (tester) async {

@@ -7,6 +7,9 @@ import '../../app/theme/app_colors.dart';
 Future<T?> showAppSheet<T>(BuildContext context, {required WidgetBuilder builder, bool scrollable = true}) {
   return showModalBottomSheet<T>(
     context: context,
+    // A tab keeps its own navigator, so without this a sheet opened from a tab
+    // would slide up underneath the shell's tab bar instead of over it.
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
