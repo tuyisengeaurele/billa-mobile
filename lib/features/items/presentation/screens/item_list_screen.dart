@@ -23,6 +23,13 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // The list controller outlives this screen, so search or a toggle from an
+    // earlier visit would otherwise stay applied behind an empty search box.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final controller = ref.read(itemListControllerProvider.notifier);
+      if (controller.resetViewState()) controller.refresh();
+    });
   }
 
   @override

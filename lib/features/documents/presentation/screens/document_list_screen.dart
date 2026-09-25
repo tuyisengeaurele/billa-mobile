@@ -27,14 +27,18 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // The list controller outlives this screen, so a filter from an earlier
-    // visit would otherwise survive while the chips start out cleared.
+    // The list controller outlives this screen, so a filter or search from an
+    // earlier visit would otherwise survive while the chips and the search
+    // box start out cleared.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final controller = ref.read(documentListControllerProvider.notifier);
       final types = _selectedTypes.isEmpty ? null : _selectedTypes.toList();
+      final searchWasStale = controller.resetViewState();
       if (!controller.hasFilters(types: types, status: _selectedStatus)) {
         controller.setFilters(types: types, status: _selectedStatus);
+      } else if (searchWasStale) {
+        controller.refresh();
       }
     });
   }
