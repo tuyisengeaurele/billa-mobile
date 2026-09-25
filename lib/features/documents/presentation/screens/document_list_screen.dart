@@ -1,3 +1,4 @@
+import '../../../../core/widgets/app_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -74,19 +75,19 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
   }
 
   Future<void> _createDocument() async {
-    final type = await showModalBottomSheet<DocumentType>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final type in DocumentType.values)
-              ListTile(
-                title: Text(documentTypeLabel(type)),
-                onTap: () => Navigator.of(context).pop(type),
-              ),
-          ],
-        ),
+    final type = await showAppSheet<DocumentType>(
+      context,
+      builder: (context) => AppSheetContent(
+        title: 'New document',
+        children: [
+          for (final type in DocumentType.values)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(_documentTypeIcon(type)),
+              title: Text(documentTypeLabel(type)),
+              onTap: () => Navigator.of(context).pop(type),
+            ),
+        ],
       ),
     );
     if (type != null && mounted) context.push('/documents/new', extra: type);
@@ -201,3 +202,12 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
     );
   }
 }
+
+IconData _documentTypeIcon(DocumentType type) => switch (type) {
+      DocumentType.invoice => Icons.receipt_long_outlined,
+      DocumentType.proforma => Icons.description_outlined,
+      DocumentType.deliveryNote => Icons.local_shipping_outlined,
+      DocumentType.quote => Icons.request_quote_outlined,
+      DocumentType.receipt => Icons.payments_outlined,
+      DocumentType.creditNote => Icons.assignment_return_outlined,
+    };

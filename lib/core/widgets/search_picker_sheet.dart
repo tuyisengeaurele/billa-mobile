@@ -1,3 +1,4 @@
+import 'app_sheet.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../errors/action_errors.dart';
@@ -10,9 +11,9 @@ Future<T?> showSearchPickerSheet<T>({
   required Future<List<T>> Function(String search) fetch,
   required Widget Function(T item) itemBuilder,
 }) {
-  return showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
+  return showAppSheet<T>(
+    context,
+    scrollable: false,
     builder: (context) => _SearchPickerSheet<T>(title: title, fetch: fetch, itemBuilder: itemBuilder),
   );
 }
@@ -57,9 +58,7 @@ class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
     return SafeArea(
       child: FractionallySizedBox(
         heightFactor: 0.75,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Column(
+        child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -111,7 +110,6 @@ class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
                 ),
               ),
             ],
-          ),
         ),
       ),
     );
