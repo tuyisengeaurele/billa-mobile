@@ -8,7 +8,6 @@ import '../features/account/presentation/screens/security_screen.dart';
 import '../features/account/presentation/screens/sessions_screen.dart';
 import '../features/account/presentation/screens/settings_screen.dart';
 import '../features/account/presentation/screens/two_factor_setup_screen.dart';
-import '../features/auth/domain/auth_status.dart';
 import '../features/business_settings/presentation/screens/business_details_screen.dart';
 import '../features/business_settings/presentation/screens/business_settings_screen.dart';
 import '../features/business_settings/presentation/screens/document_settings_screen.dart';
@@ -18,13 +17,13 @@ import '../features/business_settings/presentation/screens/payments_screen.dart'
 import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
-import '../features/businesses/presentation/providers/my_businesses_provider.dart';
 import '../features/businesses/presentation/screens/businesses_screen.dart';
 import '../features/businesses/presentation/screens/join_business_screen.dart';
 import '../features/customers/domain/customer.dart';
 import '../features/customers/presentation/screens/customer_detail_screen.dart';
 import '../features/customers/presentation/screens/customer_form_screen.dart';
 import '../features/customers/presentation/screens/customer_list_screen.dart';
+import '../features/dashboard/presentation/screens/home_screen.dart';
 import '../features/documents/domain/document.dart';
 import '../features/documents/domain/document_enums.dart';
 import '../features/documents/presentation/screens/document_detail_screen.dart';
@@ -34,8 +33,10 @@ import '../features/documents/presentation/screens/record_payment_screen.dart';
 import '../features/items/domain/item.dart';
 import '../features/items/presentation/screens/item_form_screen.dart';
 import '../features/items/presentation/screens/item_list_screen.dart';
+import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/receivables/presentation/screens/receivables_screen.dart';
+import '../features/search/presentation/screens/search_screen.dart';
 import '../features/team/presentation/screens/team_screen.dart';
 import 'theme/bootstrap_screen.dart';
 
@@ -63,7 +64,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/bootstrap', builder: (context, state) => const BootstrapScreen()),
-      GoRoute(path: '/', builder: (context, state) => const _PlaceholderHomeScreen()),
+      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
@@ -119,6 +120,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/businesses', builder: (context, state) => const BusinessesScreen()),
       GoRoute(path: '/businesses/join', builder: (context, state) => const JoinBusinessScreen()),
       GoRoute(path: '/team', builder: (context, state) => const TeamScreen()),
+      GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
+      GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/settings/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/settings/security', builder: (context, state) => const SecurityScreen()),
@@ -139,75 +142,5 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 class GoRouterRefreshNotifier extends ChangeNotifier {
   GoRouterRefreshNotifier(Ref ref) {
     ref.listen(authControllerProvider, (_, _) => notifyListeners());
-  }
-}
-
-class _PlaceholderHomeScreen extends ConsumerWidget {
-  const _PlaceholderHomeScreen();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authControllerProvider).valueOrNull;
-    final businessName = auth is Authenticated ? auth.business.name : null;
-    final isOwner = ref.watch(isOwnerOfActiveBusinessProvider);
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            key: const Key('home-account'),
-            icon: const Icon(Icons.account_circle_outlined),
-            tooltip: 'Account',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Billa', style: Theme.of(context).textTheme.displayMedium),
-            if (businessName != null)
-              TextButton.icon(
-                key: const Key('home-business-switcher'),
-                onPressed: () => context.push('/businesses'),
-                icon: const Icon(Icons.swap_horiz),
-                label: Text(businessName),
-              ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              key: const Key('home-nav-customers'),
-              onPressed: () => context.push('/customers'),
-              child: const Text('Customers'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              key: const Key('home-nav-items'),
-              onPressed: () => context.push('/items'),
-              child: const Text('Items'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              key: const Key('home-nav-documents'),
-              onPressed: () => context.push('/documents'),
-              child: const Text('Documents'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              key: const Key('home-nav-receivables'),
-              onPressed: () => context.push('/receivables'),
-              child: const Text('Receivables'),
-            ),
-            if (isOwner) ...[
-              const SizedBox(height: 12),
-              ElevatedButton(
-                key: const Key('home-nav-team'),
-                onPressed: () => context.push('/team'),
-                child: const Text('Team'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }
