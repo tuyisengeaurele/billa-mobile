@@ -1,11 +1,12 @@
-import '../../../../core/widgets/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../../core/widgets/money_text.dart';
+import '../../../../core/widgets/pull_to_refresh.dart';
 import '../../domain/outstanding_invoice.dart';
 import '../providers/receivables_repository_provider.dart';
 import '../widgets/aging_pill.dart';
@@ -44,7 +45,7 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Receivables')),
+      appBar: AppBar(title: const Text('Payments')),
       body: PullToRefresh(
         onRefresh: _refresh,
         child: FutureBuilder<List<OutstandingInvoice>>(
@@ -75,11 +76,15 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
               ),
             );
           }
+          final owed = invoices.fold<int>(0, (sum, invoice) => sum + invoice.amountOwed);
+          final overdue = invoices.where((invoice) => invoice.daysOverdue > 0).length;
           return ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: invoices.length,
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+            itemCount: invoices.length + 1,
             itemBuilder: (context, index) {
-              final invoice = invoices[index];
+              if (index == 0) return _SummaryCard(owed: owed, count: invoices.length, overdue: overdue);
+              final invoice = invoices[index - 1];
               return ListTile(
                 title: Text(invoice.customerName),
                 subtitle: Text(
@@ -98,6 +103,51 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
           );
         },
         ),
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.owed, required this.count, required this.overdue});
+
+  final int owed;
+  final int count;
+  final int overdue;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('payments-summary'),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: colors.warningBg, borderRadius: BorderRadius.circular(20)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Total outstanding', style: textTheme.labelLarge?.copyWith(color: colors.neutral700)),
+          const SizedBox(height: 4),
+          MoneyText(owed, style: textTheme.headlineMedium?.copyWith(color: colors.neutral900)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(count == 1 ? '1 invoice' : '$count invoices', style: textTheme.bodyMedium?.copyWith(color: colors.neutral700)),
+              const SizedBox(width: 12),
+              Icon(
+                overdue > 0 ? Icons.schedule : Icons.check_circle_outline,
+                size: 16,
+                color: overdue > 0 ? colors.error : colors.success,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                overdue > 0 ? '$overdue overdue' : 'None overdue',
+                style: textTheme.bodyMedium?.copyWith(color: overdue > 0 ? colors.error : colors.success),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
