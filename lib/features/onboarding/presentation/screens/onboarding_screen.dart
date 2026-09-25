@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../business_settings/presentation/providers/business_settings_repository_provider.dart';
 import '../providers/business_repository_provider.dart';
 import '../providers/logo_pipeline_provider.dart';
 import '../widgets/details_step.dart';
 import '../widgets/logo_step.dart';
+import '../widgets/numbering_step.dart';
+import '../widgets/template_step.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -16,6 +19,8 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  static const _stepCount = 4;
+
   int _step = 0;
   bool _busy = false;
   String? _error;
@@ -49,7 +54,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Step ${_step + 1} of 2'),
+        title: Text('Step ${_step + 1} of $_stepCount'),
         actions: [
           TextButton(
             onPressed: _busy ? null : () => _guard(_completeAndRefresh),
@@ -86,10 +91,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   }),
                   onSkip: () => setState(() => _step = 1),
                 )
-              else
+              else if (_step == 1)
                 LogoStep(
                   service: ref.watch(logoPipelineServiceProvider),
-                  onDone: _completeAndRefresh,
+                  onDone: () async => setState(() => _step = 2),
+                  onSkip: () => setState(() => _step = 2),
+                )
+              else if (_step == 2)
+                TemplateStep(
+                  onSaved: (template) => _guard(() async {
+                    await ref.read(businessSettingsRepositoryProvider).setDefaultTemplate(template);
+                    setState(() => _step = 3);
+                  }),
+                  onSkip: () => setState(() => _step = 3),
+                )
+              else
+                // The last step is what completes onboarding: finishing or
+                // skipping it is the only way out besides "Skip onboarding".
+                NumberingStep(
+                  onSaved: (sequences) async {
+                    await ref.read(businessSettingsRepositoryProvider).saveSequences(sequences);
+                    await _completeAndRefresh();
+                  },
                   onSkip: () => _guard(_completeAndRefresh),
                 ),
             ],
