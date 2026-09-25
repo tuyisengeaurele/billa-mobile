@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/google_sign_in_button.dart';
 import '../../../../core/widgets/password_field.dart';
 import '../../data/firebase_auth_error.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
@@ -183,7 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 24),
               const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('or')), Expanded(child: Divider())]),
               const SizedBox(height: 16),
-              OutlinedButton(onPressed: _signInWithGoogle, child: const Text('Continue with Google')),
+              GoogleSignInButton(onPressed: _signInWithGoogle, isLoading: _isSubmitting),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => context.go('/register'),
