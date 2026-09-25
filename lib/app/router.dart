@@ -47,7 +47,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: GoRouterRefreshNotifier(ref),
     redirect: (context, state) {
-      final status = ref.read(authControllerProvider).value;
+      final status = ref.read(authControllerProvider).valueOrNull;
       final path = state.uri.path;
       if (status == null) return path == '/bootstrap' ? null : '/bootstrap';
 
