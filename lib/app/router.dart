@@ -83,7 +83,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/items/:id/edit',
         builder: (context, state) => ItemFormScreen(existing: state.extra as Item?),
       ),
-      GoRoute(path: '/documents', builder: (context, state) => const DocumentListScreen()),
+      GoRoute(
+        path: '/documents',
+        builder: (context, state) {
+          final status = switch (state.uri.queryParameters['status']) {
+            'draft' => DocumentStatus.draft,
+            'finalized' => DocumentStatus.finalized,
+            _ => null,
+          };
+          final types = state.uri.queryParameters['types']
+              ?.split(',')
+              .map((name) => DocumentType.values.where((type) => type.name == name).firstOrNull)
+              .whereType<DocumentType>()
+              .toList();
+          return DocumentListScreen(initialStatus: status, initialTypes: (types?.isEmpty ?? true) ? null : types);
+        },
+      ),
       GoRoute(
         path: '/documents/new',
         builder: (context, state) => DocumentEditorScreen.create(type: state.extra as DocumentType),
