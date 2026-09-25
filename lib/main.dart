@@ -6,6 +6,7 @@ import 'app/app.dart';
 import 'app/theme/theme_preference_store.dart';
 import 'core/network/api_client.dart';
 import 'core/network/api_client_provider.dart';
+import 'core/platform/glass_support.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -13,11 +14,13 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final apiClient = await ApiClient.create();
   final preferences = await SharedPreferences.getInstance();
+  final glassBlur = await detectGlassBlurSupport();
 
   runApp(ProviderScope(
     overrides: [
       apiClientProvider.overrideWithValue(apiClient),
       themePreferenceStoreProvider.overrideWithValue(SharedPreferencesThemePreferenceStore(preferences)),
+      glassBlurEnabledProvider.overrideWithValue(glassBlur),
     ],
     child: const App(),
   ));
