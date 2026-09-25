@@ -6,7 +6,14 @@ String describeActionError(Object error) {
   if (error is DioException && error.response == null) {
     return 'Check your connection and try again';
   }
-  final code = error is DioException ? (error.response?.data?['error'] as String?) : null;
+  // The server answers 429 with a plain body, not an error code, so the
+  // status is the only reliable signal that the user is being rate limited.
+  if (error is DioException && error.response?.statusCode == 429) {
+    return 'Too many attempts — wait a few minutes and try again';
+  }
+  // Proxies and gateways answer with HTML or plain text, not a JSON body.
+  final data = error is DioException ? error.response?.data : null;
+  final code = data is Map ? data['error'] as String? : null;
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',
     'finalize_requires_approval' => 'Only the business owner can finalize documents',
@@ -34,6 +41,7 @@ String describeActionError(Object error) {
     'expired' => 'This invite has expired',
     'already_accepted' => 'This invite was already accepted',
     'not_found' => "We couldn't find that — it may have been removed",
+    'invalid_challenge' => 'This sign-in expired — log in again',
     'invalid_code' => "That code isn't right — try again",
     'not_enabled' => "Two-factor sign-in isn't turned on",
     'has_admin_history' => "This account can't be deleted because it has administrator history",

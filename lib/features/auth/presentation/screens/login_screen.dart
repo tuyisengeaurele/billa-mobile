@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,8 +67,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .read(authControllerProvider.notifier)
           .submitTwoFactorChallenge(challengeId: _challengeId!, code: _codeController.text.trim());
       HapticFeedback.lightImpact();
-    } catch (_) {
-      setState(() => _errorMessage = 'That code is incorrect or expired.');
+    } catch (e) {
+      // Every failure used to read as "incorrect or expired", which hid rate
+      // limits and dropped connections behind a code that was actually right.
+      debugPrint('Two-factor challenge failed: $e');
+      final expired = e is DioException && e.response?.data is Map && (e.response!.data as Map)['error'] == 'invalid_challenge';
+      setState(() {
+        _errorMessage = describeActionError(e);
+        if (expired) _challengeId = null;
+      });
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
