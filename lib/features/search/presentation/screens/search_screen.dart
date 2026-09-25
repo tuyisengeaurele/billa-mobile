@@ -47,9 +47,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   void _run(String query) {
+    // The builder subscribes on the next frame, so a request that fails
+    // before then would be reported as unhandled; the builder still shows it.
+    final future = ref.read(searchRepositoryProvider).search(query)..ignore();
     setState(() {
       _query = query;
-      _future = ref.read(searchRepositoryProvider).search(query);
+      _future = future;
     });
   }
 
