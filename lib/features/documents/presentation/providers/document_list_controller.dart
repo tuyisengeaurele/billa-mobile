@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/pagination/paginated_list_controller.dart';
 import '../../../../core/pagination/paginated_result.dart';
@@ -13,6 +14,18 @@ class DocumentListController extends PaginatedListController<Document> {
 
   List<DocumentType>? _types;
   DocumentStatus? _statusFilter;
+
+  bool hasFilters({List<DocumentType>? types, DocumentStatus? status}) {
+    return listEquals(_types, types) && _statusFilter == status;
+  }
+
+  // One refresh for both filters: applying them one after the other would
+  // fetch twice and briefly show a list that matches only one of them.
+  Future<void> setFilters({List<DocumentType>? types, DocumentStatus? status}) {
+    _types = types;
+    _statusFilter = status;
+    return refresh();
+  }
 
   Future<void> setTypes(List<DocumentType>? types) {
     _types = types;

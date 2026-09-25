@@ -35,7 +35,7 @@ void main() {
     expect(describeActionError(_error('not_written_off')), "This invoice hasn't been written off");
     expect(
       describeActionError(_error('subscription_required')),
-      'Subscription required to record payments',
+      'An active subscription is required to do that',
     );
     expect(describeActionError(_error('read_only_role')), 'Your role on this business is read-only');
     expect(describeActionError(_error('business_limit_reached')), "You've reached the limit of 3 businesses");
@@ -69,5 +69,14 @@ void main() {
 
   test('falls back to a generic message for a non-Dio error', () {
     expect(describeActionError(Exception('boom')), 'Something went wrong — try again');
+  });
+
+  test('a request that never got a response asks the user to check their connection', () {
+    final offline = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      type: DioExceptionType.connectionError,
+    );
+
+    expect(describeActionError(offline), 'Check your connection and try again');
   });
 }

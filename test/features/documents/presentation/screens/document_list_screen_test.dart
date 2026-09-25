@@ -37,9 +37,12 @@ void main() {
     repository = _MockDocumentRepository();
   });
 
-  Widget buildApp() {
+  Widget buildApp({DocumentStatus? initialStatus, List<DocumentType>? initialTypes}) {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const DocumentListScreen()),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => DocumentListScreen(initialStatus: initialStatus, initialTypes: initialTypes),
+      ),
       GoRoute(
         path: '/documents/new',
         builder: (context, state) => Scaffold(body: Text('new document screen: ${state.extra}')),
@@ -106,5 +109,52 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('new document screen: DocumentType.invoice'), findsOneWidget);
+  });
+
+  testWidgets('opens with the initial status selected and fetches only those documents', (tester) async {
+    when(() => repository.list(types: null, status: DocumentStatus.draft, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [_document], total: 1, page: 1, pageSize: 20),
+    );
+
+    await tester.pumpWidget(buildApp(initialStatus: DocumentStatus.draft));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('document-status-draft'))).selected, isTrue);
+    expect(find.text('INV-0001'), findsOneWidget);
+  });
+
+  testWidgets('opens with the initial types selected', (tester) async {
+    when(() => repository.list(types: [DocumentType.quote, DocumentType.proforma], status: null, search: null, page: 1, pageSize: 20))
+        .thenAnswer((_) async => const PaginatedResult(results: [_document], total: 1, page: 1, pageSize: 20));
+
+    await tester.pumpWidget(buildApp(initialTypes: [DocumentType.quote, DocumentType.proforma]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('INV-0001'), findsOneWidget);
+  });
+
+  testWidgets('reopening without filters resets a filter left over from an earlier visit', (tester) async {
+    when(() => repository.list(types: null, status: DocumentStatus.draft, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
+    );
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [_document], total: 1, page: 1, pageSize: 20),
+    );
+    final container = ProviderContainer(overrides: [documentRepositoryProvider.overrideWithValue(repository)]);
+    addTearDown(container.dispose);
+
+    Widget host(Widget screen) => UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(theme: AppTheme.light, home: screen),
+        );
+
+    await tester.pumpWidget(host(const DocumentListScreen(initialStatus: DocumentStatus.draft)));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(host(const DocumentListScreen()));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('document-status-all'))).selected, isTrue);
+    expect(find.text('INV-0001'), findsOneWidget);
   });
 }

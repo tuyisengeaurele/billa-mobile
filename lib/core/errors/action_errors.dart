@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
 
 String describeActionError(Object error) {
+  // No response at all means the request never reached the server (offline,
+  // timeout, dropped connection), which is the one failure the user can fix.
+  if (error is DioException && error.response == null) {
+    return 'Check your connection and try again';
+  }
   final code = error is DioException ? (error.response?.data?['error'] as String?) : null;
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',
@@ -18,7 +23,7 @@ String describeActionError(Object error) {
     'already_voided' => 'This payment was already voided',
     'already_paid' => 'This invoice is already fully paid',
     'not_written_off' => "This invoice hasn't been written off",
-    'subscription_required' => 'Subscription required to record payments',
+    'subscription_required' => 'An active subscription is required to do that',
     'read_only_role' => 'Your role on this business is read-only',
     'business_limit_reached' => "You've reached the limit of 3 businesses",
     'already_member' => 'That person is already on this team',
