@@ -76,6 +76,11 @@ class BusinessSettingsRepositoryImpl implements BusinessSettingsRepository {
   }
 
   @override
+  Future<BusinessSettings> setDefaultTemplate(DocumentTemplate template) {
+    return _patch({'defaultTemplate': documentTemplateToJson(template)});
+  }
+
+  @override
   Future<String> uploadSignature(List<int> bytes, String filename) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/business/signature',
