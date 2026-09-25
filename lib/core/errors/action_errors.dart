@@ -18,7 +18,7 @@ String describeActionError(Object error) {
     'already_voided' => 'This payment was already voided',
     'already_paid' => 'This invoice is already fully paid',
     'not_written_off' => "This invoice hasn't been written off",
-    'subscription_required' => 'Subscription required to record payments',
+    'subscription_required' => 'An active subscription is required to do that',
     'read_only_role' => 'Your role on this business is read-only',
     'business_limit_reached' => "You've reached the limit of 3 businesses",
     'already_member' => 'That person is already on this team',
