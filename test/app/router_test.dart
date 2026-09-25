@@ -172,7 +172,7 @@ void main() {
     expect(find.text('No documents yet'), findsOneWidget);
   });
 
-  testWidgets('the documents list FAB reaches the real document editor screen', (tester) async {
+  testWidgets('the quick-create button reaches the real document editor screen', (tester) async {
     final documentRepository = _MockDocumentRepository();
     when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
       (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
@@ -185,11 +185,9 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.tap(find.byKey(const Key('quick-create')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Invoice').last);
+    await tester.tap(find.byKey(const Key('quick-create-invoice')));
     await tester.pumpAndSettle();
 
     expect(find.text('New Invoice'), findsOneWidget);

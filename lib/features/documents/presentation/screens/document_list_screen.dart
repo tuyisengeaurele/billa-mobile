@@ -1,5 +1,5 @@
 import '../../../../core/widgets/pull_to_refresh.dart';
-import '../../../../core/widgets/app_sheet.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -75,23 +75,27 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
     ref.read(documentListControllerProvider.notifier).setStatusFilter(status);
   }
 
-  Future<void> _createDocument() async {
-    final type = await showAppSheet<DocumentType>(
-      context,
-      builder: (context) => AppSheetContent(
-        title: 'New document',
-        children: [
-          for (final type in DocumentType.values)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(documentTypeIcon(type)),
-              title: Text(documentTypeLabel(type)),
-              onTap: () => Navigator.of(context).pop(type),
-            ),
-        ],
-      ),
-    );
-    if (type != null && mounted) context.push('/documents/new', extra: type);
+  @override
+  void didUpdateWidget(covariant DocumentListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The tab stays alive between visits, so a link into it with new filters
+    // arrives as an updated widget rather than a new screen.
+    if (!listEquals(oldWidget.initialTypes, widget.initialTypes) || oldWidget.initialStatus != widget.initialStatus) {
+      setState(() {
+        _selectedTypes
+          ..clear()
+          ..addAll(widget.initialTypes ?? const []);
+        _selectedStatus = widget.initialStatus;
+      });
+      // Providers cannot be changed while the tree is updating.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(documentListControllerProvider.notifier).setFilters(
+              types: _selectedTypes.isEmpty ? null : _selectedTypes.toList(),
+              status: _selectedStatus,
+            );
+      });
+    }
   }
 
   @override
@@ -100,7 +104,6 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Documents')),
-      floatingActionButton: FloatingActionButton(onPressed: _createDocument, child: const Icon(Icons.add)),
       body: Column(
         children: [
           Padding(

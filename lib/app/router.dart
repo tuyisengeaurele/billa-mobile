@@ -39,6 +39,7 @@ import '../features/receivables/presentation/screens/receivables_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/team/presentation/screens/team_screen.dart';
 import 'fade_through_page.dart';
+import 'shell/app_shell.dart';
 import 'theme/bootstrap_screen.dart';
 
 const _authRoutes = {'/login', '/register'};
@@ -65,11 +66,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/bootstrap', pageBuilder: (context, state) => fadeThroughPage(state, const BootstrapScreen())),
-      GoRoute(path: '/', pageBuilder: (context, state) => fadeThroughPage(state, const HomeScreen())),
+      StatefulShellRoute.indexedStack(
+        pageBuilder: (context, state, navigationShell) => fadeThroughPage(state, AppShell(navigationShell: navigationShell)),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+          GoRoute(
+            path: '/documents',
+            builder: (context, state) {
+              final status = switch (state.uri.queryParameters['status']) {
+                'draft' => DocumentStatus.draft,
+                'finalized' => DocumentStatus.finalized,
+                _ => null,
+              };
+              final types = state.uri.queryParameters['types']
+                  ?.split(',')
+                  .map((name) => DocumentType.values.where((type) => type.name == name).firstOrNull)
+                  .whereType<DocumentType>()
+                  .toList();
+              return DocumentListScreen(initialStatus: status, initialTypes: (types?.isEmpty ?? true) ? null : types);
+            },
+          ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/customers', builder: (context, state) => const CustomerListScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/receivables', builder: (context, state) => const ReceivablesScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+          ]),
+        ],
+      ),
       GoRoute(path: '/login', pageBuilder: (context, state) => fadeThroughPage(state, const LoginScreen())),
       GoRoute(path: '/register', pageBuilder: (context, state) => fadeThroughPage(state, const RegisterScreen())),
       GoRoute(path: '/onboarding', pageBuilder: (context, state) => fadeThroughPage(state, const OnboardingScreen())),
-      GoRoute(path: '/customers', builder: (context, state) => const CustomerListScreen()),
       GoRoute(path: '/customers/new', builder: (context, state) => const CustomerFormScreen()),
       GoRoute(
         path: '/customers/:id/edit',
@@ -84,22 +118,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/items/:id/edit',
         builder: (context, state) => ItemFormScreen(existing: state.extra as Item?),
-      ),
-      GoRoute(
-        path: '/documents',
-        builder: (context, state) {
-          final status = switch (state.uri.queryParameters['status']) {
-            'draft' => DocumentStatus.draft,
-            'finalized' => DocumentStatus.finalized,
-            _ => null,
-          };
-          final types = state.uri.queryParameters['types']
-              ?.split(',')
-              .map((name) => DocumentType.values.where((type) => type.name == name).firstOrNull)
-              .whereType<DocumentType>()
-              .toList();
-          return DocumentListScreen(initialStatus: status, initialTypes: (types?.isEmpty ?? true) ? null : types);
-        },
       ),
       GoRoute(
         path: '/documents/new',
@@ -117,13 +135,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/documents/:id/payments/new',
         builder: (context, state) => RecordPaymentScreen(document: state.extra as Document),
       ),
-      GoRoute(path: '/receivables', builder: (context, state) => const ReceivablesScreen()),
       GoRoute(path: '/businesses', builder: (context, state) => const BusinessesScreen()),
       GoRoute(path: '/businesses/join', builder: (context, state) => const JoinBusinessScreen()),
       GoRoute(path: '/team', builder: (context, state) => const TeamScreen()),
       GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/settings/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/settings/security', builder: (context, state) => const SecurityScreen()),
       GoRoute(path: '/settings/security/two-factor', builder: (context, state) => const TwoFactorSetupScreen()),
