@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
 
 String describeActionError(Object error) {
+  // No response at all means the request never reached the server (offline,
+  // timeout, dropped connection), which is the one failure the user can fix.
+  if (error is DioException && error.response == null) {
+    return 'Check your connection and try again';
+  }
   final code = error is DioException ? (error.response?.data?['error'] as String?) : null;
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',

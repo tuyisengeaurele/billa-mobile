@@ -70,4 +70,13 @@ void main() {
   test('falls back to a generic message for a non-Dio error', () {
     expect(describeActionError(Exception('boom')), 'Something went wrong — try again');
   });
+
+  test('a request that never got a response asks the user to check their connection', () {
+    final offline = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      type: DioExceptionType.connectionError,
+    );
+
+    expect(describeActionError(offline), 'Check your connection and try again');
+  });
 }
