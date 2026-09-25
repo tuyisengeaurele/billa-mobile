@@ -15,8 +15,8 @@ class NavDestination {
 }
 
 /// A floating capsule tab bar. The selected tab sits in a soft capsule that
-/// slides between tabs; icons fill in when selected; every tab keeps its label
-/// so nothing depends on guessing what an icon means.
+/// slides between tabs and its icon fills in. Tabs are icon-only, so the label
+/// lives in the accessibility semantics instead.
 class GlassNavBar extends StatelessWidget {
   const GlassNavBar({super.key, required this.destinations, required this.currentIndex, required this.onSelected});
 
@@ -103,24 +103,12 @@ class _NavItem extends StatelessWidget {
       child: InkResponse(
         onTap: onTap,
         radius: 36,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Badge(
-              isLabelVisible: destination.badge > 0,
-              label: Text(destination.badge > 99 ? '99+' : '${destination.badge}'),
-              child: Icon(selected ? destination.selectedIcon : destination.icon, size: 24, color: color),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              destination.label,
-              maxLines: 1,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  ),
-            ),
-          ],
+        child: Center(
+          child: Badge(
+            isLabelVisible: destination.badge > 0,
+            label: Text(destination.badge > 99 ? '99+' : '${destination.badge}'),
+            child: Icon(selected ? destination.selectedIcon : destination.icon, size: 26, color: color),
+          ),
         ),
       ),
     );

@@ -59,12 +59,13 @@ void main() {
     );
   }
 
-  testWidgets('shows the five tabs and starts on Home', (tester) async {
+  testWidgets('shows the five tabs as icons named for screen readers, starting on Home', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
-    for (final label in ['Home', 'Documents', 'Customers', 'Payments', 'Profile']) {
-      expect(find.text(label), findsOneWidget);
+    for (final (i, label) in ['Home', 'Documents', 'Customers', 'Payments', 'Profile'].indexed) {
+      expect(tester.getSemantics(find.byKey(Key('nav-tab-$i'))).label, label);
+      expect(find.descendant(of: find.byKey(Key('nav-tab-$i')), matching: find.byType(Text)), findsNothing);
     }
     expect(find.text('home 0'), findsOneWidget);
   });

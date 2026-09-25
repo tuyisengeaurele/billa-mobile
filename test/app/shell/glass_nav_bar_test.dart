@@ -29,11 +29,12 @@ Widget _host({required int index, required ValueChanged<int> onSelected, List<Na
     );
 
 void main() {
-  testWidgets('shows a label for every destination and marks only the selected one', (tester) async {
+  testWidgets('shows only icons, names each for screen readers, and fills only the selected one', (tester) async {
     await tester.pumpWidget(_host(index: 1, onSelected: (_) {}));
 
-    for (final label in ['Home', 'Documents', 'Customers', 'Payments', 'Profile']) {
-      expect(find.text(label), findsOneWidget);
+    for (final (i, label) in ['Home', 'Documents', 'Customers', 'Payments', 'Profile'].indexed) {
+      expect(tester.getSemantics(find.byKey(Key('nav-tab-$i'))).label, startsWith(label));
+      expect(find.text(label), findsNothing);
     }
     expect(find.byIcon(Icons.description), findsOneWidget);
     expect(find.byIcon(Icons.description_outlined), findsNothing);
