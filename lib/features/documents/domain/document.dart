@@ -69,6 +69,9 @@ class Document with _$Document {
     required int subtotal,
     required int taxTotal,
     required int total,
+    @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+    @Default(DocumentLanguage.en)
+    DocumentLanguage language,
     String? sentAt,
     required int amountPaid,
     @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson) PaymentStatus? paymentStatus,
