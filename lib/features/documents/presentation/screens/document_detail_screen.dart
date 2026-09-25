@@ -89,8 +89,13 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     }
   }
 
-  Future<bool> _confirm(String title, String? content, String confirmLabel) =>
-      showConfirmDialog(context, title: title, content: content, confirmLabel: confirmLabel);
+  Future<bool> _confirm(String title, String? content, String confirmLabel) => showConfirmDialog(
+        context,
+        title: title,
+        content: content,
+        confirmLabel: confirmLabel,
+        destructive: confirmLabel == 'Delete',
+      );
 
   Future<void> _finalize() async {
     if (!await _confirm(
