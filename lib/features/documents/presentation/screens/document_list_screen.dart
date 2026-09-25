@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
-import '../../../../core/widgets/loading_skeleton.dart';
+import '../../../../core/widgets/list_skeleton.dart';
 import '../../domain/document_enums.dart';
 import '../providers/document_list_controller.dart';
 import '../widgets/document_list_tile.dart';
@@ -196,10 +196,7 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
                   message: "Couldn't load your documents",
                   onRetry: () => ref.read(documentListControllerProvider.notifier).refresh(),
                 )),
-              _ => ScrollableFill(child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
-                )),
+              _ => const ListSkeleton(),
             },
               ),
             )

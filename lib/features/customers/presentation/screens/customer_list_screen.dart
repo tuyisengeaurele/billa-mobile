@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
-import '../../../../core/widgets/loading_skeleton.dart';
+import '../../../../core/widgets/list_skeleton.dart';
 import '../providers/customer_list_controller.dart';
 import '../widgets/customer_list_tile.dart';
 
@@ -113,10 +113,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   message: "Couldn't load your customers",
                   onRetry: () => ref.read(customerListControllerProvider.notifier).refresh(),
                 )),
-              _ => ScrollableFill(child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
-                )),
+              _ => const ListSkeleton(),
             },
               ),
             )
