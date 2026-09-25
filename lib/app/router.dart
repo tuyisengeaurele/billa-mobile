@@ -44,6 +44,16 @@ import 'theme/bootstrap_screen.dart';
 
 const _authRoutes = {'/login', '/register'};
 
+/// How long the splash stays up at launch even when the session is already
+/// known, so the brand moment is seen rather than flashed. Zero unless the app
+/// entry point sets it, which keeps tests from waiting on a clock.
+final splashDurationProvider = Provider<Duration>((ref) => Duration.zero);
+
+final splashHoldProvider = FutureProvider<void>((ref) async {
+  final duration = ref.watch(splashDurationProvider);
+  if (duration > Duration.zero) await Future<void>.delayed(duration);
+});
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
@@ -51,6 +61,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final status = ref.read(authControllerProvider).valueOrNull;
       final path = state.uri.path;
+      if (ref.read(splashHoldProvider).isLoading) return path == '/bootstrap' ? null : '/bootstrap';
       if (status == null) return path == '/bootstrap' ? null : '/bootstrap';
 
       return status.when(
@@ -60,7 +71,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         authenticated: (user, business) {
           final needsOnboarding = business.onboardingCompletedAt == null;
           if (needsOnboarding) return path == '/onboarding' ? null : '/onboarding';
-          return (_authRoutes.contains(path) || path == '/onboarding') ? '/' : null;
+          return (_authRoutes.contains(path) || path == '/onboarding' || path == '/bootstrap') ? '/' : null;
         },
       );
     },
@@ -159,5 +170,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 class GoRouterRefreshNotifier extends ChangeNotifier {
   GoRouterRefreshNotifier(Ref ref) {
     ref.listen(authControllerProvider, (_, _) => notifyListeners());
+    ref.listen(splashHoldProvider, (_, _) => notifyListeners());
   }
 }

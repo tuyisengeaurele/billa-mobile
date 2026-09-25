@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
+import 'app/router.dart';
 import 'app/theme/theme_preference_store.dart';
 import 'core/network/api_client.dart';
 import 'core/network/api_client_provider.dart';
@@ -22,6 +23,7 @@ void main() async {
       apiClientProvider.overrideWithValue(apiClient),
       themePreferenceStoreProvider.overrideWithValue(SharedPreferencesThemePreferenceStore(preferences)),
       glassBlurEnabledProvider.overrideWithValue(glassBlur),
+      splashDurationProvider.overrideWithValue(const Duration(seconds: 2)),
       sessionSnapshotStoreProvider.overrideWithValue(SharedPreferencesSessionSnapshotStore(preferences)),
     ],
     child: const App(),

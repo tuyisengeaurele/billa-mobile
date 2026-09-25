@@ -342,6 +342,27 @@ void main() {
     expect(find.text('No pending invites'), findsOneWidget);
   });
 
+  testWidgets('a known session still shows the splash for the hold time before the app', (tester) async {
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      splashDurationProvider.overrideWithValue(const Duration(seconds: 2)),
+    ]);
+    addTearDown(container.dispose);
+
+    final router = container.read(appRouterProvider);
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/bootstrap');
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/');
+  });
+
   testWidgets('top-level screens switch with a fade-through', (tester) async {
     final container = ProviderContainer(overrides: [
       authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.unauthenticated())),
