@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
-import '../../../../core/widgets/loading_skeleton.dart';
+import '../../../../core/widgets/list_skeleton.dart';
 import '../providers/item_list_controller.dart';
 import '../widgets/item_list_tile.dart';
 
@@ -53,10 +53,16 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
     final state = ref.watch(itemListControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Items')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/items/new'),
-        child: const Icon(Icons.add),
+      appBar: AppBar(
+        title: const Text('Items'),
+        actions: [
+          IconButton(
+            key: const Key('item-add'),
+            icon: const Icon(Icons.add),
+            tooltip: 'Add item',
+            onPressed: () => context.push('/items/new'),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -132,10 +138,7 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
                   message: "Couldn't load your items",
                   onRetry: () => ref.read(itemListControllerProvider.notifier).refresh(),
                 )),
-              _ => ScrollableFill(child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
-                )),
+              _ => const ListSkeleton(),
             },
               ),
             )

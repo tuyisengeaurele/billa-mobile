@@ -31,10 +31,34 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthStatus> me() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/auth/me');
-      return _statusFromSessionResponse(response.data!);
+      return await _fetchMe();
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 401) rethrow;
+    }
+    // The access token only lives 15 minutes, so a 401 here usually means it
+    // lapsed while the app was closed, not that the user signed out. The
+    // refresh token (valid for weeks) decides that.
+    if (!await refreshSession()) return const AuthStatus.unauthenticated();
+    try {
+      return await _fetchMe();
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) return const AuthStatus.unauthenticated();
+      rethrow;
+    }
+  }
+
+  Future<AuthStatus> _fetchMe() async {
+    final response = await _dio.get<Map<String, dynamic>>('/auth/me');
+    return _statusFromSessionResponse(response.data!);
+  }
+
+  @override
+  Future<bool> refreshSession() async {
+    try {
+      await _dio.post<void>('/auth/refresh');
+      return true;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) return false;
       rethrow;
     }
   }

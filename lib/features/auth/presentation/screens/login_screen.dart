@@ -15,6 +15,7 @@ import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 import '../providers/auth_controller.dart';
 import '../providers/firebase_auth_service_provider.dart';
 import '../widgets/auth_layout.dart';
+import '../widgets/verification_view.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -75,8 +76,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       // Every failure used to read as "incorrect or expired", which hid rate
       // limits and dropped connections behind a code that was actually right.
-      debugPrint('Two-factor challenge failed: $e');
       final expired = e is DioException && e.response?.data is Map && (e.response!.data as Map)['error'] == 'invalid_challenge';
+      _codeController.clear();
       setState(() {
         _errorMessage = describeActionError(e);
         if (expired) _challengeId = null;
@@ -84,6 +85,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  void _backToLogin() {
+    _codeController.clear();
+    setState(() {
+      _challengeId = null;
+      _errorMessage = null;
+    });
   }
 
   Future<void> _forgotPassword() async {
@@ -131,25 +140,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: _challengeId != null
           ? AuthLayout(
               key: const ValueKey('code'),
-              title: 'Verification code',
-              subtitle: 'Enter the 6-digit code from your authenticator app, or use a backup code.',
+              title: 'Enter your code',
+              subtitle: 'Open your authenticator app and enter the 6-digit code for Billa.',
               children: [
-                TextField(
-                  key: const Key('login-2fa-code'),
+                VerificationView(
                   controller: _codeController,
-                  autofocus: true,
-                  decoration: const InputDecoration(labelText: 'Code', prefixIcon: Icon(Icons.shield_outlined)),
-                ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  AuthError(message: _errorMessage!),
-                ],
-                const SizedBox(height: 24),
-                AppButton(label: 'Verify', onPressed: _submitTwoFactorCode, isLoading: _isSubmitting),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => setState(() => _challengeId = null),
-                  child: const Text('Back to login'),
+                  email: _emailController.text.trim(),
+                  errorMessage: _errorMessage,
+                  isSubmitting: _isSubmitting,
+                  onSubmit: _submitTwoFactorCode,
+                  onBack: _backToLogin,
                 ),
               ],
             )

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/router.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import '../support/tall_screen.dart';
 import 'package:billa_mobile/core/pagination/paginated_result.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 import 'package:billa_mobile/features/auth/domain/auth_user.dart';
@@ -128,32 +129,13 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-customers')));
+    await tester.tap(find.byKey(const Key('nav-tab-2')));
     await tester.pumpAndSettle();
 
     expect(find.text('No customers yet'), findsOneWidget);
   });
 
-  testWidgets('home screen navigates to the items list', (tester) async {
-    final itemRepository = _MockItemRepository();
-    when(() => itemRepository.list(search: null, category: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
-      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
-    );
-    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
-    final container = ProviderContainer(overrides: [
-      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
-      itemRepositoryProvider.overrideWithValue(itemRepository),
-    ]);
-    addTearDown(container.dispose);
-
-    await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-items')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No items yet'), findsOneWidget);
-  });
-
-  testWidgets('home screen navigates to the documents list', (tester) async {
+  testWidgets('the documents tab shows the documents list', (tester) async {
     final documentRepository = _MockDocumentRepository();
     when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
       (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
@@ -166,13 +148,13 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.tap(find.byKey(const Key('nav-tab-1')));
     await tester.pumpAndSettle();
 
     expect(find.text('No documents yet'), findsOneWidget);
   });
 
-  testWidgets('the documents list FAB reaches the real document editor screen', (tester) async {
+  testWidgets('the quick-create button reaches the real document editor screen', (tester) async {
     final documentRepository = _MockDocumentRepository();
     when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
       (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
@@ -185,18 +167,16 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.tap(find.byKey(const Key('quick-create')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Invoice').last);
+    await tester.tap(find.byKey(const Key('quick-create-invoice')));
     await tester.pumpAndSettle();
 
     expect(find.text('New Invoice'), findsOneWidget);
     expect(find.text('Choose a customer'), findsOneWidget);
   });
 
-  testWidgets('home screen navigates to receivables', (tester) async {
+  testWidgets('the payments tab shows receivables', (tester) async {
     final receivablesRepository = _MockReceivablesRepository();
     when(() => receivablesRepository.list()).thenAnswer((_) async => []);
     const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
@@ -207,29 +187,19 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-receivables')));
+    await tester.tap(find.byKey(const Key('nav-tab-3')));
     await tester.pumpAndSettle();
 
     expect(find.text('Nothing outstanding. All invoices are paid up'), findsOneWidget);
   });
 
-  testWidgets('home shows the business name and an owner-only Team button', (tester) async {
+  testWidgets('home shows the business name', (tester) async {
     final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
 
     expect(find.text('Acme'), findsOneWidget);
-    expect(find.byKey(const Key('home-nav-team')), findsOneWidget);
-  });
-
-  testWidgets('home hides the Team button for a non-owner', (tester) async {
-    final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: false)]);
-    addTearDown(container.dispose);
-
-    await _pumpRouter(tester, container);
-
-    expect(find.byKey(const Key('home-nav-team')), findsNothing);
   });
 
   testWidgets('the business switcher opens the businesses screen', (tester) async {
@@ -247,29 +217,13 @@ void main() {
     expect(find.text('Join a business'), findsOneWidget);
   });
 
-  testWidgets('the Team button opens the team screen for an owner', (tester) async {
-    final teamRepository = _MockTeamRepository();
-    when(() => teamRepository.members()).thenAnswer((_) async => []);
-    when(() => teamRepository.invites()).thenAnswer((_) async => []);
-    final container = _homeContainer(
-      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
-      teamRepository: teamRepository,
-    );
-    addTearDown(container.dispose);
-
-    await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-team')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No pending invites'), findsOneWidget);
-  });
-
-  testWidgets('the account icon opens settings with the signed-in email', (tester) async {
+  testWidgets('the avatar opens the profile tab with the signed-in email', (tester) async {
+    useTallScreen(tester);
     final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-account')));
+    await tester.tap(find.byKey(const Key('home-avatar')));
     await tester.pumpAndSettle();
 
     expect(find.text('a@b.com'), findsOneWidget);
@@ -277,6 +231,7 @@ void main() {
   });
 
   testWidgets('settings rows open profile, security, notifications, and appearance', (tester) async {
+    useTallScreen(tester);
     final profileRepository = _MockProfileRepository();
     when(() => profileRepository.notificationPreferences()).thenAnswer((_) async => {});
     final securityRepository = _MockSecurityRepository();
@@ -310,6 +265,7 @@ void main() {
   });
 
   testWidgets('an owner reaches every business settings section from settings', (tester) async {
+    useTallScreen(tester);
     final settingsRepository = _MockBusinessSettingsRepository();
     when(() => settingsRepository.get()).thenAnswer((_) async => const BusinessSettings(id: 'b1', name: 'Acme'));
     when(() => settingsRepository.subscription()).thenAnswer(
@@ -344,6 +300,68 @@ void main() {
     }
   });
 
+
+  testWidgets('items are reached from the profile tab', (tester) async {
+    useTallScreen(tester);
+    final itemRepository = _MockItemRepository();
+    when(() => itemRepository.list(search: null, category: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
+    );
+    final container = _homeContainer(
+      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: false)],
+      extraOverrides: [itemRepositoryProvider.overrideWithValue(itemRepository)],
+    );
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    router.go('/settings');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-items')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No items yet'), findsOneWidget);
+  });
+
+  testWidgets('team is reached from the profile tab by an owner and hidden from others', (tester) async {
+    useTallScreen(tester);
+    final teamRepository = _MockTeamRepository();
+    when(() => teamRepository.members()).thenAnswer((_) async => []);
+    when(() => teamRepository.invites()).thenAnswer((_) async => []);
+    final container = _homeContainer(
+      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
+      teamRepository: teamRepository,
+    );
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    router.go('/settings');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-team')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No pending invites'), findsOneWidget);
+  });
+
+  testWidgets('a known session still shows the splash for the hold time before the app', (tester) async {
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      splashDurationProvider.overrideWithValue(const Duration(seconds: 2)),
+    ]);
+    addTearDown(container.dispose);
+
+    final router = container.read(appRouterProvider);
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/bootstrap');
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/');
+  });
 
   testWidgets('top-level screens switch with a fade-through', (tester) async {
     final container = ProviderContainer(overrides: [

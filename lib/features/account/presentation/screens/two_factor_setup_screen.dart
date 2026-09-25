@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/code_input.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -146,12 +147,13 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
               child: const Text('Copy key'),
             ),
             const SizedBox(height: 8),
-            TextField(
-              key: const Key('two-factor-code'),
+            const Text('Enter the 6-digit code it shows'),
+            const SizedBox(height: 12),
+            CodeInput(
+              fieldKey: const Key('two-factor-code'),
               controller: _code,
-              decoration: const InputDecoration(labelText: '6-digit code'),
-              keyboardType: TextInputType.number,
-              maxLength: 6,
+              hasError: _error != null,
+              enabled: !_busy,
               onChanged: (_) => setState(() {}),
             ),
             if (_error != null) ...[
