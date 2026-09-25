@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/router.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import '../support/tall_screen.dart';
 import 'package:billa_mobile/core/pagination/paginated_result.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 import 'package:billa_mobile/features/auth/domain/auth_user.dart';
@@ -217,6 +218,7 @@ void main() {
   });
 
   testWidgets('the avatar opens the profile tab with the signed-in email', (tester) async {
+    useTallScreen(tester);
     final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
     addTearDown(container.dispose);
 
@@ -229,6 +231,7 @@ void main() {
   });
 
   testWidgets('settings rows open profile, security, notifications, and appearance', (tester) async {
+    useTallScreen(tester);
     final profileRepository = _MockProfileRepository();
     when(() => profileRepository.notificationPreferences()).thenAnswer((_) async => {});
     final securityRepository = _MockSecurityRepository();
@@ -262,6 +265,7 @@ void main() {
   });
 
   testWidgets('an owner reaches every business settings section from settings', (tester) async {
+    useTallScreen(tester);
     final settingsRepository = _MockBusinessSettingsRepository();
     when(() => settingsRepository.get()).thenAnswer((_) async => const BusinessSettings(id: 'b1', name: 'Acme'));
     when(() => settingsRepository.subscription()).thenAnswer(
@@ -296,6 +300,47 @@ void main() {
     }
   });
 
+
+  testWidgets('items are reached from the profile tab', (tester) async {
+    useTallScreen(tester);
+    final itemRepository = _MockItemRepository();
+    when(() => itemRepository.list(search: null, category: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
+    );
+    final container = _homeContainer(
+      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: false)],
+      extraOverrides: [itemRepositoryProvider.overrideWithValue(itemRepository)],
+    );
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    router.go('/settings');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-items')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No items yet'), findsOneWidget);
+  });
+
+  testWidgets('team is reached from the profile tab by an owner and hidden from others', (tester) async {
+    useTallScreen(tester);
+    final teamRepository = _MockTeamRepository();
+    when(() => teamRepository.members()).thenAnswer((_) async => []);
+    when(() => teamRepository.invites()).thenAnswer((_) async => []);
+    final container = _homeContainer(
+      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
+      teamRepository: teamRepository,
+    );
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    router.go('/settings');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-team')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No pending invites'), findsOneWidget);
+  });
 
   testWidgets('top-level screens switch with a fade-through', (tester) async {
     final container = ProviderContainer(overrides: [
