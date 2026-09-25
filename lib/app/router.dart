@@ -38,6 +38,7 @@ import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/receivables/presentation/screens/receivables_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/team/presentation/screens/team_screen.dart';
+import 'fade_through_page.dart';
 import 'theme/bootstrap_screen.dart';
 
 const _authRoutes = {'/login', '/register'};
@@ -63,11 +64,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
     },
     routes: [
-      GoRoute(path: '/bootstrap', builder: (context, state) => const BootstrapScreen()),
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/bootstrap', pageBuilder: (context, state) => fadeThroughPage(state, const BootstrapScreen())),
+      GoRoute(path: '/', pageBuilder: (context, state) => fadeThroughPage(state, const HomeScreen())),
+      GoRoute(path: '/login', pageBuilder: (context, state) => fadeThroughPage(state, const LoginScreen())),
+      GoRoute(path: '/register', pageBuilder: (context, state) => fadeThroughPage(state, const RegisterScreen())),
+      GoRoute(path: '/onboarding', pageBuilder: (context, state) => fadeThroughPage(state, const OnboardingScreen())),
       GoRoute(path: '/customers', builder: (context, state) => const CustomerListScreen()),
       GoRoute(path: '/customers/new', builder: (context, state) => const CustomerFormScreen()),
       GoRoute(

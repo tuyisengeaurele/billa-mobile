@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -341,6 +342,22 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
     }
+  });
+
+
+  testWidgets('top-level screens switch with a fade-through', (tester) async {
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.unauthenticated())),
+    ]);
+    addTearDown(container.dispose);
+
+    final router = await _pumpRouter(tester, container);
+    expect(find.byType(FadeThroughTransition), findsWidgets);
+
+    router.go('/register');
+    await tester.pumpAndSettle();
+    expect(find.byType(FadeThroughTransition), findsWidgets);
+    expect(router.routerDelegate.currentConfiguration.uri.toString(), '/register');
   });
 }
 
