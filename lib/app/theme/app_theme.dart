@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
@@ -19,6 +20,12 @@ class AppTheme {
       ).copyWith(surface: colors.surface),
       textTheme: AppTypography.textTheme(brightness),
       extensions: [colors],
+      // Forward pushes move along one axis so depth reads as "deeper into the
+      // app", matching the same motion on both platforms.
+      pageTransitionsTheme: const PageTransitionsTheme(builders: {
+        TargetPlatform.android: SharedAxisPageTransitionsBuilder(transitionType: SharedAxisTransitionType.horizontal),
+        TargetPlatform.iOS: SharedAxisPageTransitionsBuilder(transitionType: SharedAxisTransitionType.horizontal),
+      }),
     );
   }
 
