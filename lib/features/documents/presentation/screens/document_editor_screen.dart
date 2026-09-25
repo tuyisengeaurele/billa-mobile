@@ -346,7 +346,9 @@ class _LineCardState extends ConsumerState<_LineCard> {
                 IconButton(icon: const Icon(Icons.close), onPressed: () => controller.removeLine(line.localId)),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextFormField(
@@ -397,6 +399,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 DropdownButton<DiscountType?>(
