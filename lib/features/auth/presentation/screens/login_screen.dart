@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/password_field.dart';
 import '../../data/firebase_auth_error.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 import '../providers/auth_controller.dart';
@@ -166,12 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 decoration: const InputDecoration(labelText: 'Email'),
               ),
               const SizedBox(height: 12),
-              TextField(
-                key: const Key('login-password'),
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
-              ),
+              PasswordField(key: const Key('login-password'), controller: _passwordController),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/password_field.dart';
 import '../../data/firebase_auth_error.dart';
 import '../providers/auth_controller.dart';
 import '../providers/firebase_auth_service_provider.dart';
@@ -95,21 +96,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 decoration: const InputDecoration(labelText: 'Email'),
               ),
               const SizedBox(height: 12),
-              TextField(
+              PasswordField(
                 key: const Key('register-password'),
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 4),
               PasswordRequirementsList(password: _passwordController.text),
               const SizedBox(height: 12),
-              TextField(
+              PasswordField(
                 key: const Key('register-confirm-password'),
                 controller: _confirmController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm password'),
+                label: 'Confirm password',
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 8),
