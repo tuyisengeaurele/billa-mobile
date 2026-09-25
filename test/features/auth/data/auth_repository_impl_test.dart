@@ -64,15 +64,73 @@ void main() {
     expect(status, isA<Authenticated>());
   });
 
-  test('me() maps a 401 to unauthenticated instead of throwing', () async {
+  DioException unauthorised(String path) {
+    final options = RequestOptions(path: path);
+    return DioException(requestOptions: options, response: Response(statusCode: 401, requestOptions: options));
+  }
+
+  const meJson = {
+    'user': {'id': 'u1', 'email': 'a@b.com', 'totpEnabled': false, 'isAdmin': false},
+    'business': {'id': 'b1', 'name': 'Acme', 'onboardingCompletedAt': '2026-01-01T00:00:00.000Z'},
+  };
+
+  test('me() refreshes an expired access token and retries instead of reporting a logout', () async {
     final options = RequestOptions(path: '/auth/me');
-    when(() => dio.get<Map<String, dynamic>>('/auth/me')).thenThrow(
-      DioException(requestOptions: options, response: Response(statusCode: 401, requestOptions: options)),
+    var calls = 0;
+    when(() => dio.get<Map<String, dynamic>>('/auth/me')).thenAnswer((_) async {
+      calls++;
+      if (calls == 1) throw unauthorised('/auth/me');
+      return _response(200, meJson, options);
+    });
+    when(() => dio.post<void>('/auth/refresh')).thenAnswer(
+      (_) async => Response(statusCode: 200, requestOptions: RequestOptions(path: '/auth/refresh')),
+    );
+
+    final status = await repository.me();
+
+    expect(status, isA<Authenticated>());
+    verify(() => dio.post<void>('/auth/refresh')).called(1);
+    expect(calls, 2);
+  });
+
+  test('me() reports unauthenticated only when the refresh is rejected too', () async {
+    when(() => dio.get<Map<String, dynamic>>('/auth/me')).thenAnswer((_) async => throw unauthorised('/auth/me'));
+    when(() => dio.post<void>('/auth/refresh')).thenAnswer((_) async => throw unauthorised('/auth/refresh'));
+
+    final status = await repository.me();
+
+    expect(status, const AuthStatus.unauthenticated());
+  });
+
+  test('me() lets a network failure during the refresh surface instead of signing the user out', () async {
+    when(() => dio.get<Map<String, dynamic>>('/auth/me')).thenAnswer((_) async => throw unauthorised('/auth/me'));
+    when(() => dio.post<void>('/auth/refresh')).thenAnswer(
+      (_) async => throw DioException(requestOptions: RequestOptions(path: '/auth/refresh'), type: DioExceptionType.connectionError),
+    );
+
+    expect(repository.me(), throwsA(isA<DioException>()));
+  });
+
+  test('me() refreshes at most once per call', () async {
+    when(() => dio.get<Map<String, dynamic>>('/auth/me')).thenAnswer((_) async => throw unauthorised('/auth/me'));
+    when(() => dio.post<void>('/auth/refresh')).thenAnswer(
+      (_) async => Response(statusCode: 200, requestOptions: RequestOptions(path: '/auth/refresh')),
     );
 
     final status = await repository.me();
 
     expect(status, const AuthStatus.unauthenticated());
+    verify(() => dio.post<void>('/auth/refresh')).called(1);
+  });
+
+  test('refreshSession returns true on success and false when the refresh token is rejected', () async {
+    when(() => dio.post<void>('/auth/refresh')).thenAnswer(
+      (_) async => Response(statusCode: 200, requestOptions: RequestOptions(path: '/auth/refresh')),
+    );
+    expect(await repository.refreshSession(), isTrue);
+
+    when(() => dio.post<void>('/auth/refresh')).thenAnswer((_) async => throw unauthorised('/auth/refresh'));
+    expect(await repository.refreshSession(), isFalse);
   });
 
   test('me() maps a valid session to authenticated', () async {
