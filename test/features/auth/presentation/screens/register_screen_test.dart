@@ -97,4 +97,13 @@ void main() {
     expect(find.text('Continue with Google'), findsOneWidget);
     verifyNever(() => authRepository.exchangeSession(idToken: any(named: 'idToken'), businessName: any(named: 'businessName')));
   });
+
+  testWidgets('shows the create-account heading and a way back to log in', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Create your account'), findsOneWidget);
+    expect(find.text('Already have an account? Log in'), findsOneWidget);
+    expect(find.byTooltip('Show password'), findsNWidgets(2));
+  });
 }

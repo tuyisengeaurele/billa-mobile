@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/google_sign_in_button.dart';
+import '../../../../core/widgets/password_field.dart';
 import '../../data/firebase_auth_error.dart';
 import '../providers/auth_controller.dart';
 import '../providers/firebase_auth_service_provider.dart';
+import '../widgets/auth_layout.dart';
 import '../widgets/password_requirements_list.dart';
 
 const _defaultBusinessName = 'My Business';
@@ -80,56 +83,54 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Create an account', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 16),
-              TextField(
-                key: const Key('register-email'),
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const Key('register-password'),
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: 4),
-              PasswordRequirementsList(password: _passwordController.text),
-              const SizedBox(height: 12),
-              TextField(
-                key: const Key('register-confirm-password'),
-                controller: _confirmController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm password'),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 8),
-                Text(_errorMessage!),
-              ],
-              const SizedBox(height: 16),
-              AppButton(key: const Key('register-submit'), label: 'Create account', onPressed: _submit, isLoading: _isSubmitting),
-              const SizedBox(height: 24),
-              const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('or')), Expanded(child: Divider())]),
-              const SizedBox(height: 16),
-              OutlinedButton(onPressed: _signUpWithGoogle, child: const Text('Continue with Google')),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => context.go('/login'),
-                child: const Text('Already have one? Log in'),
-              ),
-            ],
+    return AuthLayout(
+      title: 'Create your account',
+      subtitle: 'Start sending professional invoices, quotes, and receipts.',
+      children: [
+        TextField(
+          key: const Key('register-email'),
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+        ),
+        const SizedBox(height: 12),
+        PasswordField(
+          key: const Key('register-password'),
+          controller: _passwordController,
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 8),
+        PasswordRequirementsList(password: _passwordController.text),
+        const SizedBox(height: 12),
+        PasswordField(
+          key: const Key('register-confirm-password'),
+          controller: _confirmController,
+          label: 'Confirm password',
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 12),
+          AuthError(message: _errorMessage!),
+        ],
+        const SizedBox(height: 24),
+        AppButton(
+          key: const Key('register-submit'),
+          label: 'Create account',
+          onPressed: _submit,
+          isLoading: _isSubmitting,
+        ),
+        const SizedBox(height: 24),
+        const AuthDivider(),
+        const SizedBox(height: 16),
+        GoogleSignInButton(onPressed: _signUpWithGoogle, isLoading: _isSubmitting),
+        const SizedBox(height: 24),
+        Center(
+          child: TextButton(
+            onPressed: () => context.go('/login'),
+            child: const Text('Already have an account? Log in'),
           ),
         ),
-      ),
+      ],
     );
   }
 }

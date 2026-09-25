@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../../core/widgets/money_text.dart';
 import '../../domain/revenue_summary.dart';
@@ -26,23 +27,25 @@ class RevenueSection extends ConsumerWidget {
     final revenue = ref.watch(revenueProvider);
     final value = revenue.valueOrNull;
 
-    if (value != null) return _RevenueContent(revenue: value);
-    if (revenue.hasError) {
-      return SectionError(
-        message: "Couldn't load your revenue",
-        onRetry: () => ref.invalidate(revenueProvider),
-      );
-    }
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        LoadingSkeleton(width: 120, height: 14),
-        SizedBox(height: 12),
-        LoadingSkeleton(width: 220, height: 40),
-        SizedBox(height: 12),
-        LoadingSkeleton(height: 96),
-      ],
-    );
+    final Widget view = value != null
+        ? _RevenueContent(revenue: value)
+        : revenue.hasError
+            ? SectionError(
+                message: "Couldn't load your revenue",
+                onRetry: () => ref.invalidate(revenueProvider),
+              )
+            : const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LoadingSkeleton(width: 120, height: 14),
+                  SizedBox(height: 12),
+                  LoadingSkeleton(width: 220, height: 40),
+                  SizedBox(height: 12),
+                  LoadingSkeleton(height: 96),
+                ],
+              );
+
+    return FadeSwitcher(child: KeyedSubtree(key: ValueKey(asyncViewKind(revenue)), child: view));
   }
 }
 

@@ -747,6 +747,8 @@ mixin _$Document {
   int get subtotal => throw _privateConstructorUsedError;
   int get taxTotal => throw _privateConstructorUsedError;
   int get total => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+  DocumentLanguage get language => throw _privateConstructorUsedError;
   String? get sentAt => throw _privateConstructorUsedError;
   int get amountPaid => throw _privateConstructorUsedError;
   @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -789,6 +791,9 @@ abstract class $DocumentCopyWith<$Res> {
       int subtotal,
       int taxTotal,
       int total,
+      @JsonKey(
+          fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+      DocumentLanguage language,
       String? sentAt,
       int amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -836,6 +841,7 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? subtotal = null,
     Object? taxTotal = null,
     Object? total = null,
+    Object? language = null,
     Object? sentAt = freezed,
     Object? amountPaid = null,
     Object? paymentStatus = freezed,
@@ -903,6 +909,10 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
           ? _value.total
           : total // ignore: cast_nullable_to_non_nullable
               as int,
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as DocumentLanguage,
       sentAt: freezed == sentAt
           ? _value.sentAt
           : sentAt // ignore: cast_nullable_to_non_nullable
@@ -1027,6 +1037,9 @@ abstract class _$$DocumentImplCopyWith<$Res>
       int subtotal,
       int taxTotal,
       int total,
+      @JsonKey(
+          fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+      DocumentLanguage language,
       String? sentAt,
       int amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -1076,6 +1089,7 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? subtotal = null,
     Object? taxTotal = null,
     Object? total = null,
+    Object? language = null,
     Object? sentAt = freezed,
     Object? amountPaid = null,
     Object? paymentStatus = freezed,
@@ -1143,6 +1157,10 @@ class __$$DocumentImplCopyWithImpl<$Res>
           ? _value.total
           : total // ignore: cast_nullable_to_non_nullable
               as int,
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as DocumentLanguage,
       sentAt: freezed == sentAt
           ? _value.sentAt
           : sentAt // ignore: cast_nullable_to_non_nullable
@@ -1218,6 +1236,9 @@ class _$DocumentImpl implements _Document {
       required this.subtotal,
       required this.taxTotal,
       required this.total,
+      @JsonKey(
+          fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+      this.language = DocumentLanguage.en,
       this.sentAt,
       required this.amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -1266,6 +1287,9 @@ class _$DocumentImpl implements _Document {
   @override
   final int total;
   @override
+  @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+  final DocumentLanguage language;
+  @override
   final String? sentAt;
   @override
   final int amountPaid;
@@ -1302,7 +1326,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, sentAt: $sentAt, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, language: $language, sentAt: $sentAt, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -1329,6 +1353,8 @@ class _$DocumentImpl implements _Document {
             (identical(other.taxTotal, taxTotal) ||
                 other.taxTotal == taxTotal) &&
             (identical(other.total, total) || other.total == total) &&
+            (identical(other.language, language) ||
+                other.language == language) &&
             (identical(other.sentAt, sentAt) || other.sentAt == sentAt) &&
             (identical(other.amountPaid, amountPaid) ||
                 other.amountPaid == amountPaid) &&
@@ -1372,6 +1398,7 @@ class _$DocumentImpl implements _Document {
         subtotal,
         taxTotal,
         total,
+        language,
         sentAt,
         amountPaid,
         paymentStatus,
@@ -1418,6 +1445,9 @@ abstract class _Document implements Document {
       required final int subtotal,
       required final int taxTotal,
       required final int total,
+      @JsonKey(
+          fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+      final DocumentLanguage language,
       final String? sentAt,
       required final int amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -1464,6 +1494,9 @@ abstract class _Document implements Document {
   int get taxTotal;
   @override
   int get total;
+  @override
+  @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
+  DocumentLanguage get language;
   @override
   String? get sentAt;
   @override

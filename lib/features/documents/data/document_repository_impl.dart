@@ -72,8 +72,13 @@ class DocumentRepositoryImpl implements DocumentRepository {
   }
 
   @override
-  Future<String> send(String id) async {
-    final response = await _dio.post<Map<String, dynamic>>('/documents/$id/send');
+  Future<String> send(String id, {DocumentLanguage? language}) async {
+    final response = language == null
+        ? await _dio.post<Map<String, dynamic>>('/documents/$id/send')
+        : await _dio.post<Map<String, dynamic>>(
+            '/documents/$id/send',
+            data: {'language': documentLanguageToJson(language)},
+          );
     return response.data!['sentAt'] as String;
   }
 
@@ -83,8 +88,15 @@ class DocumentRepositoryImpl implements DocumentRepository {
   }
 
   @override
-  Future<List<int>> fetchPdfBytes(String id) async {
-    final response = await _dio.get<List<int>>('/documents/$id/pdf', options: Options(responseType: ResponseType.bytes));
+  Future<List<int>> fetchPdfBytes(String id, {DocumentLanguage? language}) async {
+    final options = Options(responseType: ResponseType.bytes);
+    final response = language == null
+        ? await _dio.get<List<int>>('/documents/$id/pdf', options: options)
+        : await _dio.get<List<int>>(
+            '/documents/$id/pdf',
+            queryParameters: {'language': documentLanguageToJson(language)},
+            options: options,
+          );
     return response.data!;
   }
 
