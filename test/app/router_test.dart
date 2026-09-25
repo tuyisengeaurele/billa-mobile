@@ -128,32 +128,13 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-customers')));
+    await tester.tap(find.byKey(const Key('nav-tab-2')));
     await tester.pumpAndSettle();
 
     expect(find.text('No customers yet'), findsOneWidget);
   });
 
-  testWidgets('home screen navigates to the items list', (tester) async {
-    final itemRepository = _MockItemRepository();
-    when(() => itemRepository.list(search: null, category: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
-      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
-    );
-    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
-    final container = ProviderContainer(overrides: [
-      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
-      itemRepositoryProvider.overrideWithValue(itemRepository),
-    ]);
-    addTearDown(container.dispose);
-
-    await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-items')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No items yet'), findsOneWidget);
-  });
-
-  testWidgets('home screen navigates to the documents list', (tester) async {
+  testWidgets('the documents tab shows the documents list', (tester) async {
     final documentRepository = _MockDocumentRepository();
     when(() => documentRepository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
       (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
@@ -166,7 +147,7 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-documents')));
+    await tester.tap(find.byKey(const Key('nav-tab-1')));
     await tester.pumpAndSettle();
 
     expect(find.text('No documents yet'), findsOneWidget);
@@ -194,7 +175,7 @@ void main() {
     expect(find.text('Choose a customer'), findsOneWidget);
   });
 
-  testWidgets('home screen navigates to receivables', (tester) async {
+  testWidgets('the payments tab shows receivables', (tester) async {
     final receivablesRepository = _MockReceivablesRepository();
     when(() => receivablesRepository.list()).thenAnswer((_) async => []);
     const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
@@ -205,29 +186,19 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-receivables')));
+    await tester.tap(find.byKey(const Key('nav-tab-3')));
     await tester.pumpAndSettle();
 
     expect(find.text('Nothing outstanding. All invoices are paid up'), findsOneWidget);
   });
 
-  testWidgets('home shows the business name and an owner-only Team button', (tester) async {
+  testWidgets('home shows the business name', (tester) async {
     final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
 
     expect(find.text('Acme'), findsOneWidget);
-    expect(find.byKey(const Key('home-nav-team')), findsOneWidget);
-  });
-
-  testWidgets('home hides the Team button for a non-owner', (tester) async {
-    final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: false)]);
-    addTearDown(container.dispose);
-
-    await _pumpRouter(tester, container);
-
-    expect(find.byKey(const Key('home-nav-team')), findsNothing);
   });
 
   testWidgets('the business switcher opens the businesses screen', (tester) async {
@@ -245,29 +216,12 @@ void main() {
     expect(find.text('Join a business'), findsOneWidget);
   });
 
-  testWidgets('the Team button opens the team screen for an owner', (tester) async {
-    final teamRepository = _MockTeamRepository();
-    when(() => teamRepository.members()).thenAnswer((_) async => []);
-    when(() => teamRepository.invites()).thenAnswer((_) async => []);
-    final container = _homeContainer(
-      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
-      teamRepository: teamRepository,
-    );
-    addTearDown(container.dispose);
-
-    await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-nav-team')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No pending invites'), findsOneWidget);
-  });
-
-  testWidgets('the account icon opens settings with the signed-in email', (tester) async {
+  testWidgets('the avatar opens the profile tab with the signed-in email', (tester) async {
     final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
     addTearDown(container.dispose);
 
     await _pumpRouter(tester, container);
-    await tester.tap(find.byKey(const Key('home-account')));
+    await tester.tap(find.byKey(const Key('home-avatar')));
     await tester.pumpAndSettle();
 
     expect(find.text('a@b.com'), findsOneWidget);
