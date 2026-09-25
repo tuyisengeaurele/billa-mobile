@@ -59,7 +59,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   // Fetching payments unconditionally (regardless of document type) is
   // deliberate: the backend's GET /:id/payments has no type restriction
   // (only the mutating POST does), so it simply returns an empty list for
-  // a non-invoice document — no special-casing needed here.
+  // a non-invoice document, no special-casing needed here.
   Future<List<Payment>> _loadPayments() => ref.read(documentRepositoryProvider).listPayments(widget.documentId);
 
   void _reload() => setState(() {
@@ -89,8 +89,13 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     }
   }
 
-  Future<bool> _confirm(String title, String? content, String confirmLabel) =>
-      showConfirmDialog(context, title: title, content: content, confirmLabel: confirmLabel);
+  Future<bool> _confirm(String title, String? content, String confirmLabel) => showConfirmDialog(
+        context,
+        title: title,
+        content: content,
+        confirmLabel: confirmLabel,
+        destructive: confirmLabel == 'Delete',
+      );
 
   Future<void> _finalize() async {
     if (!await _confirm(
@@ -210,7 +215,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
             (document.type == DocumentType.proforma || document.type == DocumentType.quote) &&
             document.convertedTo == null;
         final isInvoice = document.type == DocumentType.invoice;
-        // Deliberately excludes writtenOff as well as paid — showing
+        // Deliberately excludes writtenOff as well as paid, showing
         // Write-off and Reactivate at once for the same invoice would be
         // a contradictory pair of actions on screen at the same time.
         final hasOutstandingBalance =

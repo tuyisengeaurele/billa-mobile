@@ -184,10 +184,10 @@ class _QrImage extends StatelessWidget {
         bytes,
         width: 220,
         height: 220,
-        errorBuilder: (context, error, stackTrace) => const Text('QR code unavailable — use the key below'),
+        errorBuilder: (context, error, stackTrace) => const Text('QR code unavailable. Use the key below'),
       );
     } on FormatException {
-      return const Text('QR code unavailable — use the key below');
+      return const Text('QR code unavailable. Use the key below');
     }
   }
 }

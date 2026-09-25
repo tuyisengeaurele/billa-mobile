@@ -1,3 +1,4 @@
+import '../../../../core/widgets/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -82,18 +83,21 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ),
           ),
           Expanded(
+            child: PullToRefresh(
+            onRefresh: () => ref.read(customerListControllerProvider.notifier).pullToRefresh(),
             child: FadeSwitcher(
               child: KeyedSubtree(
                 key: ValueKey(asyncViewKind(state, isEmpty: (data) => data.items.isEmpty)),
                 child: switch (state) {
-              AsyncData(value: final data) when data.items.isEmpty => EmptyState(
+              AsyncData(value: final data) when data.items.isEmpty => ScrollableFill(child: EmptyState(
                   icon: Icons.people_outline,
                   message: 'No customers yet',
                   actionLabel: 'Add customer',
                   onAction: () => context.push('/customers/new'),
-                ),
+                )),
               AsyncData(value: final data) => ListView.builder(
                   controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: data.items.length + (data.isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index >= data.items.length) {
@@ -109,17 +113,18 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                     );
                   },
                 ),
-              AsyncError() => ErrorState(
+              AsyncError() => ScrollableFill(child: ErrorState(
                   message: "Couldn't load your customers",
                   onRetry: () => ref.read(customerListControllerProvider.notifier).refresh(),
-                ),
-              _ => const Padding(
+                )),
+              _ => ScrollableFill(child: const Padding(
                   padding: EdgeInsets.all(16),
                   child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
-                ),
+                )),
             },
               ),
-            ),
+            )
+          ),
           ),
         ],
       ),

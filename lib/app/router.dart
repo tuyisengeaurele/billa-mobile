@@ -54,7 +54,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       return status.when(
         unauthenticated: () => _authRoutes.contains(path) ? null : '/login',
-        // Handled inline by login_screen.dart — never a route-level redirect.
+        // Handled inline by login_screen.dart, never a route-level redirect.
         twoFactorRequired: (challengeId) => null,
         authenticated: (user, business) {
           final needsOnboarding = business.onboardingCompletedAt == null;

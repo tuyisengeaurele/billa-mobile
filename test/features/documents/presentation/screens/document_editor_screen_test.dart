@@ -13,9 +13,11 @@ import 'package:billa_mobile/features/documents/domain/document_enums.dart';
 import 'package:billa_mobile/features/documents/domain/document_repository.dart';
 import 'package:billa_mobile/features/documents/presentation/providers/document_repository_provider.dart';
 import 'package:billa_mobile/features/documents/presentation/screens/document_editor_screen.dart';
+import 'package:billa_mobile/features/documents/presentation/widgets/item_search_field.dart';
 import 'package:billa_mobile/features/items/domain/item.dart';
 import 'package:billa_mobile/features/items/domain/item_repository.dart';
 import 'package:billa_mobile/features/items/presentation/providers/item_repository_provider.dart';
+import '../../../../support/tall_screen.dart';
 
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
 class _MockCustomerRepository extends Mock implements CustomerRepository {}
@@ -88,18 +90,37 @@ void main() {
     verify(() => documentRepository.create(any())).called(1);
   });
 
-  testWidgets('picking an item fills the line description, price, and tax', (tester) async {
+  testWidgets('choosing an item from the type-ahead fills the line description, price, and tax', (tester) async {
+    useTallScreen(tester);
     await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Add line'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Choose an item'));
+    await tester.tap(find.byType(ItemSearchField));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Printing'));
+    await tester.tap(find.byKey(const Key('item-option-i1')));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
 
-    expect(find.text('Printing'), findsWidgets);
+    final fields = tester.widgetList<TextField>(find.byType(TextField)).map((f) => f.controller?.text).toList();
+    expect(fields, containsAll(['Printing', '5000', '18.0']));
+  });
+
+  testWidgets('typing a custom description keeps the line free of any item', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(ItemSearchField), 'Delivery to Huye');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Use "Delivery to Huye" as the description'), findsOneWidget);
+    expect(find.text('Enter a description'), findsNothing);
   });
 
   testWidgets('a credit note cannot autosave without a chosen reference invoice', (tester) async {

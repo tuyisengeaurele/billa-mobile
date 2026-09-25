@@ -9,6 +9,7 @@ import 'package:billa_mobile/features/account/presentation/providers/security_re
 import 'package:billa_mobile/features/account/presentation/screens/two_factor_setup_screen.dart';
 import 'package:billa_mobile/features/auth/presentation/providers/auth_controller.dart';
 import '../../support.dart';
+import '../../../../support/tall_screen.dart';
 
 class _MockSecurityRepository extends Mock implements SecurityRepository {}
 
@@ -43,6 +44,7 @@ void main() {
   }
 
   testWidgets('shows the key and keeps Verify disabled until six digits are entered', (tester) async {
+    useTallScreen(tester);
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
@@ -53,17 +55,19 @@ void main() {
   });
 
   testWidgets('a wrong code shows the specific message', (tester) async {
+    useTallScreen(tester);
     when(() => repository.verifyTwoFactor('000000')).thenThrow(apiError('invalid_code'));
 
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
     await enterCode(tester, '000000');
 
-    expect(find.text("That code isn't right — try again"), findsOneWidget);
+    expect(find.text("That code isn't right. Try again"), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
   });
 
   testWidgets('a right code shows the backup codes once and gates Done on acknowledgement', (tester) async {
+    useTallScreen(tester);
     when(() => repository.verifyTwoFactor('123456')).thenAnswer((_) async => ['aaaaaaaaaa', 'bbbbbbbbbb']);
 
     await tester.pumpWidget(buildApp());
@@ -80,6 +84,7 @@ void main() {
   });
 
   testWidgets('the signed-in user shows two-factor as on as soon as it is verified', (tester) async {
+    useTallScreen(tester);
     when(() => repository.verifyTwoFactor('123456')).thenAnswer((_) async => ['aaaaaaaaaa']);
 
     await tester.pumpWidget(buildApp());
@@ -94,6 +99,7 @@ void main() {
   });
 
   testWidgets('a failed setup load offers a retry', (tester) async {
+    useTallScreen(tester);
     when(() => repository.setUpTwoFactor()).thenAnswer((_) async => throw apiError('not_found'));
 
     await tester.pumpWidget(buildApp());

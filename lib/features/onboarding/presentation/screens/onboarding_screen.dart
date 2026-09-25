@@ -100,7 +100,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         actions: [
           TextButton(
             onPressed: _busy ? null : () => _guard(_completeAndRefresh),
-            child: const Text('Skip onboarding', style: TextStyle(color: Colors.white)),
+            child: const Text('Skip onboarding'),
           ),
         ],
       ),

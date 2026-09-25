@@ -1,3 +1,4 @@
+import '../widgets/item_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/error_state.dart';
@@ -221,7 +222,7 @@ class _DocumentEditorForm extends ConsumerWidget {
           Text('Line items', style: Theme.of(context).textTheme.titleMedium),
           for (var i = 0; i < state.lines.length; i++)
             // calculateDocumentTotals preserves list order, so index i's
-            // LineTotals always matches index i's line — computed once here
+            // LineTotals always matches index i's line, computed once here
             // rather than re-derived per card, so a card's total can never
             // drift from what the footer's subtotal actually sums.
             _LineCard(args: args, line: state.lines[i], lineTotal: totals.lines[i]),
@@ -246,7 +247,7 @@ class _DocumentEditorForm extends ConsumerWidget {
 
 // A line's description/unit price/tax rate can change from OUTSIDE this
 // widget's own typing (picking an item overwrites all three at once), so
-// plain `TextFormField(initialValue: ...)` isn't enough — Flutter only
+// plain `TextFormField(initialValue: ...)` isn't enough, Flutter only
 // applies `initialValue` on first build, not on later rebuilds carrying a
 // new value in from the controller. This owns real TextEditingControllers
 // and re-syncs them in didUpdateWidget whenever the incoming value differs
@@ -310,43 +311,29 @@ class _LineCardState extends ConsumerState<_LineCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: TextFormField(
-                    key: ValueKey('line-description-${line.localId}'),
+                  child: ItemSearchField(
+                    fieldKey: ValueKey('line-description-${line.localId}'),
                     controller: _descriptionController,
-                    decoration: InputDecoration(
-                      labelText: 'Description',
-                      errorText: line.description.trim().isEmpty ? 'Enter a description' : null,
+                    errorText: line.description.trim().isEmpty ? 'Enter a description' : null,
+                    searchItems: (query) async => (await ref.read(itemRepositoryProvider).list(search: query)).results,
+                    // Typing here decouples the line from any linked item,
+                    // matching the production web editor's ItemPicker.
+                    onTextChanged: (value) => controller.setLineDescription(line.localId, value),
+                    onItemSelected: (item) => controller.selectLineItem(
+                      line.localId,
+                      itemId: item.id,
+                      description: item.description,
+                      unitPrice: item.unitPrice,
+                      taxRate: item.taxRate,
                     ),
-                    // Typing here decouples the line from any linked item —
-                    // matches the production web editor's ItemPicker.
-                    onChanged: (value) => controller.setLineDescription(line.localId, value),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  tooltip: 'Choose an item',
-                  onPressed: () async {
-                    final item = await showSearchPickerSheet(
-                      context: context,
-                      title: 'Choose an item',
-                      fetch: (search) async => (await ref.read(itemRepositoryProvider).list(search: search)).results,
-                      itemBuilder: (item) => ListTile(title: Text(item.description)),
-                    );
-                    if (item != null) {
-                      controller.selectLineItem(
-                        line.localId,
-                        itemId: item.id,
-                        description: item.description,
-                        unitPrice: item.unitPrice,
-                        taxRate: item.taxRate,
-                      );
-                    }
-                  },
                 ),
                 IconButton(icon: const Icon(Icons.close), onPressed: () => controller.removeLine(line.localId)),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextFormField(
@@ -397,6 +384,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 DropdownButton<DiscountType?>(

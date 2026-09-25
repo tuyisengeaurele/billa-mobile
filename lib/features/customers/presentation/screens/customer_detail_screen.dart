@@ -1,3 +1,4 @@
+import '../../../../core/widgets/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,22 +36,15 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
 
   Future<void> _toggleActive(Customer customer) async {
     final action = customer.isActive ? 'Deactivate' : 'Reactivate';
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('$action ${customer.name}?'),
-        content: Text(
-          customer.isActive
-              ? 'Hidden from lists. Their existing documents are not affected.'
-              : 'They will appear in lists again.',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(action)),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '$action ${customer.name}?',
+      content: customer.isActive
+          ? 'Hidden from lists. Their existing documents are not affected.'
+          : 'They will appear in lists again.',
+      confirmLabel: action,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await ref.read(customerRepositoryProvider).update(customer.id, isActive: !customer.isActive);
     setState(() {
       _future = _load();

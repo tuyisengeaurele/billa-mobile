@@ -35,7 +35,7 @@ void main() {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Nothing outstanding — all invoices are paid up'), findsOneWidget);
+    expect(find.text('Nothing outstanding. All invoices are paid up'), findsOneWidget);
   });
 
   testWidgets('shows each outstanding invoice with its aging bucket and navigates on tap', (tester) async {
