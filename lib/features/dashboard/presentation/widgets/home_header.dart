@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../account/presentation/widgets/user_avatar.dart';
 import '../../../auth/domain/auth_status.dart';
 import '../../../auth/presentation/providers/active_business_provider.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
@@ -13,13 +14,6 @@ String greetingFor(DateTime now) {
   if (now.hour < 12) return 'Good morning';
   if (now.hour < 17) return 'Good afternoon';
   return 'Good evening';
-}
-
-String _initials(String name) {
-  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-  if (parts.isEmpty) return '?';
-  if (parts.length == 1) return parts.first.characters.first.toUpperCase();
-  return (parts.first.characters.first + parts.last.characters.first).toUpperCase();
 }
 
 class HomeHeader extends ConsumerWidget {
@@ -46,12 +40,7 @@ class HomeHeader extends ConsumerWidget {
           child: GestureDetector(
             key: const Key('home-avatar'),
             onTap: () => context.go('/settings'),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: colors.primary100,
-              foregroundColor: colors.primary700,
-              child: Text(_initials(fullName), style: textTheme.titleSmall?.copyWith(color: colors.primary700)),
-            ),
+            child: user == null ? const CircleAvatar(radius: 22) : UserAvatar(user: user, radius: 22),
           ),
         ),
         const SizedBox(width: 12),
