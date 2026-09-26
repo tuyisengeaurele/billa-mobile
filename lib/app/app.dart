@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/security/app_lock.dart';
 import '../features/auth/presentation/providers/auth_controller.dart';
+import 'privacy_layer.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_mode_provider.dart';
@@ -27,8 +29,14 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(authControllerProvider.notifier).refreshIfStale();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        ref.read(appLockProvider.notifier).onResumed();
+        ref.read(authControllerProvider.notifier).refreshIfStale();
+      case AppLifecycleState.paused:
+        ref.read(appLockProvider.notifier).onPaused();
+      default:
+        break;
     }
   }
 
@@ -42,6 +50,7 @@ class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       routerConfig: ref.watch(appRouterProvider),
+      builder: (context, child) => AppPrivacyLayer(child: child ?? const SizedBox.shrink()),
     );
   }
 }
