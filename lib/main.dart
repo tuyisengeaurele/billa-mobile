@@ -17,11 +17,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // The fonts ship inside the app; a download on slow data would only delay text.
   GoogleFonts.config.allowRuntimeFetching = false;
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  final apiClient = await ApiClient.create();
-  final preferences = await SharedPreferences.getInstance();
-  final glassBlur = await detectGlassBlurSupport();
-  final sessionSnapshot = await SecureSessionSnapshotStore.load(SecureStorage(), preferences);
+  // None of these depend on each other except the snapshot, which needs the
+  // preferences; running them together makes launch as slow as the slowest one
+  // instead of the sum of all of them.
+  final (_, apiClient, glassBlur, sessionSnapshot, preferences) = await (
+    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+    ApiClient.create(),
+    detectGlassBlurSupport(),
+    SharedPreferences.getInstance().then((preferences) => SecureSessionSnapshotStore.load(SecureStorage(), preferences)),
+    SharedPreferences.getInstance(),
+  ).wait;
 
   runApp(ProviderScope(
     overrides: [
