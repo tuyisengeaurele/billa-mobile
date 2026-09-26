@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/shell/quick_create.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/privacy/privacy_mode.dart';
 import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../../core/widgets/money_text.dart';
@@ -179,16 +180,17 @@ class _HeroFailed extends StatelessWidget {
   }
 }
 
-class _RevenueContent extends StatelessWidget {
+class _RevenueContent extends ConsumerWidget {
   const _RevenueContent({required this.revenue});
 
   final RevenueSummary revenue;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final textTheme = Theme.of(context).textTheme;
     final percent = revenue.monthOverMonthPercent;
+    final hidden = ref.watch(amountsHiddenProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +199,18 @@ class _RevenueContent extends StatelessWidget {
           top: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Invoiced this month', style: textTheme.labelLarge?.copyWith(color: Colors.white70)),
+              Row(
+                children: [
+                  Expanded(child: Text('Invoiced this month', style: textTheme.labelLarge?.copyWith(color: Colors.white70))),
+                  IconButton(
+                    key: const Key('home-privacy-toggle'),
+                    visualDensity: VisualDensity.compact,
+                    tooltip: hidden ? 'Show amounts' : 'Hide amounts',
+                    onPressed: () => togglePrivacyEye(ref),
+                    icon: Icon(hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white70),
+                  ),
+                ],
+              ),
               const SizedBox(height: 4),
               MoneyText(
                 revenue.invoicedThisMonth,
