@@ -50,6 +50,16 @@ String describeActionError(Object error) {
     'no_file' => 'Choose an image first',
     'not_owner' => 'Only the business owner can change this',
     'forbidden' => "You don't have permission to use that file",
-    _ => 'Something went wrong. Try again',
+    _ => _unexpected(error, code),
   };
+}
+
+/// A short code lets someone read out exactly what failed when they ask for
+/// help, without the app showing internals for the errors it can explain.
+String _unexpected(Object error, String? code) {
+  const base = 'Something went wrong. Try again';
+  if (code != null) return '$base (code: $code)';
+  final status = error is DioException ? error.response?.statusCode : null;
+  if (status != null && status >= 500) return '$base (code: $status)';
+  return base;
 }
