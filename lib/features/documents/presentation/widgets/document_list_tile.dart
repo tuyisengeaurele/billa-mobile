@@ -36,16 +36,18 @@ class DocumentListTile extends StatelessWidget {
     final tile = ListTile(
       onTap: onTap,
       title: Text(document.number ?? 'Draft ${documentTypeLabel(document.type)}'),
-      subtitle: Text('${documentTypeLabel(document.type)} · ${document.customer.name}'),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      // The status sits under the text rather than beside the amount: a tile's
+      // trailing slot has a fixed height that a large system font overflows.
+      isThreeLine: true,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          MoneyText(document.total),
+          Text('${documentTypeLabel(document.type)} · ${document.customer.name}'),
           const SizedBox(height: 4),
           DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
         ],
       ),
+      trailing: MoneyText(document.total),
     );
 
     if (onDuplicate == null && onContact == null) return tile;

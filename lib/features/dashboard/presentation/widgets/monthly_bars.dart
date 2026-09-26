@@ -24,13 +24,16 @@ class MonthlyBars extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final peak = months.fold<int>(1, (max, month) => month.net > max ? month.net : max);
+    // The month and amount labels grow with the system font; a fixed chart
+    // height would clip them for anyone who has raised it.
+    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
     final summary = months.map((m) => '${monthLabel(m.month)} RWF ${m.net}').join(', ');
 
     return Semantics(
       label: 'Net revenue by month: $summary',
       child: ExcludeSemantics(
         child: SizedBox(
-          height: _maxBarHeight + 44,
+          height: _maxBarHeight + 44 * textScale,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
