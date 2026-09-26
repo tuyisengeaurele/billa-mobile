@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -135,5 +136,33 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyNever(() => documentRepository.create(any()));
+  });
+
+  testWidgets('a failed autosave says why, keeps the draft on screen, and Retry saves it', (tester) async {
+    var failing = true;
+    when(() => documentRepository.create(any())).thenAnswer((_) async {
+      if (failing) throw DioException(requestOptions: RequestOptions(path: '/documents'), type: DioExceptionType.connectionError);
+      return _savedDocument();
+    });
+
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Acme'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.text('Acme'), findsWidgets);
+
+    failing = false;
+    await tester.tap(find.byKey(const Key('editor-save-retry')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsNothing);
+    verify(() => documentRepository.create(any())).called(2);
   });
 }

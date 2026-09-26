@@ -1,6 +1,7 @@
 import '../widgets/item_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/widgets/action_error_banner.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../../core/widgets/money_text.dart';
@@ -118,6 +119,14 @@ class _DocumentEditorForm extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (state.autosaveStatus == AutosaveStatus.error) ...[
+            ActionErrorBanner(
+              retryKey: const Key('editor-save-retry'),
+              message: state.autosaveError ?? 'Check your connection and try again',
+              onRetry: controller.retrySave,
+            ),
+            const SizedBox(height: 16),
+          ],
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(state.customerName ?? 'Choose a customer'),
