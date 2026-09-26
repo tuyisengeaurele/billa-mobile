@@ -178,7 +178,8 @@ class __$$DocumentLineInputImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
+@JsonSerializable(includeIfNull: false)
 class _$DocumentLineInputImpl implements _DocumentLineInput {
   const _$DocumentLineInputImpl(
       {this.itemId,
@@ -484,7 +485,7 @@ class __$$DocumentDraftInputImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(explicitToJson: true, includeIfNull: false)
 class _$DocumentDraftInputImpl implements _DocumentDraftInput {
   const _$DocumentDraftInputImpl(
       {@JsonKey(fromJson: documentTypeFromJson, toJson: documentTypeToJson)

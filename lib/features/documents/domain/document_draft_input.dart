@@ -4,8 +4,11 @@ import 'document_enums.dart';
 part 'document_draft_input.freezed.dart';
 part 'document_draft_input.g.dart';
 
+// The API treats an absent optional field as "not set" but rejects an explicit
+// null for most of them, so empty fields are left out of the request.
 @freezed
 class DocumentLineInput with _$DocumentLineInput {
+  @JsonSerializable(includeIfNull: false)
   const factory DocumentLineInput({
     String? itemId,
     required String description,
@@ -25,7 +28,7 @@ class DocumentDraftInput with _$DocumentDraftInput {
   // unconverted (relying on dart:convert's jsonEncode to call their own
   // toJson() later), fine for Dio in practice, but it means toJson()'s
   // own return value can't be inspected as plain maps, which the tests do.
-  @JsonSerializable(explicitToJson: true)
+  @JsonSerializable(explicitToJson: true, includeIfNull: false)
   const factory DocumentDraftInput({
     @JsonKey(fromJson: documentTypeFromJson, toJson: documentTypeToJson) required DocumentType type,
     required String customerId,
