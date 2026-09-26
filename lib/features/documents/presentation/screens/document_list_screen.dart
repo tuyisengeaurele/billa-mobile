@@ -8,6 +8,8 @@ import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/list_skeleton.dart';
 import '../../domain/document_enums.dart';
+import '../providers/document_contact.dart';
+import '../providers/document_duplicate.dart';
 import '../providers/document_list_controller.dart';
 import '../widgets/document_list_tile.dart';
 
@@ -189,6 +191,8 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
                     return DocumentListTile(
                       document: document,
                       onTap: () => context.push('/documents/${document.id}'),
+                      onDuplicate: () => duplicateDocument(context, ref, documentId: document.id),
+                      onContact: () => startDocumentContact(context, ref, documentId: document.id),
                     );
                   },
                 ),
