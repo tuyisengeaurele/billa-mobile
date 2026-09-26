@@ -39,6 +39,7 @@ void main() {
       ('settings-security', '/settings/security'),
       ('settings-notifications', '/settings/notifications'),
       ('settings-appearance', '/settings/appearance'),
+      ('settings-privacy', '/settings/privacy'),
     ]) {
       await tester.pumpWidget(buildApp());
       await tester.pumpAndSettle();

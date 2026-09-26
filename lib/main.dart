@@ -12,6 +12,7 @@ import 'core/network/api_client.dart';
 import 'core/network/api_client_provider.dart';
 import 'core/network/response_cache.dart';
 import 'core/platform/glass_support.dart';
+import 'core/privacy/privacy_settings.dart';
 import 'core/storage/secure_storage.dart';
 import 'features/auth/data/session_snapshot_store.dart';
 import 'features/items/presentation/providers/recent_items_provider.dart';
@@ -45,6 +46,7 @@ void main() async {
       splashDurationProvider.overrideWithValue(const Duration(seconds: 2)),
       sessionSnapshotStoreProvider.overrideWithValue(sessionSnapshot),
       recentItemsStoreProvider.overrideWithValue(SharedPreferencesRecentItemsStore(preferences)),
+      privacySettingsStoreProvider.overrideWithValue(SharedPreferencesPrivacySettingsStore(preferences)),
     ],
     child: const App(),
   ));
