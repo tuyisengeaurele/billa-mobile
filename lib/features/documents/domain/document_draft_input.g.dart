@@ -19,16 +19,24 @@ _$DocumentLineInputImpl _$$DocumentLineInputImplFromJson(
     );
 
 Map<String, dynamic> _$$DocumentLineInputImplToJson(
-        _$DocumentLineInputImpl instance) =>
-    <String, dynamic>{
-      'itemId': instance.itemId,
-      'description': instance.description,
-      'quantity': instance.quantity,
-      'unitPrice': instance.unitPrice,
-      'taxRate': instance.taxRate,
-      'discountType': discountTypeToJson(instance.discountType),
-      'discountValue': instance.discountValue,
-    };
+    _$DocumentLineInputImpl instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('itemId', instance.itemId);
+  val['description'] = instance.description;
+  val['quantity'] = instance.quantity;
+  val['unitPrice'] = instance.unitPrice;
+  val['taxRate'] = instance.taxRate;
+  writeNotNull('discountType', discountTypeToJson(instance.discountType));
+  writeNotNull('discountValue', instance.discountValue);
+  return val;
+}
 
 _$DocumentDraftInputImpl _$$DocumentDraftInputImplFromJson(
         Map<String, dynamic> json) =>
@@ -51,15 +59,24 @@ _$DocumentDraftInputImpl _$$DocumentDraftInputImplFromJson(
     );
 
 Map<String, dynamic> _$$DocumentDraftInputImplToJson(
-        _$DocumentDraftInputImpl instance) =>
-    <String, dynamic>{
-      'type': documentTypeToJson(instance.type),
-      'customerId': instance.customerId,
-      'issueDate': instance.issueDate,
-      'dueDate': instance.dueDate,
-      'notes': instance.notes,
-      'customerReference': instance.customerReference,
-      'referencedDocumentId': instance.referencedDocumentId,
-      'language': documentLanguageToJson(instance.language),
-      'lines': instance.lines.map((e) => e.toJson()).toList(),
-    };
+    _$DocumentDraftInputImpl instance) {
+  final val = <String, dynamic>{
+    'type': documentTypeToJson(instance.type),
+    'customerId': instance.customerId,
+    'issueDate': instance.issueDate,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('dueDate', instance.dueDate);
+  writeNotNull('notes', instance.notes);
+  writeNotNull('customerReference', instance.customerReference);
+  writeNotNull('referencedDocumentId', instance.referencedDocumentId);
+  val['language'] = documentLanguageToJson(instance.language);
+  val['lines'] = instance.lines.map((e) => e.toJson()).toList();
+  return val;
+}

@@ -466,6 +466,47 @@ void main() {
     verify(() => repository.writeOff('d1', 'Bad debt')).called(1);
   });
 
+  testWidgets('a written-off invoice can be taken back straight from the snackbar', (tester) async {
+    const unpaidInvoice = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0001',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 9000,
+      taxTotal: 1620,
+      total: 10620,
+      amountPaid: 0,
+      paymentStatus: PaymentStatus.unpaid,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => unpaidInvoice);
+    when(() => repository.writeOff('d1', 'Bad debt')).thenAnswer(
+      (_) async => unpaidInvoice.copyWith(paymentStatus: PaymentStatus.writtenOff),
+    );
+    when(() => repository.reactivate('d1')).thenAnswer((_) async => unpaidInvoice);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Write off'));
+    await tester.tap(find.text('Write off'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Bad debt');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Write off').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 750));
+
+    expect(find.text('INV-0001 written off'), findsOneWidget);
+    await tester.tap(find.text('Undo'));
+    await tester.pump();
+
+    verify(() => repository.reactivate('d1')).called(1);
+  });
+
   testWidgets('Reactivate appears for a written-off invoice and succeeds', (tester) async {
     const writtenOffInvoice = Document(
       id: 'd1',

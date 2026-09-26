@@ -90,7 +90,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final color = selected ? colors.primary500 : colors.neutral600;
+    final color = selected ? colors.accent : colors.neutral600;
     final label = destination.badge > 0
         ? '${destination.label}, ${destination.badge} overdue'
         : destination.label;

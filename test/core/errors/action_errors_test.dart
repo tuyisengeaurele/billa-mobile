@@ -63,8 +63,55 @@ void main() {
     expect(describeActionError(_error('forbidden')), "You don't have permission to use that file");
   });
 
-  test('falls back to a generic message for an unknown code', () {
-    expect(describeActionError(_error('something_else')), 'Something went wrong. Try again');
+  test('a rejected request body reports the first thing the server said was wrong', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 400, data: {
+        'error': 'invalid_body',
+        'details': {
+          'formErrors': [],
+          'fieldErrors': {
+            'email': ['Enter a valid email address'],
+          },
+        },
+      }),
+    );
+
+    expect(describeActionError(error), 'Enter a valid email address');
+  });
+
+  test('a rejected request body with no readable detail points at the form', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 400, data: {'error': 'invalid_body', 'details': {}}),
+    );
+
+    expect(describeActionError(error), "Some details aren't valid. Check the form and try again");
+  });
+
+  test('a rejected request body points at the form instead of showing a code', () {
+    expect(describeActionError(_error('invalid_body')), "Some details aren't valid. Check the form and try again");
+  });
+
+  test('an unknown server code is kept as a short support code', () {
+    expect(describeActionError(_error('something_else')), 'Something went wrong. Try again (code: something_else)');
+  });
+
+  test('a server failure with no error body is reported by its status', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 502, data: '<html>Bad gateway</html>'),
+    );
+
+    expect(describeActionError(error), 'Something went wrong. Try again (code: 502)');
+  });
+
+  test('a known code never carries a support code, since the message already explains it', () {
+    expect(describeActionError(_error('no_lines')).contains('code:'), isFalse);
+  });
+
+  test('a rate limit and a dropped connection stay free of codes', () {
+    expect(describeActionError(DioException(requestOptions: RequestOptions(path: '/x'))).contains('code:'), isFalse);
   });
 
   test('falls back to a generic message for a non-Dio error', () {

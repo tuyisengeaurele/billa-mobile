@@ -107,16 +107,20 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
                 ],
                 child: ListTile(
                 title: Text(invoice.customerName),
-                subtitle: Text(
-                  invoice.dueDate == null
-                      ? (invoice.number ?? 'Draft')
-                      : '${invoice.number ?? 'Draft'} · Due ${invoice.dueDate}',
+                isThreeLine: true,
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      invoice.dueDate == null
+                          ? (invoice.number ?? 'Draft')
+                          : '${invoice.number ?? 'Draft'} · Due ${invoice.dueDate}',
+                    ),
+                    const SizedBox(height: 4),
+                    AgingPill(bucket: invoice.agingBucket),
+                  ],
                 ),
-                trailing: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [MoneyText(invoice.amountOwed), const SizedBox(height: 4), AgingPill(bucket: invoice.agingBucket)],
-                ),
+                trailing: MoneyText(invoice.amountOwed),
                 onTap: () => context.push('/documents/${invoice.id}'),
                 ),
               );

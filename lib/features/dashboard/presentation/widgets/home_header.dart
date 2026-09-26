@@ -50,7 +50,9 @@ class HomeHeader extends ConsumerWidget {
             borderRadius: BorderRadius.circular(8),
             onTap: () => context.push('/businesses'),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+              // Comfortable to tap: the row is only as tall as its two lines
+              // otherwise, which is under the 48 dp minimum for a target.
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
