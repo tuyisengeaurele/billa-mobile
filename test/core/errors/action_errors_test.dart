@@ -63,6 +63,32 @@ void main() {
     expect(describeActionError(_error('forbidden')), "You don't have permission to use that file");
   });
 
+  test('a rejected request body reports the first thing the server said was wrong', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 400, data: {
+        'error': 'invalid_body',
+        'details': {
+          'formErrors': [],
+          'fieldErrors': {
+            'email': ['Enter a valid email address'],
+          },
+        },
+      }),
+    );
+
+    expect(describeActionError(error), 'Enter a valid email address');
+  });
+
+  test('a rejected request body with no readable detail points at the form', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 400, data: {'error': 'invalid_body', 'details': {}}),
+    );
+
+    expect(describeActionError(error), "Some details aren't valid. Check the form and try again");
+  });
+
   test('a rejected request body points at the form instead of showing a code', () {
     expect(describeActionError(_error('invalid_body')), "Some details aren't valid. Check the form and try again");
   });

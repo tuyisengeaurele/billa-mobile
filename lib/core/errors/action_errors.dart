@@ -14,6 +14,7 @@ String describeActionError(Object error) {
   // Proxies and gateways answer with HTML or plain text, not a JSON body.
   final data = error is DioException ? error.response?.data : null;
   final code = data is Map ? data['error'] as String? : null;
+  if (code == 'invalid_body') return _firstValidationMessage(data) ?? "Some details aren't valid. Check the form and try again";
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',
     'finalize_requires_approval' => 'Only the business owner can finalize documents',
@@ -49,7 +50,6 @@ String describeActionError(Object error) {
     'invalid_file_type' => 'Choose a PNG, JPG, or WebP image',
     'no_file' => 'Choose an image first',
     'not_owner' => 'Only the business owner can change this',
-    'invalid_body' => "Some details aren't valid. Check the form and try again",
     'forbidden' => "You don't have permission to use that file",
     _ => _unexpected(error, code),
   };
@@ -63,4 +63,21 @@ String _unexpected(Object error, String? code) {
   final status = error is DioException ? error.response?.statusCode : null;
   if (status != null && status >= 500) return '$base (code: $status)';
   return base;
+}
+
+/// The server names what is wrong in plain words ("Enter a valid email
+/// address"), so the first of those beats a generic line.
+String? _firstValidationMessage(Object? data) {
+  if (data is! Map) return null;
+  final details = data['details'];
+  if (details is! Map) return null;
+  final formErrors = details['formErrors'];
+  if (formErrors is List && formErrors.isNotEmpty && formErrors.first is String) return formErrors.first as String;
+  final fieldErrors = details['fieldErrors'];
+  if (fieldErrors is Map) {
+    for (final messages in fieldErrors.values) {
+      if (messages is List && messages.isNotEmpty && messages.first is String) return messages.first as String;
+    }
+  }
+  return null;
 }
