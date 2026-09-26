@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,5 +81,44 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No phone number saved'), findsNWidgets(3));
+  });
+
+  testWidgets('deactivating confirms afterwards and Undo brings the customer back', (tester) async {
+    when(() => repository.update('c1', isActive: false)).thenAnswer(
+      (_) async => const Customer(id: 'c1', name: 'Acme', isActive: false, createdAt: '2026-01-01T00:00:00.000Z'),
+    );
+    when(() => repository.update('c1', isActive: true)).thenAnswer((_) async => _customer);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('customer-toggle-active')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Deactivate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 750));
+
+    expect(find.text('Acme deactivated'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pump();
+
+    verify(() => repository.update('c1', isActive: true)).called(1);
+  });
+
+  testWidgets('a failed deactivation says why and leaves the customer as they were', (tester) async {
+    when(() => repository.update('c1', isActive: false)).thenAnswer(
+      (_) async => throw DioException(requestOptions: RequestOptions(path: '/customers/c1'), type: DioExceptionType.connectionError),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('customer-toggle-active')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Deactivate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 750));
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.text('Deactivate customer'), findsOneWidget);
   });
 }
