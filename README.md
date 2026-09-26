@@ -1,16 +1,44 @@
-# billa_mobile
+# Billa Mobile
 
-Billa mobile companion
+Flutter companion to the Billa web app: documents, customers, payments and receivables for small businesses in Rwanda.
 
-## Getting Started
+## Running
 
-This project is a starting point for a Flutter application.
+The API address is passed at build time and is never hardcoded:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter run --dart-define=API_BASE_URL=https://billa-api-og7v.onrender.com
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Without it the app points at `http://localhost:4000`, which only works on an emulator with a local server.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Release builds
+
+Release builds are signed with the key described in `android/key.properties` (git-ignored). Without that file the build still succeeds, signed with the debug key, and is not fit to publish.
+
+`android/key.properties` has four lines:
+
+```
+storePassword=...
+keyPassword=...
+keyAlias=billa
+storeFile=C:/path/to/billa-release.jks
+```
+
+The keystore and its passwords live outside the repository. Back them up: if the key is lost, an app published on the Play Store can never be updated.
+
+Build one APK per CPU architecture; phones today use `app-arm64-v8a-release.apk`, which is about a third of the size of the universal build:
+
+```bash
+flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://billa-api-og7v.onrender.com
+```
+
+The APKs are written to `build/app/outputs/flutter-apk/`. Release builds shrink code and resources, so check sign-in, lists and sharing on a device after changing dependencies.
+
+## Checks before a pull request
+
+```bash
+flutter analyze
+flutter test
+flutter build apk --debug
+```
