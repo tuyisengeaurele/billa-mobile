@@ -1,5 +1,6 @@
 import '../widgets/item_search_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../items/domain/item.dart';
@@ -360,7 +361,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
                       labelText: 'Qty',
                       errorText: line.quantity > 0 ? null : 'Enter a quantity greater than zero',
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (value) {
                       final parsed = double.tryParse(value);
                       if (parsed != null) controller.setLineQuantity(line.localId, parsed);
@@ -377,6 +378,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
                       errorText: line.unitPrice >= 0 ? null : "Price can't be negative",
                     ),
                     keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     onChanged: (value) {
                       final parsed = int.tryParse(value);
                       if (parsed != null) controller.setLineUnitPrice(line.localId, parsed);
@@ -392,7 +394,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
                       labelText: 'Tax %',
                       errorText: line.taxRate >= 0 && line.taxRate <= 100 ? null : 'Must be between 0 and 100',
                     ),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (value) {
                       final parsed = double.tryParse(value);
                       if (parsed != null) controller.setLineTaxRate(line.localId, parsed);
@@ -428,7 +430,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
                             ? null
                             : (line.discountType == DiscountType.percent ? "Can't exceed 100%" : "Can't be negative"),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       onChanged: (value) {
                         final parsed = double.tryParse(value);
                         if (parsed != null) controller.setLineDiscount(line.localId, line.discountType, parsed);

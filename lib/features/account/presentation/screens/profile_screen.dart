@@ -125,6 +125,9 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
         TextField(
           key: const Key('profile-name'),
           controller: _name,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.next,
+          autofillHints: const [AutofillHints.name],
           decoration: const InputDecoration(labelText: 'Name'),
           onChanged: (_) => setState(() {}),
         ),
@@ -134,6 +137,8 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
           controller: _phone,
           decoration: const InputDecoration(labelText: 'Phone (optional)'),
           keyboardType: TextInputType.phone,
+          textInputAction: TextInputAction.done,
+          autofillHints: const [AutofillHints.telephoneNumber],
         ),
         if (_actionError != null) ...[
           const SizedBox(height: 16),
