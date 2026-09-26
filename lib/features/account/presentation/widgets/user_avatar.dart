@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/network/asset_url.dart';
 import '../../../auth/domain/auth_user.dart';
@@ -19,8 +20,8 @@ class UserAvatar extends StatelessWidget {
     final url = user.avatarUrl;
     if (url == null) return initial;
     return ClipOval(
-      child: Image.network(
-        resolveAssetUrl(url),
+      child: Image(
+        image: CachedNetworkImageProvider(resolveAssetUrl(url)),
         width: radius * 2,
         height: radius * 2,
         fit: BoxFit.cover,
