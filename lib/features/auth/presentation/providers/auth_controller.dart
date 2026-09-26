@@ -6,6 +6,7 @@ import '../../domain/auth_status.dart';
 import '../../domain/auth_user.dart';
 import '../../../onboarding/domain/business.dart';
 import '../../../../core/network/api_client_provider.dart';
+import '../../../../core/network/response_cache.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(ref.watch(apiClientProvider).dio);
@@ -27,6 +28,7 @@ class AuthController extends AsyncNotifier<AuthStatus> {
       // Open straight into the app on what was true last time, then let the
       // server confirm or correct it in the background.
       _lastRefreshAt = ref.read(authClockProvider)();
+      ref.read(cacheScopeProvider).businessId = snapshot.business.id;
       Future.microtask(() => _revalidate(snapshot));
       return snapshot;
     }
@@ -51,10 +53,17 @@ class AuthController extends AsyncNotifier<AuthStatus> {
 
   void _remember(AuthStatus status) {
     final store = ref.read(sessionSnapshotStoreProvider);
+    final scope = ref.read(cacheScopeProvider);
     if (status is Authenticated) {
       store.write(status);
+      scope.businessId = status.business.id;
     } else if (status is Unauthenticated) {
       store.clear();
+      // Saved copies belong to the person who was signed in, so they go with
+      // the session; the next user on this phone must never see them.
+      scope.businessId = '';
+      scope.stale.value = false;
+      ref.read(responseCacheProvider).clear();
     }
   }
 
