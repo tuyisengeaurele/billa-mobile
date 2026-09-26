@@ -3,15 +3,31 @@ package rw.billa.billa_mobile
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.ContactsContract
-import io.flutter.embedding.android.FlutterActivity
+import android.view.WindowManager
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+// local_auth shows its prompt as a fragment, which needs a fragment-capable activity.
+class MainActivity : FlutterFragmentActivity() {
     private var pendingPick: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SECURE_WINDOW_CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method != "setSecure") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            // FLAG_SECURE blanks the app in the recent apps list and blocks
+            // screenshots and screen recording.
+            if (call.argument<Boolean>("secure") == true) {
+                window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+            result.success(null)
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CONTACT_CHANNEL).setMethodCallHandler { call, result ->
             if (call.method != "pickPhone") {
                 result.notImplemented()
@@ -65,6 +81,7 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CONTACT_CHANNEL = "billa/contact_picker"
+        private const val SECURE_WINDOW_CHANNEL = "billa/secure_window"
         private const val PICK_PHONE_REQUEST = 4711
     }
 }
