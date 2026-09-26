@@ -52,6 +52,9 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Without key.properties (CI, a fresh clone) the build still works,
             // signed with the debug key and not fit to publish.
             signingConfig = if (signingProperties.isNotEmpty()) {
