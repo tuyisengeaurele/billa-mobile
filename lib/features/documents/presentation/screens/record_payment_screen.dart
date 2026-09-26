@@ -1,6 +1,7 @@
 import '../../../../core/widgets/app_sheet.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -133,6 +134,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Amount'),
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<PaymentMethod>(
@@ -162,10 +164,11 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _referenceController,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(labelText: 'Reference number (optional)'),
             ),
             const SizedBox(height: 12),
-            TextField(controller: _payerController, decoration: const InputDecoration(labelText: 'Payer name (optional)')),
+            TextField(controller: _payerController, textCapitalization: TextCapitalization.words, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'Payer name (optional)')),
             const SizedBox(height: 12),
             TextField(controller: _notesController, decoration: const InputDecoration(labelText: 'Notes (optional)'), maxLines: 3),
             const SizedBox(height: 12),

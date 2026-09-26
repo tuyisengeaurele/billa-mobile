@@ -455,6 +455,7 @@ void main() {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Write off'));
     await tester.tap(find.text('Write off'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Bad debt');

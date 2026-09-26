@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/errors/action_errors.dart';
 import '../../core/widgets/app_sheet.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/glass_surface.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/money_text.dart';
 import '../../features/documents/domain/document_enums.dart';
-import '../../features/documents/presentation/providers/document_repository_provider.dart';
+import '../../features/documents/presentation/providers/record_payment_flow.dart';
 import '../../features/documents/presentation/widgets/document_list_tile.dart';
 import '../../features/receivables/domain/outstanding_invoice.dart';
 import '../../features/receivables/presentation/providers/receivables_repository_provider.dart';
@@ -202,14 +201,7 @@ class _CreateTile extends StatelessWidget {
 Future<void> startRecordPayment(BuildContext context, WidgetRef ref) async {
   final invoice = await showAppSheet<OutstandingInvoice>(context, builder: (context) => const _InvoicePicker());
   if (invoice == null || !context.mounted) return;
-
-  final messenger = ScaffoldMessenger.maybeOf(context);
-  try {
-    final document = await ref.read(documentRepositoryProvider).get(invoice.id);
-    if (context.mounted) context.push('/documents/${document.id}/payments/new', extra: document);
-  } catch (e) {
-    messenger?.showSnackBar(SnackBar(content: Text(describeActionError(e))));
-  }
+  await recordPaymentFor(context, ref, invoiceId: invoice.id);
 }
 
 class _InvoicePicker extends ConsumerStatefulWidget {

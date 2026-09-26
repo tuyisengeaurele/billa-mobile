@@ -126,6 +126,7 @@ void main() {
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(path: '/documents', builder: (context, state) => stub('documents ${state.uri}')),
       GoRoute(path: '/documents/new', builder: (context, state) => stub('new ${(state.extra as DocumentType).name}')),
+      GoRoute(path: '/documents/:id/edit', builder: (context, state) => stub('editing ${state.pathParameters['id']}')),
       GoRoute(path: '/documents/:id', builder: (context, state) => stub('document ${state.pathParameters['id']}')),
       GoRoute(path: '/receivables', builder: (context, state) => stub('receivables screen')),
       GoRoute(
@@ -373,5 +374,35 @@ void main() {
     await tester.tap(find.byKey(const Key('home-avatar')));
     await tester.pumpAndSettle();
     expect(find.text('settings screen'), findsOneWidget);
+  });
+
+  testWidgets('the newest draft is offered as Continue draft and opens the editor', (tester) async {
+    when(() => dashboard.summary()).thenAnswer(
+      (_) async => _summary.copyWith(recentDocuments: [
+        const RecentDocument(
+          id: 'd9',
+          type: DocumentType.quote,
+          number: null,
+          status: DocumentStatus.draft,
+          customerName: 'Beta Co',
+          issueDate: '2026-03-02T00:00:00.000Z',
+        ),
+        ..._summary.recentDocuments,
+      ]),
+    );
+
+    await pumpHome(tester);
+
+    expect(find.byKey(const Key('home-continue-draft')), findsOneWidget);
+    expect(find.text('Quote · Beta Co'), findsWidgets);
+    await tester.tap(find.byKey(const Key('home-continue-draft')));
+    await tester.pumpAndSettle();
+    expect(find.text('editing d9'), findsOneWidget);
+  });
+
+  testWidgets('with no draft in the recent list there is no Continue draft card', (tester) async {
+    await pumpHome(tester);
+
+    expect(find.byKey(const Key('home-continue-draft')), findsNothing);
   });
 }

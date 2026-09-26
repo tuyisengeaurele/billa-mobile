@@ -7,6 +7,9 @@ import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../../core/widgets/money_text.dart';
 import '../../../../core/widgets/pull_to_refresh.dart';
+import '../../../../core/widgets/swipe_row.dart';
+import '../../../documents/presentation/providers/document_contact.dart';
+import '../../../documents/presentation/providers/record_payment_flow.dart';
 import '../../domain/outstanding_invoice.dart';
 import '../providers/receivables_repository_provider.dart';
 import '../widgets/aging_pill.dart';
@@ -85,7 +88,24 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
             itemBuilder: (context, index) {
               if (index == 0) return _SummaryCard(owed: owed, count: invoices.length, overdue: overdue);
               final invoice = invoices[index - 1];
-              return ListTile(
+              return SwipeRow(
+                startActions: [
+                  SwipeAction(
+                    key: Key('receivable-swipe-contact-${invoice.id}'),
+                    label: 'Contact',
+                    icon: Icons.chat_outlined,
+                    onPressed: () => startDocumentContact(context, ref, documentId: invoice.id),
+                  ),
+                ],
+                endActions: [
+                  SwipeAction(
+                    key: Key('receivable-swipe-pay-${invoice.id}'),
+                    label: 'Record payment',
+                    icon: Icons.payments_outlined,
+                    onPressed: () => recordPaymentFor(context, ref, invoiceId: invoice.id),
+                  ),
+                ],
+                child: ListTile(
                 title: Text(invoice.customerName),
                 subtitle: Text(
                   invoice.dueDate == null
@@ -98,6 +118,7 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
                   children: [MoneyText(invoice.amountOwed), const SizedBox(height: 4), AgingPill(bucket: invoice.agingBucket)],
                 ),
                 onTap: () => context.push('/documents/${invoice.id}'),
+                ),
               );
             },
           );

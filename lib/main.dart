@@ -14,6 +14,7 @@ import 'core/network/response_cache.dart';
 import 'core/platform/glass_support.dart';
 import 'core/storage/secure_storage.dart';
 import 'features/auth/data/session_snapshot_store.dart';
+import 'features/items/presentation/providers/recent_items_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -43,6 +44,7 @@ void main() async {
       glassBlurEnabledProvider.overrideWithValue(glassBlur),
       splashDurationProvider.overrideWithValue(const Duration(seconds: 2)),
       sessionSnapshotStoreProvider.overrideWithValue(sessionSnapshot),
+      recentItemsStoreProvider.overrideWithValue(SharedPreferencesRecentItemsStore(preferences)),
     ],
     child: const App(),
   ));

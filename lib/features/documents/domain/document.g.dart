@@ -82,6 +82,7 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
           ? DocumentLanguage.en
           : documentLanguageFromJson(json['language'] as String),
       sentAt: json['sentAt'] as String?,
+      publicToken: json['publicToken'] as String?,
       amountPaid: (json['amountPaid'] as num).toInt(),
       paymentStatus: paymentStatusFromJson(json['paymentStatus'] as String?),
       writtenOffAt: json['writtenOffAt'] as String?,
@@ -123,6 +124,7 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'total': instance.total,
       'language': documentLanguageToJson(instance.language),
       'sentAt': instance.sentAt,
+      'publicToken': instance.publicToken,
       'amountPaid': instance.amountPaid,
       'paymentStatus': paymentStatusToJson(instance.paymentStatus),
       'writtenOffAt': instance.writtenOffAt,
