@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/account/presentation/screens/appearance_screen.dart';
+import '../features/security/presentation/privacy_screen.dart';
 import '../features/account/presentation/screens/notification_preferences_screen.dart';
 import '../features/account/presentation/screens/profile_screen.dart';
 import '../features/account/presentation/screens/security_screen.dart';
@@ -157,6 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/security/sessions', builder: (context, state) => const SessionsScreen()),
       GoRoute(path: '/settings/notifications', builder: (context, state) => const NotificationPreferencesScreen()),
       GoRoute(path: '/settings/appearance', builder: (context, state) => const AppearanceScreen()),
+      GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyScreen()),
       GoRoute(path: '/settings/business', builder: (context, state) => const BusinessSettingsScreen()),
       GoRoute(path: '/settings/business/details', builder: (context, state) => const BusinessDetailsScreen()),
       GoRoute(path: '/settings/business/payments', builder: (context, state) => const PaymentsScreen()),
