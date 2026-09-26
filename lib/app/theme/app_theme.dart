@@ -22,7 +22,7 @@ class AppTheme {
       fillColor: colors.neutral100,
       border: border(BorderSide.none),
       enabledBorder: border(BorderSide.none),
-      focusedBorder: border(BorderSide(color: colors.primary500, width: 2)),
+      focusedBorder: border(BorderSide(color: colors.accent, width: 2)),
       errorBorder: border(BorderSide(color: colors.error)),
       focusedErrorBorder: border(BorderSide(color: colors.error, width: 2)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

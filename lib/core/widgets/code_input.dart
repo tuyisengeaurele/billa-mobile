@@ -147,7 +147,7 @@ class _Box extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = hasError ? colors.error : (focused ? colors.primary500 : Colors.transparent);
+    final borderColor = hasError ? colors.error : (focused ? colors.accent : Colors.transparent);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(

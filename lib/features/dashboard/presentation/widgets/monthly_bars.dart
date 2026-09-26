@@ -52,7 +52,7 @@ class MonthlyBars extends StatelessWidget {
                         height: month.net > 0 ? (_maxBarHeight * month.net / peak).clamp(4.0, _maxBarHeight) : 2,
                         margin: const EdgeInsets.symmetric(horizontal: 6),
                         decoration: BoxDecoration(
-                          color: month.net > 0 ? colors.primary500 : colors.neutral200,
+                          color: month.net > 0 ? colors.accent : colors.neutral200,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

@@ -209,7 +209,7 @@ class _Row extends StatelessWidget {
           leading: Icon(icon, color: destructive ? colors.error : (highlighted ? colors.primary700 : colors.neutral700)),
           title: Text(title, style: TextStyle(color: foreground)),
           subtitle: subtitle == null ? null : Text(subtitle!),
-          trailing: destructive ? null : Icon(Icons.chevron_right, color: colors.neutral400),
+          trailing: destructive ? null : Icon(Icons.chevron_right, color: colors.neutral500),
           enabled: onTap != null,
           onTap: onTap,
         ),

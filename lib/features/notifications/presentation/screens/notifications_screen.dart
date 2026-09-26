@@ -99,7 +99,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             leading: Icon(
                               notification.isUnread ? Icons.circle : Icons.circle_outlined,
                               size: 12,
-                              color: notification.isUnread ? colors.primary500 : colors.neutral300,
+                              color: notification.isUnread ? colors.accent : colors.neutral300,
                             ),
                             title: Text(
                               notification.title,

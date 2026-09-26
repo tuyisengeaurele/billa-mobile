@@ -68,7 +68,7 @@ void main() {
       expect(rest.borderRadius, BorderRadius.circular(AppRadii.large));
 
       final focused = input.focusedBorder as UnderlineInputBorder;
-      expect(focused.borderSide.color, colors.primary500);
+      expect(focused.borderSide.color, colors.accent);
       expect(focused.borderSide.width, 2);
     }
   });
