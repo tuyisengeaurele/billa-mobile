@@ -49,6 +49,7 @@ String describeActionError(Object error) {
     'invalid_file_type' => 'Choose a PNG, JPG, or WebP image',
     'no_file' => 'Choose an image first',
     'not_owner' => 'Only the business owner can change this',
+    'invalid_body' => "Some details aren't valid. Check the form and try again",
     'forbidden' => "You don't have permission to use that file",
     _ => _unexpected(error, code),
   };

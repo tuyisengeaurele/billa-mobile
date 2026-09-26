@@ -63,6 +63,10 @@ void main() {
     expect(describeActionError(_error('forbidden')), "You don't have permission to use that file");
   });
 
+  test('a rejected request body points at the form instead of showing a code', () {
+    expect(describeActionError(_error('invalid_body')), "Some details aren't valid. Check the form and try again");
+  });
+
   test('an unknown server code is kept as a short support code', () {
     expect(describeActionError(_error('something_else')), 'Something went wrong. Try again (code: something_else)');
   });
