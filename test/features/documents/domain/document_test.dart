@@ -82,6 +82,11 @@ void main() {
     expect(document.paymentStatus, isNull);
   });
 
+  test('reads the public token that the customer-facing page is built from', () {
+    expect(Document.fromJson(_documentJson(extra: {'publicToken': 'abc123'})).publicToken, 'abc123');
+    expect(Document.fromJson(_documentJson()).publicToken, isNull);
+  });
+
   test('reads the document language', () {
     expect(Document.fromJson(_documentJson(extra: {'language': 'FR'})).language, DocumentLanguage.fr);
     expect(Document.fromJson(_documentJson(extra: {'language': 'EN'})).language, DocumentLanguage.en);
