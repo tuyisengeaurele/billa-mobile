@@ -202,10 +202,14 @@ class _CreateTile extends StatelessWidget {
 Future<void> startRecordPayment(BuildContext context, WidgetRef ref) async {
   final invoice = await showAppSheet<OutstandingInvoice>(context, builder: (context) => const _InvoicePicker());
   if (invoice == null || !context.mounted) return;
+  await recordPaymentFor(context, ref, invoiceId: invoice.id);
+}
 
+/// The payment screen needs the whole document, and a list row only has its id.
+Future<void> recordPaymentFor(BuildContext context, WidgetRef ref, {required String invoiceId}) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
   try {
-    final document = await ref.read(documentRepositoryProvider).get(invoice.id);
+    final document = await ref.read(documentRepositoryProvider).get(invoiceId);
     if (context.mounted) context.push('/documents/${document.id}/payments/new', extra: document);
   } catch (e) {
     messenger?.showSnackBar(SnackBar(content: Text(describeActionError(e))));
