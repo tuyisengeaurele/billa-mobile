@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,5 +54,30 @@ void main() {
 
     expect(find.text('Check the highlighted fields'), findsOneWidget);
     verifyNever(() => repository.create(description: any(named: 'description'), unitPrice: any(named: 'unitPrice'), unit: any(named: 'unit')));
+  });
+
+  testWidgets('a failed save keeps what was typed, says why, and Retry saves it', (tester) async {
+    var failing = true;
+    when(() => repository.create(description: 'Cement', unitPrice: 13000, unit: 'bag', taxRate: 18, category: null)).thenAnswer((_) async {
+      if (failing) throw DioException(requestOptions: RequestOptions(path: '/items'), type: DioExceptionType.connectionError);
+      return const Item(id: 'i1', description: 'Cement', unitPrice: 13000, unit: 'bag', taxRate: 18, isActive: true);
+    });
+
+    await tester.pumpWidget(buildApp(const ItemFormScreen()));
+    await tester.enterText(find.byKey(const Key('item-form-description')), 'Cement');
+    await tester.enterText(find.byKey(const Key('item-form-unit-price')), '13000');
+    await tester.enterText(find.byKey(const Key('item-form-unit')), 'bag');
+    await tester.tap(find.byKey(const Key('item-form-save')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.text('Cement'), findsOneWidget);
+    expect(find.text('13000'), findsOneWidget);
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.create(description: 'Cement', unitPrice: 13000, unit: 'bag', taxRate: 18, category: null)).called(2);
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:billa_mobile/core/network/response_cache.dart';
 import 'package:billa_mobile/core/storage/secure_storage.dart';
 import 'package:billa_mobile/features/auth/data/session_snapshot_store.dart';
 import 'package:billa_mobile/features/auth/domain/auth_repository.dart';
@@ -22,10 +23,15 @@ void main() {
   late _MockAuthRepository repository;
   late InMemorySessionSnapshotStore store;
 
+  late InMemoryResponseCache responses;
+  late CacheScope scope;
+
   ProviderContainer makeContainer() {
     final container = ProviderContainer(overrides: [
       authRepositoryProvider.overrideWithValue(repository),
       sessionSnapshotStoreProvider.overrideWithValue(store),
+      responseCacheProvider.overrideWithValue(responses),
+      cacheScopeProvider.overrideWithValue(scope),
     ]);
     addTearDown(container.dispose);
     return container;
@@ -34,6 +40,8 @@ void main() {
   setUp(() {
     repository = _MockAuthRepository();
     store = InMemorySessionSnapshotStore();
+    responses = InMemoryResponseCache();
+    scope = CacheScope();
   });
 
   test('a remembered session opens straight away without waiting for the server', () async {
@@ -122,6 +130,40 @@ void main() {
     await container.read(authControllerProvider.notifier).logout();
 
     expect(store.read(), isNull);
+  });
+
+  test('saved data is scoped to the remembered business from the first frame', () async {
+    await store.write(_signedIn);
+    when(() => repository.me()).thenAnswer((_) async => _signedIn);
+
+    final container = makeContainer();
+    await container.read(authControllerProvider.future);
+
+    expect(scope.businessId, 'b1');
+  });
+
+  test('switching business re-scopes saved data', () async {
+    await store.write(_signedIn);
+    when(() => repository.me()).thenAnswer((_) async => _signedIn);
+
+    final container = makeContainer();
+    await container.read(authControllerProvider.future);
+    container.read(authControllerProvider.notifier).setBusiness(const Business(id: 'b2', name: 'Other'));
+
+    expect(scope.businessId, 'b2');
+  });
+
+  test('signing out or losing the session wipes saved data', () async {
+    await responses.write('b1|/items?', CachedResponse(statusCode: 200, data: {'a': 1}, savedAt: DateTime(2026)));
+    await store.write(_signedIn);
+    when(() => repository.me()).thenAnswer((_) async => const AuthStatus.unauthenticated());
+
+    final container = makeContainer();
+    await container.read(authControllerProvider.future);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(await responses.read('b1|/items?'), isNull);
+    expect(scope.businessId, isEmpty);
   });
 
   group('secure snapshot store', () {

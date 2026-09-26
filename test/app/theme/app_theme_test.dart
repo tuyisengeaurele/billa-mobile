@@ -1,5 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:billa_mobile/app/theme/app_colors.dart';
@@ -11,6 +12,19 @@ void main() {
 
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
+  test('every font file the theme asks for is bundled, so nothing is downloaded at runtime', () async {
+    for (final name in [
+      'Fraunces-SemiBold',
+      'PlusJakartaSans-Regular',
+      'PlusJakartaSans-Medium',
+      'PlusJakartaSans-SemiBold',
+      'PlusJakartaSans-Bold',
+    ]) {
+      final data = await rootBundle.load('assets/google_fonts/$name.ttf');
+      expect(data.lengthInBytes, greaterThan(10000), reason: name);
+    }
   });
 
   test('light and dark themes expose the matching AppColors extension', () {

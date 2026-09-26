@@ -3,10 +3,11 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_theme.dart';
 
 class ActionErrorBanner extends StatelessWidget {
-  const ActionErrorBanner({super.key, required this.message, required this.onRetry});
+  const ActionErrorBanner({super.key, required this.message, required this.onRetry, this.retryKey});
 
   final String message;
   final VoidCallback? onRetry;
+  final Key? retryKey;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,7 @@ class ActionErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(message, style: TextStyle(color: colors.error))),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
+          TextButton(key: retryKey, onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );

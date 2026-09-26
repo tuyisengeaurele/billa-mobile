@@ -10,6 +10,7 @@ import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/payment_input.dart';
 import '../../../../core/errors/action_errors.dart';
+import '../../../../core/widgets/action_error_banner.dart';
 import '../providers/document_repository_provider.dart';
 
 String paymentMethodLabel(PaymentMethod method) => switch (method) {
@@ -45,6 +46,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   bool _uploadingReceipt = false;
   bool _isSaving = false;
   String? _errorMessage;
+  String? _saveError;
 
   Future<void> _pickReceipt() async {
     final source = await showAppSheet<ImageSource>(
@@ -90,6 +92,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     }
     setState(() {
       _errorMessage = null;
+      _saveError = null;
       _isSaving = true;
     });
     try {
@@ -110,7 +113,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
       await showSuccessCheck(context);
       if (mounted) context.pop(true);
     } catch (e) {
-      setState(() => _errorMessage = describeActionError(e));
+      if (mounted) setState(() => _saveError = describeActionError(e));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -183,6 +186,10 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             if (_errorMessage != null) ...[
               const SizedBox(height: 8),
               Text(_errorMessage!),
+            ],
+            if (_saveError != null) ...[
+              const SizedBox(height: 8),
+              ActionErrorBanner(message: _saveError!, onRetry: _isSaving ? null : _save),
             ],
             const SizedBox(height: 16),
             AppButton(
