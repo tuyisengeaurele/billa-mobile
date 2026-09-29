@@ -204,7 +204,6 @@ class _RevenueContent extends ConsumerWidget {
                   Expanded(child: Text('Invoiced this month', style: textTheme.labelLarge?.copyWith(color: Colors.white70))),
                   IconButton(
                     key: const Key('home-privacy-toggle'),
-                    visualDensity: VisualDensity.compact,
                     tooltip: hidden ? 'Show amounts' : 'Hide amounts',
                     onPressed: () => togglePrivacyEye(ref),
                     icon: Icon(hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white70),

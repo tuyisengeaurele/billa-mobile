@@ -18,14 +18,23 @@ _$PaymentInputImpl _$$PaymentInputImplFromJson(Map<String, dynamic> json) =>
       generateReceipt: json['generateReceipt'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$$PaymentInputImplToJson(_$PaymentInputImpl instance) =>
-    <String, dynamic>{
-      'amount': instance.amount,
-      'method': paymentMethodToJson(instance.method),
-      'paidOn': instance.paidOn,
-      'notes': instance.notes,
-      'referenceNumber': instance.referenceNumber,
-      'payerName': instance.payerName,
-      'receiptImageUrl': instance.receiptImageUrl,
-      'generateReceipt': instance.generateReceipt,
-    };
+Map<String, dynamic> _$$PaymentInputImplToJson(_$PaymentInputImpl instance) {
+  final val = <String, dynamic>{
+    'amount': instance.amount,
+    'method': paymentMethodToJson(instance.method),
+    'paidOn': instance.paidOn,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('notes', instance.notes);
+  writeNotNull('referenceNumber', instance.referenceNumber);
+  writeNotNull('payerName', instance.payerName);
+  writeNotNull('receiptImageUrl', instance.receiptImageUrl);
+  val['generateReceipt'] = instance.generateReceipt;
+  return val;
+}

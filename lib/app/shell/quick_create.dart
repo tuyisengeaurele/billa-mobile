@@ -54,7 +54,7 @@ class QuickCreateButton extends ConsumerWidget {
           key: const Key('quick-create'),
           onTap: () => showQuickCreate(context, ref),
           child: GlassSurface(
-            child: Center(child: Icon(Icons.add, size: 30, color: colors.primary500)),
+            child: Center(child: Icon(Icons.add, size: 30, color: colors.accent)),
           ),
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import 'package:billa_mobile/core/error/app_exception.dart';
 import 'package:billa_mobile/core/widgets/app_button.dart';
 import 'package:billa_mobile/features/auth/data/firebase_auth_service.dart';
 import 'package:billa_mobile/features/auth/domain/auth_repository.dart';
@@ -152,6 +153,19 @@ void main() {
     await submitCode(tester, challengeError(401, 'invalid_challenge'));
 
     expect(find.text('This sign-in expired. Log in again'), findsOneWidget);
+    expect(find.byKey(const Key('login-email')), findsOneWidget);
+  });
+
+  testWidgets('an account with no business returns to the login form and says where it signs in', (tester) async {
+    when(() => authRepository.submitTwoFactorChallenge(challengeId: 'challenge-1', code: '123456'))
+        .thenAnswer((_) async => throw const AdminOnlyAccountException());
+    await reachCodeForm(tester);
+    await tester.enterText(find.byKey(const Key('login-2fa-code')), '123456');
+    await tester.pump();
+    await tester.tap(find.text('Verify'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This account has no business, so it signs in on the web. Use a business account here'), findsOneWidget);
     expect(find.byKey(const Key('login-email')), findsOneWidget);
   });
 

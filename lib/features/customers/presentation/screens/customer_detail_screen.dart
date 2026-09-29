@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/contact_actions.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../domain/customer.dart';
@@ -45,11 +47,33 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
           : 'They will appear in lists again.',
       confirmLabel: action,
     );
-    if (!confirmed) return;
-    await ref.read(customerRepositoryProvider).update(customer.id, isActive: !customer.isActive);
+    if (!confirmed || !mounted) return;
+    // Captured now because the undo outlives this screen.
+    final repository = ref.read(customerRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final nowActive = !customer.isActive;
+    try {
+      await repository.update(customer.id, isActive: nowActive);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeActionError(e))));
+      return;
+    }
+    if (!mounted) return;
     setState(() {
       _future = _load();
     });
+    showUndoSnackBar(
+      context,
+      message: '${customer.name} ${nowActive ? 'reactivated' : 'deactivated'}',
+      onUndo: () async {
+        await repository.update(customer.id, isActive: !nowActive);
+        if (mounted) {
+          setState(() {
+            _future = _load();
+          });
+        }
+      },
+    );
   }
 
   @override

@@ -191,7 +191,8 @@ class __$$PaymentInputImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
+@JsonSerializable(includeIfNull: false)
 class _$PaymentInputImpl implements _PaymentInput {
   const _$PaymentInputImpl(
       {required this.amount,
