@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:billa_mobile/core/error/app_exception.dart';
 import 'package:billa_mobile/core/errors/action_errors.dart';
 
 DioException _error(String code) => DioException(
@@ -135,5 +136,12 @@ void main() {
       response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 429, data: 'Too many requests'),
     );
     expect(describeActionError(limited), 'Too many attempts. Wait a few minutes and try again');
+  });
+
+  test('explains that an account with no business signs in on the web', () {
+    expect(
+      describeActionError(const AdminOnlyAccountException()),
+      'This account has no business, so it signs in on the web. Use a business account here',
+    );
   });
 }

@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import '../error/app_exception.dart';
 
 String describeActionError(Object error) {
+  if (error is AdminOnlyAccountException) return error.message;
   // No response at all means the request never reached the server (offline,
   // timeout, dropped connection), which is the one failure the user can fix.
   if (error is DioException && error.response == null) {
