@@ -8,9 +8,9 @@
 
 **Tech Stack:** Flutter, Riverpod (no code generation), freezed and json_serializable (generated files are committed), dio, mocktail, device_info_plus (already a dependency).
 
-**Spec:** `docs/superpowers/specs/2026-09-30-web-parity-round-design.md` (Round 1, items 1 to 4). Executors read both files.
+**Spec:** `docs/superpowers/specs/2026-09-30-web-parity-round-design.md` (Round 1, items 1 to 6). Executors read both files. Rounds 2 to 4 are specced there and get their own plans when they start; nothing from them is built here.
 
-**Not in this plan:** the one-time "your session ended after a security update" message. The spec left it as an open decision, and the app cannot yet tell that case apart from a normal expiry, so it waits for a decision.
+**Not in this plan:** Rounds 2 to 4 (opened tracking and its notification type, share tracking, payment terms, statements, credit limit, draft delete from the list, inline add item, instalments, attachments, reminder settings, receivables due now, repeating invoices, revenue glance, activity feed), and the one-time "your session ended after a security update" message. The spec left it as an open decision, and the app cannot yet tell that case apart from a normal expiry, so it waits for a decision.
 
 ## Global Constraints
 
