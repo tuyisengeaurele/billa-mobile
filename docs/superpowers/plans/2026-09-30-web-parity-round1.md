@@ -1810,7 +1810,7 @@ void main() {
   test('says where a prefilled rate came from', () {
     expect(
       rateHint(const RateQuote(rate: 1450, source: 'BNR', date: '2026-09-29')),
-      'National Bank of Rwanda reference rate, 2026-09-29.',
+      'National Bank of Rwanda reference rate, 29 Sep 2026.',
     );
     expect(rateHint(const RateQuote(rate: 1450, source: 'LAST_USED')), 'The rate you used last.');
     expect(rateHint(null), isNull);
@@ -1864,7 +1864,7 @@ In `document_editor_controller_test.dart` (which mocks `DocumentRepository`), ad
       expect(current().currency, Currency.usd);
       expect(current().exchangeRate, 1400);
       expect(current().lines.single.unitPrice, 1000);
-      expect(current().rateHint, 'National Bank of Rwanda reference rate, 2026-09-29.');
+      expect(current().rateHint, 'National Bank of Rwanda reference rate, 29 Sep 2026.');
       expect(current().repriceNote, isFalse);
     });
 
@@ -1977,6 +1977,7 @@ Create `lib/features/documents/domain/exchange_rates.dart`:
 
 ```dart
 import '../../../core/formatting/currency.dart';
+import '../../../core/formatting/short_date.dart';
 
 class RateQuote {
   const RateQuote({required this.rate, required this.source, this.date});
@@ -2019,7 +2020,7 @@ class ExchangeRates {
 String? rateHint(RateQuote? quote) {
   if (quote == null) return null;
   if (quote.source == 'BNR' && quote.date != null) {
-    return 'National Bank of Rwanda reference rate, ${quote.date}.';
+    return 'National Bank of Rwanda reference rate, ${formatShortDate(quote.date!)}.';
   }
   return 'The rate you used last.';
 }
@@ -2053,15 +2054,15 @@ In `document_editor_controller.dart` add imports for `core/formatting/currency.d
 
 `copyWith` gains `Object? rateHint = _unset, bool? repriceNote,` and passes them through (`rateHint: identical(rateHint, _unset) ? this.rateHint : rateHint as String?`, `repriceNote: repriceNote ?? this.repriceNote`).
 
-Controller: add `ExchangeRates? _rates;` and
+Controller: add
 
 ```dart
-  // The reference rates rarely change within a session, and asking again on every switch
-  // would make a flaky connection block a picker.
+  // Asked every time a currency is chosen, as the web form does: the server keeps the rates fresh, and a
+  // long editing session should not keep using a rate from when the draft was opened. A failure is not
+  // an error to show, it just means no rate could be prefilled, and the user types one.
   Future<ExchangeRates?> _loadRates() async {
-    if (_rates != null) return _rates;
     try {
-      return _rates = await ref.read(documentRepositoryProvider).rates();
+      return await ref.read(documentRepositoryProvider).rates();
     } catch (_) {
       return null;
     }
@@ -2239,6 +2240,17 @@ void main() {
     expect(rates, [1500.25, null]);
   });
 
+  testWidgets('the rate box ignores letters, a second dot and more than six decimals', (tester) async {
+    final rates = <double?>[];
+    await tester.pumpWidget(host(currency: Currency.usd, rate: 1450, onRate: rates.add));
+
+    await tester.enterText(find.byKey(const Key('document-editor-rate')), '14a5');
+    await tester.enterText(find.byKey(const Key('document-editor-rate')), '1.2.3');
+    await tester.enterText(find.byKey(const Key('document-editor-rate')), '1.1234567');
+
+    expect(rates, isEmpty);
+  });
+
   testWidgets('a foreign currency with no rate says what to do', (tester) async {
     await tester.pumpWidget(host(currency: Currency.usd));
 
@@ -2292,7 +2304,7 @@ Add to `document_editor_screen_test.dart` (its `buildApp` and `_savedDocument` e
     await tester.pumpAndSettle();
 
     expect(find.text('1400'), findsOneWidget);
-    expect(find.textContaining('National Bank of Rwanda reference rate, 2026-09-29.'), findsOneWidget);
+    expect(find.textContaining('National Bank of Rwanda reference rate, 29 Sep 2026.'), findsOneWidget);
 
     await tester.tap(find.text('Add line'));
     await tester.pumpAndSettle();
@@ -2343,6 +2355,12 @@ class CurrencySection extends StatefulWidget {
   @override
   State<CurrencySection> createState() => _CurrencySectionState();
 }
+
+// The same rule as the web's rate box: digits, one dot, at most six decimals. A key press that would break it
+// is ignored, so the box never holds text that cannot be a rate.
+final _rateFormatter = TextInputFormatter.withFunction(
+  (oldValue, newValue) => RegExp(r'^[0-9]*\.?[0-9]{0,6}$').hasMatch(newValue.text) ? newValue : oldValue,
+);
 
 class _CurrencySectionState extends State<CurrencySection> {
   late final _rateController = TextEditingController(text: _rateText(widget.exchangeRate));
@@ -2411,7 +2429,7 @@ class _CurrencySectionState extends State<CurrencySection> {
             enabled: !widget.locked,
             decoration: InputDecoration(labelText: '1 ${currency.code} = RWF', errorText: problem),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+            inputFormatters: [_rateFormatter],
             onChanged: (value) => widget.onRateChanged(double.tryParse(value)),
           ),
         ],
