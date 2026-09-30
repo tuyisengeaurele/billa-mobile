@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Bring the mobile app back in step with the web backend: retire the accountant role, show and edit documents in their own currency, and show readable signed-in devices.
+**Goal:** Bring the mobile app back in step with the web backend: retire the accountant role, stop the phone from overwriting what the web saved on a draft, show and edit documents in their own currency, word customer messages the way the web does, and show readable signed-in devices.
 
 **Architecture:** A new `Currency` type in `core/formatting` owns decimals, parsing, formatting and RWF conversion, so every screen asks one place how an amount reads. Models carry `currency` and `exchangeRate`; screens pass the document's currency to `MoneyText`. The editor gains a currency and rate section that reprices lines through RWF, mirroring the web form. Sessions gain a device name sent by the app in an `X-Billa-Device` header and shown with last-active time.
 
@@ -20,6 +20,7 @@
 - Comments explain why, never what. No plan or spec pointers in code. No em dashes anywhere (code, strings, docs, commit messages).
 - Lines stay within 120 columns. Do not run the default `dart format`.
 - Riverpod is used without code generation. freezed and json_serializable outputs are regenerated with `dart run build_runner build --delete-conflicting-outputs` and committed alongside the source that changed them.
+- `PATCH /documents/:id` replaces the whole draft. A field left out is reset: `currency` falls back to RWF (the server's schema default), `installments` are deleted, `recurrence` is cleared. Anything the phone does not edit must therefore be sent back exactly as it was loaded.
 - Amounts are whole numbers of the currency's smallest unit (francs for RWF, cents for USD, decimals 2). The exchange rate is RWF for one whole unit of the currency.
 - No dead ends: every error says what happened and what to do next, with a working retry. Every loading state shows a skeleton, not a bare spinner.
 - Money uses tabular figures through `MoneyText`.
@@ -28,6 +29,8 @@
 ## Review Focus
 
 The spec is silent on these inputs, so each gets a test in the task that owns the code.
+
+0. **A draft made on the web with a foreign currency, an instalment plan or a repeat schedule, opened and autosaved on the phone,** must come back unchanged. Owner: Task 2A. This is a live risk in the installed build: today the phone silently turns such a draft into an RWF draft and deletes its plan.
 
 1. **A typed foreign-currency amount with odd text** (`12.999`, `1,250.5`, `.`, `abc`, empty) must round or be rejected, never crash. Owner: Task 2.
 2. **A draft opened or created in a foreign currency with no rate** (rate null, or the rates request failed offline) must show a clear rate problem and refuse to save, not send a request the server rejects. Owner: Task 5.
@@ -558,19 +561,29 @@ git commit -m "feat: add a currency type with decimals, parsing and rate convers
 
 ---
 
-### Task 3: Documents show their own currency
+### Task 2A: Keep web-only fields when a draft is saved from the phone
 
 **Files:**
 - Modify: `lib/features/documents/domain/document.dart` (+ regenerate `document.freezed.dart`, `document.g.dart`)
-- Modify: `lib/features/documents/domain/share_message.dart`
-- Modify: `lib/features/documents/presentation/providers/document_contact.dart`
-- Modify: `lib/features/documents/presentation/widgets/document_list_tile.dart`
-- Modify: `lib/features/documents/presentation/screens/document_detail_screen.dart`
-- Test: `test/features/documents/domain/document_test.dart`, `test/features/documents/domain/share_message_test.dart`, `test/features/documents/presentation/widgets/document_list_tile_test.dart`, `test/features/documents/presentation/screens/document_detail_screen_test.dart`
+- Modify: `lib/features/documents/domain/document_draft_input.dart` (+ regenerate)
+- Modify: `lib/features/documents/domain/duplicate_draft.dart`
+- Modify: `lib/features/documents/presentation/providers/document_editor_controller.dart`
+- Modify: `lib/features/documents/presentation/screens/document_editor_screen.dart`
+- Modify: `lib/core/errors/action_errors.dart`
+- Test: `test/features/documents/domain/document_test.dart`, `test/features/documents/domain/document_draft_input_test.dart`, `test/features/documents/domain/duplicate_draft_test.dart`, `test/features/documents/presentation/providers/document_editor_controller_test.dart`, `test/features/documents/presentation/screens/document_editor_screen_test.dart`, `test/core/errors/action_errors_test.dart`
 
 **Interfaces:**
-- Consumes: `Currency`, `currencyFromJson`, `currencyToJson`, `rateFromJson`, `formatMoney`, `MoneyText(currency:)` from Task 2.
-- Produces: `Document.currency` (`Currency`, default `rwf`) and `Document.exchangeRate` (`double?`); `reminderMessage(..., Currency currency = Currency.rwf)` and `shareMessage(..., Currency currency = Currency.rwf)`.
+- Consumes: `Currency`, `currencyFromJson`, `currencyToJson`, `rateFromJson`, `rateProblem` from Task 2.
+- Produces:
+  - `Document.currency` (`Currency`, default `rwf`), `.exchangeRate` (`double?`), `.installments` (`List<DocumentInstallment>`), `.recurrenceInterval` and `.recurrenceEndDate` (`String?`), `.nextInstallment` (`DocumentNextInstallment?`), `.business` (`DocumentBusinessRef?`).
+  - `DocumentInstallment({String? label, required int amount, required String dueDate})`, `DocumentNextInstallment({String? label, required int remaining, required String dueDate})`, `DocumentBusinessRef({bool momoEnabled = false})`.
+  - `InstallmentInput({String? label, required int amount, required String dueDate})` and `RecurrenceInput({required String interval, String? endDate})`.
+  - `DocumentDraftInput.currency`, `.exchangeRate`, `.installments` (`List<InstallmentInput>?`), `.recurrence` (`RecurrenceInput?`).
+  - `DocumentEditorState.currency`, `.exchangeRate`, `.installments`, `.recurrence`, and `String? get preservedPlanNote`.
+
+**Why this is first:** the server's `PATCH /documents/:id` deletes the draft's lines and instalments and rewrites every column from the request. The phone does not send `currency`, so the server's schema default makes the draft RWF with no rate, and its cent amounts read as francs. It does not send `installments`, so the plan is deleted, and it does not send `recurrence`, so the schedule is cleared. Opening and editing any web-made draft of that kind on the current app corrupts it. The server also refuses a plan whose instalments no longer add up to the total, with the error `invalid_installments` and a plain message that the phone must show.
+
+The phone does not edit instalments or repeat schedules in Round 1. It carries them through untouched and says so.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -582,6 +595,10 @@ Add to `test/features/documents/domain/document_test.dart` (import `package:bill
 
     expect(document.currency, Currency.rwf);
     expect(document.exchangeRate, isNull);
+    expect(document.installments, isEmpty);
+    expect(document.recurrenceInterval, isNull);
+    expect(document.nextInstallment, isNull);
+    expect(document.business, isNull);
   });
 
   test('a foreign document carries its currency and the rate saved with it', () {
@@ -594,40 +611,712 @@ Add to `test/features/documents/domain/document_test.dart` (import `package:bill
   test('a currency the app does not know reads as RWF', () {
     expect(Document.fromJson(_documentJson(extra: {'currency': 'JPY'})).currency, Currency.rwf);
   });
+
+  test('reads a payment plan, the next instalment and whether the business takes MoMo', () {
+    final document = Document.fromJson(_documentJson(extra: {
+      'installments': [
+        {'id': 'i1', 'sortOrder': 0, 'label': 'Deposit', 'amount': 4000, 'dueDate': '2026-10-01T00:00:00.000Z'},
+        {'id': 'i2', 'sortOrder': 1, 'label': null, 'amount': 7800, 'dueDate': '2026-11-01T00:00:00.000Z'},
+      ],
+      'nextInstallment': {
+        'label': 'Deposit',
+        'amount': 4000,
+        'dueDate': '2026-10-01',
+        'paid': 1000,
+        'remaining': 3000,
+        'status': 'PARTIALLY_PAID',
+      },
+      'business': {'momoEnabled': true},
+    }));
+
+    expect(document.installments.map((step) => step.amount), [4000, 7800]);
+    expect(document.installments.first.label, 'Deposit');
+    expect(document.installments.last.label, isNull);
+    expect(document.nextInstallment!.remaining, 3000);
+    expect(document.business!.momoEnabled, isTrue);
+  });
+
+  test('reads a repeat schedule', () {
+    final document = Document.fromJson(
+      _documentJson(extra: {'recurrenceInterval': 'MONTHLY', 'recurrenceEndDate': '2027-01-01T00:00:00.000Z'}),
+    );
+
+    expect(document.recurrenceInterval, 'MONTHLY');
+    expect(document.recurrenceEndDate, '2027-01-01T00:00:00.000Z');
+  });
 ```
 
-Add to `test/features/documents/domain/share_message_test.dart` (import currency):
+Add to `document_draft_input_test.dart` (import `Currency`, and update any existing exact-map expectation in this file so it includes `'currency': 'RWF'`):
 
 ```dart
-  test('a foreign amount is written in its own currency', () {
-    final message = shareMessage(
-      customer: 'Acme',
-      typeLabel: 'invoice',
-      number: 'INV-1',
-      total: 125050,
-      link: 'https://x/view/t',
+  test('a foreign draft sends its currency and rate, an RWF draft sends no rate', () {
+    final usd = const DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-01-01',
       currency: Currency.usd,
-    );
+      exchangeRate: 1450.5,
+    ).toJson();
+    final rwf = const DocumentDraftInput(type: DocumentType.invoice, customerId: 'c1', issueDate: '2026-01-01').toJson();
 
-    expect(message, contains('USD 1,250.50'));
+    expect(usd['currency'], 'USD');
+    expect(usd['exchangeRate'], 1450.5);
+    expect(rwf['currency'], 'RWF');
+    expect(rwf.containsKey('exchangeRate'), isFalse);
+    expect(rwf.containsKey('installments'), isFalse);
+    expect(rwf.containsKey('recurrence'), isFalse);
   });
 
-  test('a foreign invoice reminder does not invite the customer to pay online', () {
-    final message = reminderMessage(
-      customer: 'Acme',
-      number: 'INV-1',
-      amountOwed: 125050,
-      link: 'https://x/view/t',
-      currency: Currency.usd,
-    );
+  test('a plan and a repeat schedule are written the way the server reads them', () {
+    final plan = const DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-01-01',
+      installments: [
+        InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
+        InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
+      ],
+    ).toJson();
+    final repeat = const DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-01-01',
+      recurrence: RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'),
+    ).toJson();
 
-    expect(message, contains('USD 1,250.50'));
-    expect(message, isNot(contains('pay')));
-    expect(message, contains('https://x/view/t'));
+    expect(plan['installments'], [
+      {'label': 'Deposit', 'amount': 4000, 'dueDate': '2026-10-01'},
+      {'amount': 7800, 'dueDate': '2026-11-01'},
+    ]);
+    expect(repeat['recurrence'], {'interval': 'MONTHLY', 'endDate': '2027-01-01'});
   });
 ```
 
-Add to `test/features/documents/presentation/widgets/document_list_tile_test.dart` (import `package:billa_mobile/core/formatting/currency.dart`):
+Also update exact-map expectations in `document_repository_impl_test.dart` that compare a whole request body so they include `'currency': 'RWF'`.
+
+Add to `duplicate_draft_test.dart` (use that file's existing source-document helper, and give it `currency`, `exchangeRate`, `installments` and `recurrenceInterval` as needed):
+
+```dart
+  test('a repeat of a foreign document stays in that currency at the same rate', () {
+    final draft = draftFromDocument(_source(currency: Currency.usd, exchangeRate: 1450.5));
+
+    expect(draft.currency, Currency.usd);
+    expect(draft.exchangeRate, 1450.5);
+  });
+
+  test('a repeat starts without the original payment plan or repeat schedule', () {
+    final draft = draftFromDocument(_source(
+      installments: [const DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z')],
+      recurrenceInterval: 'MONTHLY',
+    ));
+
+    expect(draft.installments, isNull);
+    expect(draft.recurrence, isNull);
+  });
+```
+
+Add to `document_editor_controller_test.dart` (imports for `Currency`, `InstallmentInput`, `RecurrenceInput`, `DocumentInstallment`):
+
+```dart
+  group('a draft made on the web', () {
+    Document webDraft({
+      Currency currency = Currency.rwf,
+      double? rate,
+      List<DocumentInstallment> installments = const [],
+      String? interval,
+    }) =>
+        Document(
+          id: 'd1',
+          type: DocumentType.invoice,
+          status: DocumentStatus.draft,
+          customerId: 'c1',
+          customer: _customer,
+          issueDate: '2026-01-01T00:00:00.000Z',
+          dueDate: '2026-11-01T00:00:00.000Z',
+          subtotal: 11800,
+          taxTotal: 0,
+          total: 11800,
+          currency: currency,
+          exchangeRate: rate,
+          installments: installments,
+          recurrenceInterval: interval,
+          recurrenceEndDate: interval == null ? null : '2027-01-01T00:00:00.000Z',
+          amountPaid: 0,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        );
+
+    Future<DocumentEditorState> open(Document document) async {
+      when(() => repository.get('d1')).thenAnswer((_) async => document);
+      const arg = DocumentEditorArgs.edit('d1');
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      return container.read(documentEditorControllerProvider(arg).future);
+    }
+
+    test('keeps its currency and rate when saved', () async {
+      final state = await open(webDraft(currency: Currency.usd, rate: 1450.5));
+
+      expect(state.currency, Currency.usd);
+      expect(state.exchangeRate, 1450.5);
+      expect(state.toInput().currency, Currency.usd);
+      expect(state.toInput().exchangeRate, 1450.5);
+    });
+
+    test('keeps its payment plan, with dates as plain dates, when saved', () async {
+      final state = await open(webDraft(installments: const [
+        DocumentInstallment(label: 'Deposit', amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+        DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+      ]));
+
+      expect(state.toInput().installments, const [
+        InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
+        InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
+      ]);
+      expect(state.preservedPlanNote, contains('instalments'));
+    });
+
+    test('keeps its repeat schedule when saved', () async {
+      final state = await open(webDraft(interval: 'MONTHLY'));
+
+      expect(state.toInput().recurrence, const RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'));
+      expect(state.toInput().installments, isNull);
+      expect(state.preservedPlanNote, 'This draft repeats every month. Change how often on the web.');
+    });
+
+    test('a plain RWF draft sends neither a plan nor a schedule', () async {
+      final state = await open(webDraft());
+
+      expect(state.toInput().installments, isNull);
+      expect(state.toInput().recurrence, isNull);
+      expect(state.preservedPlanNote, isNull);
+    });
+
+    test('a foreign draft with no saved rate is not savable until one is typed', () async {
+      final state = await open(webDraft(currency: Currency.usd));
+
+      expect(state.isSavable, isFalse);
+    });
+  });
+```
+
+Add to `test/core/errors/action_errors_test.dart`:
+
+```dart
+  test('a payment plan that no longer adds up shows the server reason and what to do', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 400,
+        data: {
+          'error': 'invalid_installments',
+          'message': 'The instalments add up to RWF 10,000 but the total is RWF 12,000.',
+        },
+      ),
+    );
+
+    expect(
+      describeActionError(error),
+      'The instalments add up to RWF 10,000 but the total is RWF 12,000. '
+      'Change the amounts back, or update the instalments on the web.',
+    );
+  });
+
+  test('a payment plan error without a reason still says what to do', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), data: {'error': 'invalid_installments'}),
+    );
+
+    expect(describeActionError(error), contains('Change the amounts back'));
+  });
+```
+
+Add to `document_editor_screen_test.dart` (its `_savedDocument()` and `buildApp` exist):
+
+```dart
+  testWidgets('a draft with a payment plan says the plan is kept and where to change it', (tester) async {
+    when(() => documentRepository.get('d1')).thenAnswer((_) async => _savedDocument().copyWith(
+          installments: const [
+            DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+            DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+          ],
+        ));
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.edit(documentId: 'd1')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('paid in instalments set up on the web'), findsOneWidget);
+  });
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `flutter test test/features/documents test/core/errors`
+Expected: FAIL (`Document` has no `currency`, `InstallmentInput` does not exist).
+
+- [ ] **Step 3: Implement the read models**
+
+In `lib/features/documents/domain/document.dart` add `import '../../../core/formatting/currency.dart';`, then add these classes next to `DocumentRef`:
+
+```dart
+@freezed
+class DocumentInstallment with _$DocumentInstallment {
+  const factory DocumentInstallment({String? label, required int amount, required String dueDate}) =
+      _DocumentInstallment;
+
+  factory DocumentInstallment.fromJson(Map<String, dynamic> json) => _$DocumentInstallmentFromJson(json);
+}
+
+/// The step of a payment plan the customer should pay next, as the server works it out from what is paid.
+@freezed
+class DocumentNextInstallment with _$DocumentNextInstallment {
+  const factory DocumentNextInstallment({String? label, required int remaining, required String dueDate}) =
+      _DocumentNextInstallment;
+
+  factory DocumentNextInstallment.fromJson(Map<String, dynamic> json) => _$DocumentNextInstallmentFromJson(json);
+}
+
+@freezed
+class DocumentBusinessRef with _$DocumentBusinessRef {
+  const factory DocumentBusinessRef({@Default(false) bool momoEnabled}) = _DocumentBusinessRef;
+
+  factory DocumentBusinessRef.fromJson(Map<String, dynamic> json) => _$DocumentBusinessRefFromJson(json);
+}
+```
+
+and in the `Document` factory, after `required int total,`:
+
+```dart
+    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
+    @JsonKey(fromJson: rateFromJson) double? exchangeRate,
+    @Default(<DocumentInstallment>[]) List<DocumentInstallment> installments,
+    String? recurrenceInterval,
+    String? recurrenceEndDate,
+    DocumentNextInstallment? nextInstallment,
+    DocumentBusinessRef? business,
+```
+
+Regenerate: `dart run build_runner build --delete-conflicting-outputs`. Run `git status` and keep only `document.freezed.dart` and `document.g.dart` among generated files; restore any other generated file the run touched with `git checkout -- <path>`.
+
+- [ ] **Step 4: Implement the request models**
+
+In `lib/features/documents/domain/document_draft_input.dart` add `import '../../../core/formatting/currency.dart';`, add next to `DocumentLineInput`:
+
+```dart
+@freezed
+class InstallmentInput with _$InstallmentInput {
+  @JsonSerializable(includeIfNull: false)
+  const factory InstallmentInput({String? label, required int amount, required String dueDate}) = _InstallmentInput;
+
+  factory InstallmentInput.fromJson(Map<String, dynamic> json) => _$InstallmentInputFromJson(json);
+}
+
+@freezed
+class RecurrenceInput with _$RecurrenceInput {
+  @JsonSerializable(includeIfNull: false)
+  const factory RecurrenceInput({required String interval, String? endDate}) = _RecurrenceInput;
+
+  factory RecurrenceInput.fromJson(Map<String, dynamic> json) => _$RecurrenceInputFromJson(json);
+}
+```
+
+and in `DocumentDraftInput`, after the `language` field:
+
+```dart
+    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
+    double? exchangeRate,
+    List<InstallmentInput>? installments,
+    RecurrenceInput? recurrence,
+```
+
+Regenerate and keep only `document_draft_input.freezed.dart` and `document_draft_input.g.dart`.
+
+In `duplicate_draft.dart` add to the returned `DocumentDraftInput`, with the reason as a comment above them:
+
+```dart
+    // A repeat is a new document in the same currency, but it starts without the original plan (its dates
+    // are in the past) and without a repeat schedule (the original keeps repeating by itself).
+    currency: source.currency,
+    exchangeRate: source.exchangeRate,
+```
+
+- [ ] **Step 5: Carry the fields through the editor**
+
+In `document_editor_controller.dart` add imports for `core/formatting/currency.dart`. In `DocumentEditorState`:
+
+1. Constructor: add `this.currency = Currency.rwf, this.exchangeRate, this.installments = const [], this.recurrence,` and the matching fields:
+
+```dart
+  final Currency currency;
+  final double? exchangeRate;
+
+  // Set up on the web and sent back exactly as loaded, because saving replaces the whole draft.
+  final List<InstallmentInput> installments;
+  final RecurrenceInput? recurrence;
+```
+
+2. `fromDocument` sets:
+
+```dart
+        currency: document.currency,
+        exchangeRate: document.exchangeRate,
+        installments: [
+          for (final step in document.installments)
+            InstallmentInput(label: step.label, amount: step.amount, dueDate: step.dueDate.split('T').first),
+        ],
+        recurrence: document.recurrenceInterval == null
+            ? null
+            : RecurrenceInput(
+                interval: document.recurrenceInterval!,
+                endDate: document.recurrenceEndDate?.split('T').first,
+              ),
+```
+
+3. `isSavable` gains `&& rateProblem(currency, exchangeRate) == null` (a foreign draft with no rate would be refused by the server).
+4. `toInput` gains:
+
+```dart
+        currency: currency,
+        exchangeRate: currency == Currency.rwf ? null : exchangeRate,
+        // The server refuses an empty plan, so no plan is sent as no field at all.
+        installments: installments.isEmpty ? null : installments,
+        recurrence: recurrence,
+```
+
+5. `copyWith` gains `Currency? currency, Object? exchangeRate = _unset,` and passes them through (`currency: currency ?? this.currency`, `exchangeRate: identical(exchangeRate, _unset) ? this.exchangeRate : exchangeRate as double?`, and `installments: installments, recurrence: recurrence`).
+6. Add the note getter:
+
+```dart
+  // These are kept but not editable on the phone, so the phone says so instead of hiding them.
+  String? get preservedPlanNote {
+    if (installments.isNotEmpty) {
+      return 'This draft is paid in instalments set up on the web. Keep the total the same, or change the plan there.';
+    }
+    final interval = recurrence?.interval;
+    if (interval == null) return null;
+    return 'This draft repeats ${_recurrenceWords(interval)}. Change how often on the web.';
+  }
+```
+
+with, at file level:
+
+```dart
+String _recurrenceWords(String interval) => switch (interval) {
+      'WEEKLY' => 'every week',
+      'MONTHLY' => 'every month',
+      'QUARTERLY' => 'every quarter',
+      'ANNUALLY' => 'every year',
+      _ => 'on a schedule',
+    };
+```
+
+In `document_editor_screen.dart`, at the top of the `_DocumentEditorForm` column (before the autosave error banner), add:
+
+```dart
+          if (state.preservedPlanNote case final note?) ...[
+            Card(
+              key: const Key('editor-plan-note'),
+              child: Padding(padding: const EdgeInsets.all(12), child: Text(note)),
+            ),
+            const SizedBox(height: 16),
+          ],
+```
+
+In `lib/core/errors/action_errors.dart`, after the `invalid_body` line and before the `return switch`, add:
+
+```dart
+  // The server says exactly how the plan and the total disagree; the phone adds the way out, because
+  // it cannot edit the plan itself.
+  if (code == 'invalid_installments') {
+    final detail = data is Map ? data['message'] as String? : null;
+    return '${detail ?? 'The instalments no longer match the total.'} '
+        'Change the amounts back, or update the instalments on the web.';
+  }
+```
+
+- [ ] **Step 6: Run the tests to verify they pass**
+
+Run: `flutter test test/features/documents test/core/errors && flutter analyze`
+Expected: PASS, no analyzer issues.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add lib/features/documents lib/core/errors/action_errors.dart test/features/documents test/core/errors/action_errors_test.dart
+git commit -m "fix: keep a draft's currency, plan and repeat schedule when saving from the phone"
+```
+
+---
+
+### Task 3: Documents show their own currency, and messages read like the web's
+
+**Files:**
+- Create: `lib/core/formatting/short_date.dart`
+- Modify: `lib/features/documents/domain/share_message.dart`
+- Modify: `lib/features/documents/presentation/providers/document_contact.dart`
+- Modify: `lib/features/documents/presentation/widgets/document_list_tile.dart`
+- Modify: `lib/features/documents/presentation/screens/document_detail_screen.dart`
+- Test: `test/core/formatting/short_date_test.dart` (create), `test/features/documents/domain/share_message_test.dart`, `test/features/documents/presentation/providers/document_contact_test.dart`, `test/features/documents/presentation/widgets/document_list_tile_test.dart`, `test/features/documents/presentation/screens/document_detail_screen_test.dart`
+
+**Interfaces:**
+- Consumes: `Currency`, `formatMoney`, `MoneyText(currency:)` from Task 2; `Document.currency`, `.installments`, `.nextInstallment`, `.business` from Task 2A.
+- Produces:
+  - `String formatShortDate(String iso)`, for example `1 Oct 2026`, read as a UTC calendar day.
+  - `String? dueDateLabel(DocumentType type)`: `Due date` for an invoice, `Valid until` for a proforma or quote, none for the rest.
+  - `reminderMessage({customer, business, number, amountOwed, dueDate, link, currency, payable, instalment})` and `shareMessage({customer, business, type, typeLabel, number, total, dueDate, link, currency, payable})`.
+
+The web changed how its WhatsApp text reads (`shared/src/whatsapp-message.ts`): it names the business, adds a due date line, says "View and pay it here" only when the invoice can really be paid online (the business takes MoMo, the invoice is RWF), and for an invoice on a payment plan says which instalment is due now. The phone should send the same words, so customers get one voice from both apps. The web text is:
+
+```
+Hello {customer}, a reminder from {business} that invoice {number} has {amount} outstanding[, of which {amount} ({label}) is due now].
+Due date: {short date}.
+View and pay it here: {link}
+```
+
+and for sharing `Hello {customer}, {business} sent you {type} {number} for {amount}.` in place of the first line. The due line appears only when the document type has one and a date is set. "View it here" replaces "View and pay it here" when payment is not possible.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `test/core/formatting/short_date_test.dart`:
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:billa_mobile/core/formatting/short_date.dart';
+
+void main() {
+  test('writes a day, a three letter month and the year', () {
+    expect(formatShortDate('2026-10-01'), '1 Oct 2026');
+    expect(formatShortDate('2026-09-30T00:00:00.000Z'), '30 Sep 2026');
+    expect(formatShortDate('2027-01-05T00:00:00.000Z'), '5 Jan 2027');
+  });
+
+  test('reads the calendar day it was written for, whatever the phone timezone', () {
+    expect(formatShortDate('2026-10-01T23:59:59.000Z'), '1 Oct 2026');
+  });
+
+  test('returns the text unchanged when it is not a date', () {
+    expect(formatShortDate('soon'), 'soon');
+  });
+}
+```
+
+Replace the message tests in `test/features/documents/domain/share_message_test.dart` after the first (`publicDocumentUrl`) test with:
+
+```dart
+  test('a reminder names the customer, the business, the invoice, the amount, the due date and the link', () {
+    final message = reminderMessage(
+      customer: 'Acme Ltd',
+      business: 'Kigali Traders',
+      number: 'INV-0001',
+      amountOwed: 4000,
+      dueDate: '2026-10-01T00:00:00.000Z',
+      link: 'https://x/view/t',
+      payable: true,
+    );
+
+    expect(
+      message,
+      'Hello Acme Ltd, a reminder from Kigali Traders that invoice INV-0001 has RWF 4,000 outstanding.\n'
+      'Due date: 1 Oct 2026.\n'
+      'View and pay it here: https://x/view/t',
+    );
+  });
+
+  test('a reminder for an unnumbered invoice still reads naturally', () {
+    final message = reminderMessage(
+      customer: 'Acme',
+      business: 'Kigali Traders',
+      number: null,
+      amountOwed: 500,
+      dueDate: null,
+      link: 'l',
+    );
+
+    expect(message, contains('that invoice has RWF 500 outstanding.'));
+    expect(message, isNot(contains('null')));
+    expect(message, isNot(contains('Due date')));
+  });
+
+  test('a reminder for an invoice on a plan says which instalment is due now', () {
+    final message = reminderMessage(
+      customer: 'Acme',
+      business: 'Kigali Traders',
+      number: 'INV-1',
+      amountOwed: 10000,
+      dueDate: '2026-10-01',
+      link: 'l',
+      instalment: (label: 'Deposit', amount: 3000),
+    );
+
+    expect(message, contains('has RWF 10,000 outstanding, of which RWF 3,000 (Deposit) is due now.'));
+  });
+
+  test('an unnamed instalment is called the next instalment', () {
+    final message = reminderMessage(
+      customer: 'Acme',
+      business: 'B',
+      number: 'INV-1',
+      amountOwed: 10000,
+      dueDate: null,
+      link: 'l',
+      instalment: (label: '  ', amount: 3000),
+    );
+
+    expect(message, contains('(the next instalment) is due now'));
+  });
+
+  test('a foreign invoice is written in its own currency and is not offered online payment', () {
+    final message = reminderMessage(
+      customer: 'Acme',
+      business: 'B',
+      number: 'INV-1',
+      amountOwed: 125050,
+      dueDate: null,
+      link: 'https://x/view/t',
+      currency: Currency.usd,
+      payable: true,
+    );
+
+    expect(message, contains('USD 1,250.50 outstanding'));
+    expect(message, contains('View it here: https://x/view/t'));
+    expect(message, isNot(contains('pay')));
+  });
+
+  test('an invoice the business cannot take payment for says view it', () {
+    final message = reminderMessage(
+      customer: 'Acme',
+      business: 'B',
+      number: 'INV-1',
+      amountOwed: 4000,
+      dueDate: null,
+      link: 'l',
+    );
+
+    expect(message, contains('View it here: l'));
+  });
+
+  test('a share message names the business, the document and the total', () {
+    final message = shareMessage(
+      customer: 'Acme',
+      business: 'Kigali Traders',
+      type: DocumentType.quote,
+      typeLabel: 'quote',
+      number: 'QUO-1',
+      total: 12000,
+      dueDate: '2026-10-15',
+      link: 'https://x/view/t',
+    );
+
+    expect(
+      message,
+      'Hello Acme, Kigali Traders sent you quote QUO-1 for RWF 12,000.\n'
+      'Valid until: 15 Oct 2026.\n'
+      'View it here: https://x/view/t',
+    );
+  });
+
+  test('only an invoice is offered online payment, and a delivery note has no due line', () {
+    final invoice = shareMessage(
+      customer: 'A',
+      business: 'B',
+      type: DocumentType.invoice,
+      typeLabel: 'invoice',
+      number: 'INV-1',
+      total: 1000,
+      dueDate: '2026-10-01',
+      link: 'l',
+      payable: true,
+    );
+    final note = shareMessage(
+      customer: 'A',
+      business: 'B',
+      type: DocumentType.deliveryNote,
+      typeLabel: 'delivery note',
+      number: 'DN-1',
+      total: 1000,
+      dueDate: '2026-10-01',
+      link: 'l',
+      payable: true,
+    );
+
+    expect(invoice, contains('View and pay it here: l'));
+    expect(note, contains('View it here: l'));
+    expect(note, isNot(contains('Due date')));
+    expect(note, isNot(contains('Valid until')));
+  });
+
+  test('messages contain no em dashes', () {
+    final all = [
+      reminderMessage(customer: 'A', business: 'B', number: 'N', amountOwed: 1, dueDate: null, link: 'l'),
+      shareMessage(
+        customer: 'A',
+        business: 'B',
+        type: DocumentType.invoice,
+        typeLabel: 'invoice',
+        number: 'N',
+        total: 1,
+        dueDate: null,
+        link: 'l',
+      ),
+    ];
+
+    for (final message in all) {
+      expect(message.contains('\u2014'), isFalse);
+    }
+  });
+```
+
+Keep the file's closing `}` and add imports for `Currency` and `DocumentType` (`document_enums.dart`).
+
+In `test/features/documents/presentation/providers/document_contact_test.dart`, give `pressGo` the signed-in business by adding this override (import `auth_controller.dart` and `../../../account/support.dart`, which provides `FakeAuthController` with a business named `Acme`):
+
+```dart
+        authControllerProvider.overrideWith(FakeAuthController.new),
+```
+
+Update the existing expectations that read the old wording: `here is quote INV-0001` becomes `Acme sent you quote INV-0001`. The two `... RWF 4,000 outstanding` expectations still hold. Add:
+
+```dart
+  testWidgets('a reminder names the business and takes payment only when MoMo is on and the invoice is RWF', (tester) async {
+    await start(
+      tester,
+      _document().copyWith(business: const DocumentBusinessRef(momoEnabled: true), dueDate: '2026-10-01T00:00:00.000Z'),
+    );
+
+    expect(find.textContaining('a reminder from Acme that invoice INV-0001'), findsOneWidget);
+    expect(find.textContaining('Due date: 1 Oct 2026.'), findsOneWidget);
+    expect(find.textContaining('View and pay it here'), findsOneWidget);
+  });
+
+  testWidgets('a foreign invoice reminder is in its currency and does not invite payment', (tester) async {
+    await start(
+      tester,
+      _document(total: 125050, amountPaid: 25000).copyWith(
+        currency: Currency.usd,
+        exchangeRate: 1450,
+        business: const DocumentBusinessRef(momoEnabled: true),
+      ),
+    );
+
+    expect(find.textContaining('USD 1,000.50 outstanding'), findsOneWidget);
+    expect(find.textContaining('View it here'), findsOneWidget);
+    expect(find.textContaining('View and pay'), findsNothing);
+  });
+
+  testWidgets('a reminder for an invoice on a plan says which instalment is due now', (tester) async {
+    await start(
+      tester,
+      _document().copyWith(nextInstallment: const DocumentNextInstallment(label: 'Deposit', remaining: 1500, dueDate: '2026-10-01')),
+    );
+
+    expect(find.textContaining('of which RWF 1,500 (Deposit) is due now'), findsOneWidget);
+  });
+```
+
+(import `Currency`, `DocumentBusinessRef`, `DocumentNextInstallment`). If `document_detail_actions_test.dart` or `receivables_swipe_test.dart` open the contact sheet, add the same `authControllerProvider` override to their provider list so the business name is present; their `outstanding` expectations still hold.
+
+Add to `document_list_tile_test.dart` (import `Currency`):
 
 ```dart
   testWidgets('shows a foreign total in its own currency', (tester) async {
@@ -659,7 +1348,7 @@ Add to `test/features/documents/presentation/widgets/document_list_tile_test.dar
   });
 ```
 
-Add to `test/features/documents/presentation/screens/document_detail_screen_test.dart` (same import):
+Add to `document_detail_screen_test.dart` (import `Currency`):
 
 ```dart
   testWidgets('a foreign invoice shows lines, totals and payments in its own currency', (tester) async {
@@ -715,53 +1404,129 @@ If the payments section needs a scroll to build, scroll it into view the way the
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `flutter test test/features/documents/domain test/features/documents/presentation/widgets/document_list_tile_test.dart test/features/documents/presentation/screens/document_detail_screen_test.dart`
-Expected: FAIL (`Document` has no `currency`).
+Run: `flutter test test/core/formatting test/features/documents`
+Expected: FAIL (`short_date.dart` does not exist, the message functions have new parameters).
 
-- [ ] **Step 3: Implement the model**
+- [ ] **Step 3: Implement the date helper**
 
-In `lib/features/documents/domain/document.dart` add `import '../../../core/formatting/currency.dart';` and, in the `Document` factory, after `required int total,`:
+Create `lib/core/formatting/short_date.dart`:
 
 ```dart
-    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
-    @JsonKey(fromJson: rateFromJson) double? exchangeRate,
-```
+const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-Regenerate: `dart run build_runner build --delete-conflicting-outputs`. Run `git status` and keep only `document.freezed.dart` and `document.g.dart` among generated files. Restore any other generated file the run touched with `git checkout -- <path>`.
+/// "1 Oct 2026". Spelled out by hand so it reads the same on every phone and in the web app, and read as
+/// the UTC calendar day because a due date is a day, not a moment.
+String formatShortDate(String iso) {
+  final parsed = DateTime.tryParse(iso);
+  if (parsed == null) return iso;
+  // A date with no zone is a calendar day and is kept as written; a value with a zone is already in UTC.
+  final date = parsed.isUtc ? parsed : DateTime.utc(parsed.year, parsed.month, parsed.day);
+  return '${date.day} ${_months[date.month - 1]} ${date.year}';
+}
+```
 
 - [ ] **Step 4: Implement the messages**
 
-`lib/features/documents/domain/share_message.dart`: add `import '../../../core/formatting/currency.dart';` and replace the two message functions with:
+Replace the two message functions in `lib/features/documents/domain/share_message.dart` (keep `publicDocumentUrl`), with imports for `Currency`, `formatShortDate` and `document_enums.dart`:
 
 ```dart
-// Only an RWF invoice can be paid on the public page, so a foreign one is not invited to.
+/// The label before a document's date, or none for a type that has no date to show.
+String? dueDateLabel(DocumentType type) => switch (type) {
+      DocumentType.invoice => 'Due date',
+      DocumentType.proforma || DocumentType.quote => 'Valid until',
+      _ => null,
+    };
+
+String _lines(String opening, DocumentType type, String? dueDate, String link, bool payable) {
+  final label = dueDateLabel(type);
+  final canPay = payable && type == DocumentType.invoice;
+  return [
+    opening,
+    if (label != null && dueDate != null) '$label: ${formatShortDate(dueDate)}.',
+    '${canPay ? 'View and pay it here' : 'View it here'}: $link',
+  ].join('\n');
+}
+
+/// Worded like the web app's WhatsApp reminder, so a customer hears the same thing from either app.
+/// [payable] is whether the public page can take a MoMo payment, and it never can for a foreign invoice.
 String reminderMessage({
   required String customer,
+  required String business,
   required String? number,
   required int amountOwed,
+  required String? dueDate,
   required String link,
   Currency currency = Currency.rwf,
+  bool payable = false,
+  ({String? label, int amount})? instalment,
 }) {
-  final what = number == null ? 'your invoice' : 'invoice $number';
-  final action = currency == Currency.rwf ? 'view it and pay here' : 'view it here';
-  return 'Hello $customer, a friendly reminder that $what has ${formatMoney(amountOwed, currency: currency)} '
-      'outstanding. You can $action: $link Thank you.';
+  final reference = number == null ? 'invoice' : 'invoice $number';
+  String money(int amount) => formatMoney(amount, currency: currency);
+  final name = instalment?.label?.trim();
+  final due = instalment == null
+      ? ''
+      : ', of which ${money(instalment.amount)} (${name == null || name.isEmpty ? 'the next instalment' : name}) is due now';
+  final opening = 'Hello $customer, a reminder from $business that $reference has ${money(amountOwed)} outstanding$due.';
+  return _lines(opening, DocumentType.invoice, dueDate, link, payable && currency == Currency.rwf);
 }
 
 String shareMessage({
   required String customer,
+  required String business,
+  required DocumentType type,
   required String typeLabel,
   required String? number,
   required int total,
+  required String? dueDate,
   required String link,
   Currency currency = Currency.rwf,
+  bool payable = false,
 }) {
-  final what = number == null ? 'your $typeLabel' : '$typeLabel $number';
-  return 'Hello $customer, here is $what for ${formatMoney(total, currency: currency)}: $link Thank you.';
+  final reference = number == null ? typeLabel : '$typeLabel $number';
+  final opening = 'Hello $customer, $business sent you $reference for ${formatMoney(total, currency: currency)}.';
+  return _lines(opening, type, dueDate, link, payable && currency == Currency.rwf);
 }
 ```
 
-`document_contact.dart`: pass `currency: document.currency` to both calls (`reminderMessage(... link: link, currency: document.currency)` and inside `shareMessage(... link: link, currency: document.currency)`).
+In `document_contact.dart` add imports for `core/formatting/currency.dart`, `../../../auth/domain/auth_status.dart` and `../../../auth/presentation/providers/auth_controller.dart`, then replace the message construction:
+
+```dart
+    final status = ref.read(authControllerProvider).valueOrNull;
+    final business = status is Authenticated ? status.business.name : '';
+    final payable = document.business?.momoEnabled == true && document.currency == Currency.rwf;
+    final next = document.nextInstallment;
+    // Only a plan with something already covered has a smaller amount due now than the whole balance.
+    final instalment = next != null && next.remaining < owed ? (label: next.label, amount: next.remaining) : null;
+```
+
+and:
+
+```dart
+      message: isChase
+          ? reminderMessage(
+              customer: customer.name,
+              business: business,
+              number: document.number,
+              amountOwed: owed,
+              dueDate: document.dueDate,
+              link: link,
+              currency: document.currency,
+              payable: payable,
+              instalment: instalment,
+            )
+          : shareMessage(
+              customer: customer.name,
+              business: business,
+              type: document.type,
+              typeLabel: documentTypeLabel(document.type).toLowerCase(),
+              number: document.number,
+              total: document.total,
+              dueDate: document.dueDate,
+              link: link,
+              currency: document.currency,
+              payable: payable,
+            ),
+```
 
 - [ ] **Step 5: Implement the screens**
 
@@ -769,7 +1534,7 @@ String shareMessage({
 
 `document_detail_screen.dart`:
 
-1. Add `import '../../../../core/formatting/money.dart';` and replace `_lineDiscountLabel` so it takes the currency:
+1. Add imports `../../../../core/formatting/currency.dart` and `../../../../core/formatting/money.dart`, and replace `_lineDiscountLabel` so it takes the currency:
 
 ```dart
 String _lineDiscountLabel(DocumentLine line, Currency currency) {
@@ -780,13 +1545,12 @@ String _lineDiscountLabel(DocumentLine line, Currency currency) {
 }
 ```
 
-(import `core/formatting/currency.dart` for `Currency`.)
-
-2. In the lines list replace the quantity text and line total:
+2. In the lines list replace the quantity text and line total (wrap the long string across lines to stay within 120 columns):
 
 ```dart
                               Text(
-                                '${line.quantity.toStringAsFixed(2)} × ${formatMoney(line.unitPrice, currency: document.currency)}'
+                                '${line.quantity.toStringAsFixed(2)} × '
+                                '${formatMoney(line.unitPrice, currency: document.currency)}'
                                 '${_lineDiscountLabel(line, document.currency).isEmpty ? '' : ' · ${_lineDiscountLabel(line, document.currency)}'}',
                               ),
 ```
@@ -795,13 +1559,17 @@ and `MoneyText(line.lineTotal, currency: document.currency),`.
 
 3. Add `currency: document.currency` to the `MoneyText` calls for `document.subtotal`, `document.taxTotal`, `document.total`, and `payment.amount` in the payments list.
 
-- [ ] **Step 6: Fix expectations that read the old plain-number unit price**
+- [ ] **Step 6: Run the tests and fix the expectations that read the old text**
 
-Run the two screen tests. The old line text was `RWF 5000`; it is now `RWF 5,000`. Update those expectations, then run: `flutter test test/features/documents && flutter analyze`. Expected: PASS.
+Run: `flutter test test/core test/features/documents test/features/receivables && flutter analyze`. The old unit price text was `RWF 5000`; it is now `RWF 5,000`. The old share wording (`here is quote ...`) is now `Acme sent you quote ...`. Update those expectations in the tests that still carry them, then re-run. Expected: PASS.
 
 - [ ] **Step 7: Commit**
 
+Two commits:
+
 ```bash
+git add lib/core/formatting/short_date.dart lib/features/documents/domain/share_message.dart lib/features/documents/presentation/providers/document_contact.dart test/core/formatting/short_date_test.dart test/features/documents/domain/share_message_test.dart test/features/documents/presentation/providers/document_contact_test.dart
+git commit -m "feat: word customer messages the way the web app does"
 git add lib/features/documents test/features/documents
 git commit -m "feat: show documents in the currency they were written in"
 ```
@@ -991,21 +1759,18 @@ git commit -m "feat: total what is owed one currency at a time"
 ### Task 5: Draft currency, rate and repricing (state and controller)
 
 **Files:**
-- Modify: `lib/features/documents/domain/document_draft_input.dart` (+ regenerate)
 - Create: `lib/features/documents/domain/exchange_rates.dart`
 - Modify: `lib/features/documents/domain/document_repository.dart`
 - Modify: `lib/features/documents/data/document_repository_impl.dart`
-- Modify: `lib/features/documents/domain/duplicate_draft.dart`
 - Modify: `lib/features/documents/presentation/providers/document_editor_controller.dart`
-- Test: `test/features/documents/domain/exchange_rates_test.dart` (create), `test/features/documents/data/document_repository_impl_test.dart`, `test/features/documents/domain/document_draft_input_test.dart`, `test/features/documents/domain/duplicate_draft_test.dart`, `test/features/documents/presentation/providers/document_editor_controller_test.dart`
+- Test: `test/features/documents/domain/exchange_rates_test.dart` (create), `test/features/documents/data/document_repository_impl_test.dart`, `test/features/documents/presentation/providers/document_editor_controller_test.dart`
 
 **Interfaces:**
-- Consumes: everything from Task 2; `Document.currency` and `Document.exchangeRate` from Task 3.
+- Consumes: everything from Task 2; `DocumentDraftInput.currency`, `DocumentEditorState.currency` and `.exchangeRate`, `toInput` and `isSavable` from Task 2A.
 - Produces:
   - `class RateQuote { const RateQuote({required double rate, required String source, String? date}) }` and `class ExchangeRates { const ExchangeRates(Map<Currency, RateQuote> quotes); factory ExchangeRates.fromJson(Map<String, dynamic>); RateQuote? operator [](Currency currency) }`, plus `String? rateHint(RateQuote? quote)`.
   - `DocumentRepository.rates()` returning `Future<ExchangeRates>` (`GET /documents/rates`).
-  - `DocumentDraftInput.currency` (`Currency`, default `rwf`) and `DocumentDraftInput.exchangeRate` (`double?`, omitted when null).
-  - `DocumentEditorState.currency`, `.exchangeRate`, `.rateHint`, `.repriceNote`, `.currencyLocked`; controller methods `Future<void> setCurrency(Currency next)`, `void setExchangeRate(double? rate)`, and `setReferencedDocument(DocumentRef?, {Currency? currency, double? exchangeRate})`.
+  - `DocumentEditorState.rateHint`, `.repriceNote`, `.currencyLocked`; controller methods `Future<void> setCurrency(Currency next)`, `void setExchangeRate(double? rate)`, and `setReferencedDocument(DocumentRef?, {Currency? currency, double? exchangeRate})`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1071,28 +1836,6 @@ In `test/features/documents/data/document_repository_impl_test.dart` add (follow
 ```
 
 Add `import 'package:billa_mobile/core/formatting/currency.dart';` to that file. It builds the repository in `setUp` as `repository = DocumentRepositoryImpl(dio)` with a `_MockDio dio`; use whatever those variables are named at the top of `main()`.
-
-In `document_draft_input_test.dart` add:
-
-```dart
-  test('a foreign draft sends its currency and rate, an RWF draft sends no rate', () {
-    final usd = const DocumentDraftInput(
-      type: DocumentType.invoice,
-      customerId: 'c1',
-      issueDate: '2026-01-01',
-      currency: Currency.usd,
-      exchangeRate: 1450.5,
-    ).toJson();
-    final rwf = const DocumentDraftInput(type: DocumentType.invoice, customerId: 'c1', issueDate: '2026-01-01').toJson();
-
-    expect(usd['currency'], 'USD');
-    expect(usd['exchangeRate'], 1450.5);
-    expect(rwf['currency'], 'RWF');
-    expect(rwf.containsKey('exchangeRate'), isFalse);
-  });
-```
-
-and update any existing exact-map expectations in that file and in `duplicate_draft_test.dart` and `document_repository_impl_test.dart` so they include `'currency': 'RWF'`. In `duplicate_draft_test.dart` add a test that repeating a USD document at rate 1450.5 gives a draft with `currency == Currency.usd` and `exchangeRate == 1450.5`.
 
 In `document_editor_controller_test.dart` (which mocks `DocumentRepository`), add:
 
@@ -1221,7 +1964,7 @@ In `document_editor_controller_test.dart` (which mocks `DocumentRepository`), ad
   });
 ```
 
-(add imports for `Currency`, `ExchangeRates`, `RateQuote`.) Also add a test to the file that opening an existing USD draft (`repository.get('d1')` returning a `Document` with `currency: Currency.usd, exchangeRate: 1450`) gives an editor state with that currency, rate, and `currencyLocked == false` when it has no reference.
+(add imports for `Currency`, `ExchangeRates`, `RateQuote`.)
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -1292,26 +2035,13 @@ String? rateHint(RateQuote? quote) {
   }
 ```
 
-- [ ] **Step 4: Implement the draft input and duplicate**
-
-`document_draft_input.dart`: add `import '../../../core/formatting/currency.dart';` and in `DocumentDraftInput`, after the `language` field:
-
-```dart
-    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
-    double? exchangeRate,
-```
-
-Regenerate and keep only `document_draft_input.freezed.dart` and `document_draft_input.g.dart`. In `duplicate_draft.dart` add `currency: source.currency, exchangeRate: source.exchangeRate,` to the returned `DocumentDraftInput`.
-
-- [ ] **Step 5: Implement the editor state and controller**
+- [ ] **Step 4: Implement the editor state and controller**
 
 In `document_editor_controller.dart` add imports for `core/formatting/currency.dart` and `../../domain/exchange_rates.dart`.
 
-`DocumentEditorState`: add fields (constructor defaults `this.currency = Currency.rwf`, `this.exchangeRate`, `this.rateHint`, `this.repriceNote = false`), and:
+`DocumentEditorState`: `currency`, `exchangeRate`, `toInput` and the rate check in `isSavable` already exist from Task 2A. Add fields (constructor defaults `this.rateHint`, `this.repriceNote = false`), and:
 
 ```dart
-  final Currency currency;
-  final double? exchangeRate;
   final String? rateHint;
 
   /// True when the currency changed but the prices could not be converted, so the user must check them.
@@ -1321,7 +2051,7 @@ In `document_editor_controller.dart` add imports for `core/formatting/currency.d
   bool get currencyLocked => referencedDocument != null;
 ```
 
-`fromDocument` sets `currency: document.currency, exchangeRate: document.exchangeRate`. `isSavable` gains `&& rateProblem(currency, exchangeRate) == null`. `toInput` gains `currency: currency, exchangeRate: currency == Currency.rwf ? null : exchangeRate,`. `copyWith` gains `Currency? currency, Object? exchangeRate = _unset, Object? rateHint = _unset, bool? repriceNote,` and passes them through (`exchangeRate: identical(exchangeRate, _unset) ? this.exchangeRate : exchangeRate as double?`, same pattern for `rateHint` as `String?`).
+`copyWith` gains `Object? rateHint = _unset, bool? repriceNote,` and passes them through (`rateHint: identical(rateHint, _unset) ? this.rateHint : rateHint as String?`, `repriceNote: repriceNote ?? this.repriceNote`).
 
 Controller: add `ExchangeRates? _rates;` and
 
@@ -1419,12 +2149,12 @@ Note `_update` is synchronous and schedules autosave. `setReferencedDocument` be
 
 Add the doc comment "unitPrice is the catalog price in RWF" above it.
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `flutter test test/features/documents && flutter analyze`
 Expected: PASS. If a `copyWith`-based test in the file compares whole states, adjust it for the new fields.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 Two commits, since the pieces are independent:
 
@@ -2181,13 +2911,14 @@ Then install `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` on the Te
 
 Check on the phone with a business account, and report each result:
 
+0. On the web, make three drafts: one in USD, one with an instalment plan (two or three steps), one that repeats monthly. Open each on the phone, change a note, wait for the saved tick, then reopen it on the web. The currency and rate, the plan, and the repeat schedule must all be unchanged. On the plan draft the phone shows the note about instalments set up on the web. Then change a line price on the plan draft: the phone must show the server's reason that the instalments no longer add up, with the way out, and not a bare error.
 1. Profile, Security, Signed-in devices lists this phone by name (for example "TECNO CC7, Android 9"), marked "This device" and "Active now"; the web session shows as "Chrome on Windows".
 2. Team: no role controls; inviting sends an email and the invite appears as "Member".
 3. New invoice: change currency to USD, see the bank rate and its source, type a price of `12.50`, see `USD 12.50` and a `USD` total.
 4. Change that draft back to RWF: prices convert back and the rate box disappears.
 5. Turn airplane mode on, change currency to EUR: prices stay as typed, the note appears, and saving is blocked until a rate is typed.
 6. Finalize a USD invoice, open it: detail, list row, and Payments show USD. Record a payment of `10.50`: the balance updates in USD.
-7. Send a USD reminder on WhatsApp: the message says `USD ...` and does not invite payment online.
+7. Send a USD reminder on WhatsApp: the message names your business, says `USD ...`, has the due date line, and says `View it here`, not `View and pay it here`. Send an RWF reminder from a business with MoMo on: it says `View and pay it here`. For an invoice on a plan with a payment already made, the reminder says which instalment is due now.
 8. Payments tab with one RWF and one USD invoice: the summary shows two separate totals.
 9. Privacy mode on: the USD amounts show `USD ••••`.
 

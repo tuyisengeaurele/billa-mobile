@@ -56,6 +56,22 @@ Read from the web source, not assumed:
   is visible; the upload route and payload need confirming).
 - **Recurring documents** use `recurrenceInterval`, `recurrenceEndDate` and
   `nextRecurrenceAt`.
+- **Saving a draft replaces all of it** (`PATCH /documents/:id`, added after
+  the first pass of this spec, found on a second read of the web code). A field
+  left out is reset: `currency` returns to RWF through the schema default,
+  `installments` are deleted, `recurrence` is cleared. The current phone app
+  sends none of them, so editing a web-made foreign, instalment or repeating
+  draft on it corrupts that draft.
+- **Payment plans** are two to twelve steps of `{label?, amount, dueDate}` on an
+  invoice, in the document's currency, and must add up to the total. A plan that
+  does not is refused with `invalid_installments` and a plain `message`. A plan
+  cannot be combined with a repeat schedule. Each document also returns
+  `nextInstallment` (what to pay next and how much of it remains), `business.momoEnabled`,
+  and view tracking fields.
+- **Customer message wording** changed on the web: it names the business, adds a
+  due line (`Due date` for invoices, `Valid until` for quotes and proformas),
+  says `View and pay it here` only when the business takes MoMo and the invoice
+  is RWF, and for a plan says which instalment is due now.
 
 ## The work, in rounds
 
@@ -84,6 +100,14 @@ time, on a branch stacked on the previous one. Every round ends with a green
    and the "This device" marker. One clear message after the one-time session
    reset is worth adding if the app can tell that case apart from a normal
    expiry (confirm).
+
+5. **Keep what the web saved.** Send `currency`, `exchangeRate`, `installments`
+   and `recurrence` back unchanged when a draft is saved from the phone, say in
+   the editor that a plan or repeat schedule is set up on the web, and show the
+   server's reason when a plan no longer adds up. This is the most urgent item,
+   because the installed app can already damage web-made drafts.
+6. **Message wording.** Reminders and shares use the web's words, business
+   name, due line and payment invitation rules.
 
 ### Round 2: quick wins
 
