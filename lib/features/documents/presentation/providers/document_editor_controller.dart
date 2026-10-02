@@ -6,6 +6,7 @@ import '../../domain/document.dart';
 import '../../domain/document_draft_input.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/document_totals.dart';
+import '../../domain/exchange_rates.dart';
 import 'document_repository_provider.dart';
 
 enum AutosaveStatus { idle, saving, saved, error }
@@ -78,6 +79,8 @@ class DocumentEditorState {
     this.exchangeRate,
     this.installments = const [],
     this.recurrence,
+    this.rateHint,
+    this.repriceNote = false,
     this.lines = const [],
     this.autosaveStatus = AutosaveStatus.idle,
     this.autosaveError,
@@ -142,6 +145,14 @@ class DocumentEditorState {
   // Set up on the web and sent back exactly as loaded, because saving replaces the whole draft.
   final List<InstallmentInput> installments;
   final RecurrenceInput? recurrence;
+  final String? rateHint;
+
+  /// True when the currency changed but the prices could not be converted, so the user must check them.
+  final bool repriceNote;
+
+  // A document that refers to an invoice is always in the invoice's currency at its rate.
+  bool get currencyLocked => referencedDocument != null;
+
   final List<DocumentLineDraft> lines;
   final AutosaveStatus autosaveStatus;
   final String? autosaveError;
@@ -209,6 +220,8 @@ class DocumentEditorState {
     DocumentLanguage? language,
     Currency? currency,
     Object? exchangeRate = _unset,
+    Object? rateHint = _unset,
+    bool? repriceNote,
     List<DocumentLineDraft>? lines,
     AutosaveStatus? autosaveStatus,
     Object? autosaveError = _unset,
@@ -232,6 +245,8 @@ class DocumentEditorState {
       exchangeRate: identical(exchangeRate, _unset) ? this.exchangeRate : exchangeRate as double?,
       installments: installments,
       recurrence: recurrence,
+      rateHint: identical(rateHint, _unset) ? this.rateHint : rateHint as String?,
+      repriceNote: repriceNote ?? this.repriceNote,
       lines: lines ?? this.lines,
       autosaveStatus: autosaveStatus ?? this.autosaveStatus,
       autosaveError: identical(autosaveError, _unset) ? this.autosaveError : autosaveError as String?,
@@ -288,8 +303,73 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
   void setDueDate(DateTime? date) => _update((s) => s.copyWith(dueDate: date));
   void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setCustomerReference(String value) => _update((s) => s.copyWith(customerReference: value));
-  void setReferencedDocument(DocumentRef? reference) => _update((s) => s.copyWith(referencedDocument: reference));
+  void setReferencedDocument(DocumentRef? reference, {Currency? currency, double? exchangeRate}) =>
+      _update((s) => s.copyWith(
+            referencedDocument: reference,
+            currency: reference == null ? null : currency,
+            exchangeRate: reference == null || currency == null ? _unset : exchangeRate,
+            repriceNote: false,
+          ));
   void setLanguage(DocumentLanguage language) => _update((s) => s.copyWith(language: language));
+
+  // Asked every time a currency is chosen, as the web form does: the server keeps the rates fresh, and a
+  // long editing session should not keep using a rate from when the draft was opened. A failure is not
+  // an error to show, it just means no rate could be prefilled, and the user types one.
+  Future<ExchangeRates?> _loadRates() async {
+    try {
+      return await ref.read(documentRepositoryProvider).rates();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setCurrency(Currency next) async {
+    final current = state.value;
+    if (current == null || current.currencyLocked || next == current.currency) return;
+
+    final quote = next == Currency.rwf ? null : (await _loadRates())?[next];
+    final rate = quote?.rate;
+    // The state may have moved on while the rates were loading.
+    final latest = state.value;
+    if (latest == null || latest.currencyLocked) return;
+
+    final repriced = <DocumentLineDraft>[];
+    var canConvert = true;
+    for (final line in latest.lines) {
+      final price = convertMinor(
+        line.unitPrice,
+        from: latest.currency,
+        fromRate: latest.exchangeRate,
+        to: next,
+        toRate: rate,
+      );
+      final flat = line.discountType == DiscountType.flat;
+      final discount = flat
+          ? convertMinor(
+              (line.discountValue ?? 0).round(),
+              from: latest.currency,
+              fromRate: latest.exchangeRate,
+              to: next,
+              toRate: rate,
+            )
+          : line.discountValue?.round();
+      if (price == null || (flat && discount == null)) {
+        canConvert = false;
+        break;
+      }
+      repriced.add(_cloneLine(line, unitPrice: price, discountValue: flat ? discount!.toDouble() : line.discountValue));
+    }
+
+    _update((s) => s.copyWith(
+          currency: next,
+          exchangeRate: rate,
+          rateHint: rateHint(quote),
+          lines: canConvert ? repriced : s.lines,
+          repriceNote: !canConvert && s.lines.any((line) => line.unitPrice > 0),
+        ));
+  }
+
+  void setExchangeRate(double? rate) => _update((s) => s.copyWith(exchangeRate: rate, rateHint: null));
 
   void addLine() {
     final localId = _nextLocalId++;
@@ -332,17 +412,21 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
   void setLineDescription(int localId, String text) =>
       _updateLine(localId, (line) => _cloneLine(line, description: text, itemId: null));
 
+  // [unitPrice] is the catalog price, which is always in RWF.
   void selectLineItem(
     int localId, {
     required String itemId,
     required String description,
     required int unitPrice,
     required double taxRate,
-  }) =>
-      _updateLine(
-        localId,
-        (line) => _cloneLine(line, itemId: itemId, description: description, unitPrice: unitPrice, taxRate: taxRate),
-      );
+  }) {
+    final current = state.value;
+    final price = current == null ? unitPrice : fromRwf(unitPrice, current.currency, current.exchangeRate);
+    _updateLine(
+      localId,
+      (line) => _cloneLine(line, itemId: itemId, description: description, unitPrice: price, taxRate: taxRate),
+    );
+  }
 
   void setLineQuantity(int localId, double quantity) =>
       _updateLine(localId, (line) => _cloneLine(line, quantity: quantity));

@@ -1,3 +1,4 @@
+import 'package:billa_mobile/features/documents/domain/exchange_rates.dart';
 import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -209,6 +210,129 @@ void main() {
       final state = await open(webDraft(currency: Currency.usd));
 
       expect(state.isSavable, isFalse);
+    });
+  });
+
+  group('currency', () {
+    const usdRates = ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')});
+
+    Future<DocumentEditorController> open() async {
+      const arg = DocumentEditorArgs.create(DocumentType.invoice);
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      await container.read(documentEditorControllerProvider(arg).future);
+      return container.read(documentEditorControllerProvider(arg).notifier);
+    }
+
+    DocumentEditorState current() =>
+        container.read(documentEditorControllerProvider(const DocumentEditorArgs.create(DocumentType.invoice))).requireValue;
+
+    test('switching to a foreign currency prefills the bank rate and reprices the lines through RWF', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().currency, Currency.usd);
+      expect(current().exchangeRate, 1400);
+      expect(current().lines.single.unitPrice, 1000);
+      expect(current().rateHint, 'National Bank of Rwanda reference rate, 29 Sep 2026.');
+      expect(current().repriceNote, isFalse);
+    });
+
+    test('a flat discount is repriced with the prices, a percent discount is left alone', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      notifier.addLine();
+      notifier.setLineDiscount(0, DiscountType.flat, 1400);
+      notifier.setLineDiscount(1, DiscountType.percent, 10);
+
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().lines[0].discountValue, 100);
+      expect(current().lines[1].discountValue, 10);
+    });
+
+    test('when the rates cannot be loaded the prices stay as typed and the user is told', () async {
+      when(() => repository.rates()).thenAnswer((_) async => throw Exception('offline'));
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().currency, Currency.usd);
+      expect(current().exchangeRate, isNull);
+      expect(current().lines.single.unitPrice, 14000);
+      expect(current().repriceNote, isTrue);
+    });
+
+    test('a foreign draft with no rate is not savable, and is once a rate is typed', () async {
+      when(() => repository.rates()).thenAnswer((_) async => const ExchangeRates({}));
+      final notifier = await open();
+      notifier.setCustomer('c1', 'Acme');
+
+      await notifier.setCurrency(Currency.usd);
+      expect(current().isSavable, isFalse);
+
+      notifier.setExchangeRate(1400);
+      expect(current().isSavable, isTrue);
+    });
+
+    test('switching back to RWF clears the rate and reprices back', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+      await notifier.setCurrency(Currency.usd);
+
+      await notifier.setCurrency(Currency.rwf);
+
+      expect(current().currency, Currency.rwf);
+      expect(current().exchangeRate, isNull);
+      expect(current().lines.single.unitPrice, 14000);
+    });
+
+    test('a document that refers to an invoice keeps the invoice currency and cannot change it', () async {
+      final notifier = await open();
+
+      notifier.setReferencedDocument(
+        const DocumentRef(id: 'inv1', number: 'INV-1', type: DocumentType.invoice),
+        currency: Currency.usd,
+        exchangeRate: 1450,
+      );
+      expect(current().currency, Currency.usd);
+      expect(current().exchangeRate, 1450);
+      expect(current().currencyLocked, isTrue);
+
+      await notifier.setCurrency(Currency.eur);
+      expect(current().currency, Currency.usd);
+    });
+
+    test('picking a catalog item converts its RWF price into the draft currency', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      await notifier.setCurrency(Currency.usd);
+
+      notifier.selectLineItem(0, itemId: 'i1', description: 'Printing', unitPrice: 14000, taxRate: 18);
+
+      expect(current().lines.single.unitPrice, 1000);
+    });
+
+    test('the request carries the currency and rate, and none for RWF', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.setCustomer('c1', 'Acme');
+
+      expect(current().toInput().currency, Currency.rwf);
+      expect(current().toInput().exchangeRate, isNull);
+
+      await notifier.setCurrency(Currency.usd);
+      expect(current().toInput().currency, Currency.usd);
+      expect(current().toInput().exchangeRate, 1400);
     });
   });
 }
