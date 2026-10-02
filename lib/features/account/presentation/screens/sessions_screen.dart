@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
+import '../../../../core/formatting/relative_time.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/error_state.dart';
@@ -97,8 +98,22 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
             children: [
               for (final session in sessions)
                 ListTile(
-                  title: Text(session.isCurrent ? 'This device' : 'Signed in ${_date(session.createdAt)}'),
-                  subtitle: Text('Started ${_date(session.createdAt)} · expires ${_date(session.expiresAt)}'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Row(
+                    children: [
+                      Flexible(child: Text(session.deviceName ?? 'Unknown device', overflow: TextOverflow.ellipsis)),
+                      if (session.isCurrent) ...[
+                        const SizedBox(width: 8),
+                        Text('This device', style: Theme.of(context).textTheme.labelMedium),
+                      ],
+                    ],
+                  ),
+                  subtitle: Text(
+                    session.isCurrent
+                        ? 'Active now'
+                        : 'Last active ${relativeTime(session.lastUsedAt ?? session.createdAt)}'
+                            ' · signed in ${_date(session.createdAt)}',
+                  ),
                   trailing: session.isCurrent
                       ? null
                       : TextButton(

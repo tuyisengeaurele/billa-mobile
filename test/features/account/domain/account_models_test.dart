@@ -47,4 +47,26 @@ void main() {
     }
     expect(NotificationType.fromWire('SOMETHING_NEW'), isNull);
   });
+
+  test('SessionInfo reads the device name and last active time, and copes without them', () {
+    final named = SessionInfo.fromJson({
+      'id': 's1',
+      'deviceName': 'TECNO CC7, Android 9',
+      'lastUsedAt': '2026-09-30T10:00:00.000Z',
+      'createdAt': '2026-09-01T00:00:00.000Z',
+      'expiresAt': '2026-10-01T00:00:00.000Z',
+      'isCurrent': true,
+    });
+    final old = SessionInfo.fromJson({
+      'id': 's2',
+      'createdAt': '2026-09-01T00:00:00.000Z',
+      'expiresAt': '2026-10-01T00:00:00.000Z',
+      'isCurrent': false,
+    });
+
+    expect(named.deviceName, 'TECNO CC7, Android 9');
+    expect(named.lastUsedAt, '2026-09-30T10:00:00.000Z');
+    expect(old.deviceName, isNull);
+    expect(old.lastUsedAt, isNull);
+  });
 }
