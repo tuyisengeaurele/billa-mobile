@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:billa_mobile/features/documents/domain/document.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
@@ -99,5 +100,60 @@ void main() {
   test('language names are shown in their own language', () {
     expect(documentLanguageLabel(DocumentLanguage.en), 'English');
     expect(documentLanguageLabel(DocumentLanguage.fr), 'Français');
+  });
+
+  test('a document with no currency reads as RWF, as older responses have none', () {
+    final document = Document.fromJson(_documentJson());
+
+    expect(document.currency, Currency.rwf);
+    expect(document.exchangeRate, isNull);
+    expect(document.installments, isEmpty);
+    expect(document.recurrenceInterval, isNull);
+    expect(document.nextInstallment, isNull);
+    expect(document.business, isNull);
+  });
+
+  test('a foreign document carries its currency and the rate saved with it', () {
+    final document = Document.fromJson(_documentJson(extra: {'currency': 'USD', 'exchangeRate': 1450.5}));
+
+    expect(document.currency, Currency.usd);
+    expect(document.exchangeRate, 1450.5);
+  });
+
+  test('a currency the app does not know reads as RWF', () {
+    expect(Document.fromJson(_documentJson(extra: {'currency': 'JPY'})).currency, Currency.rwf);
+  });
+
+  test('reads a payment plan, the next instalment and whether the business takes MoMo', () {
+    final document = Document.fromJson(_documentJson(extra: {
+      'installments': [
+        {'id': 'i1', 'sortOrder': 0, 'label': 'Deposit', 'amount': 4000, 'dueDate': '2026-10-01T00:00:00.000Z'},
+        {'id': 'i2', 'sortOrder': 1, 'label': null, 'amount': 7800, 'dueDate': '2026-11-01T00:00:00.000Z'},
+      ],
+      'nextInstallment': {
+        'label': 'Deposit',
+        'amount': 4000,
+        'dueDate': '2026-10-01',
+        'paid': 1000,
+        'remaining': 3000,
+        'status': 'PARTIALLY_PAID',
+      },
+      'business': {'momoEnabled': true},
+    }));
+
+    expect(document.installments.map((step) => step.amount), [4000, 7800]);
+    expect(document.installments.first.label, 'Deposit');
+    expect(document.installments.last.label, isNull);
+    expect(document.nextInstallment!.remaining, 3000);
+    expect(document.business!.momoEnabled, isTrue);
+  });
+
+  test('reads a repeat schedule', () {
+    final document = Document.fromJson(
+      _documentJson(extra: {'recurrenceInterval': 'MONTHLY', 'recurrenceEndDate': '2027-01-01T00:00:00.000Z'}),
+    );
+
+    expect(document.recurrenceInterval, 'MONTHLY');
+    expect(document.recurrenceEndDate, '2027-01-01T00:00:00.000Z');
   });
 }

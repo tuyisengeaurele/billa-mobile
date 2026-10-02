@@ -20,6 +20,50 @@ Map<String, dynamic> _$$DocumentRefImplToJson(_$DocumentRefImpl instance) =>
       'type': documentTypeToJson(instance.type),
     };
 
+_$DocumentInstallmentImpl _$$DocumentInstallmentImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DocumentInstallmentImpl(
+      label: json['label'] as String?,
+      amount: (json['amount'] as num).toInt(),
+      dueDate: json['dueDate'] as String,
+    );
+
+Map<String, dynamic> _$$DocumentInstallmentImplToJson(
+        _$DocumentInstallmentImpl instance) =>
+    <String, dynamic>{
+      'label': instance.label,
+      'amount': instance.amount,
+      'dueDate': instance.dueDate,
+    };
+
+_$DocumentNextInstallmentImpl _$$DocumentNextInstallmentImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DocumentNextInstallmentImpl(
+      label: json['label'] as String?,
+      remaining: (json['remaining'] as num).toInt(),
+      dueDate: json['dueDate'] as String,
+    );
+
+Map<String, dynamic> _$$DocumentNextInstallmentImplToJson(
+        _$DocumentNextInstallmentImpl instance) =>
+    <String, dynamic>{
+      'label': instance.label,
+      'remaining': instance.remaining,
+      'dueDate': instance.dueDate,
+    };
+
+_$DocumentBusinessRefImpl _$$DocumentBusinessRefImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DocumentBusinessRefImpl(
+      momoEnabled: json['momoEnabled'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$$DocumentBusinessRefImplToJson(
+        _$DocumentBusinessRefImpl instance) =>
+    <String, dynamic>{
+      'momoEnabled': instance.momoEnabled,
+    };
+
 _$DocumentCustomerRefImpl _$$DocumentCustomerRefImplFromJson(
         Map<String, dynamic> json) =>
     _$DocumentCustomerRefImpl(
@@ -78,6 +122,25 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
       subtotal: (json['subtotal'] as num).toInt(),
       taxTotal: (json['taxTotal'] as num).toInt(),
       total: (json['total'] as num).toInt(),
+      currency: json['currency'] == null
+          ? Currency.rwf
+          : currencyFromJson(json['currency']),
+      exchangeRate: rateFromJson(json['exchangeRate']),
+      installments: (json['installments'] as List<dynamic>?)
+              ?.map((e) =>
+                  DocumentInstallment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <DocumentInstallment>[],
+      recurrenceInterval: json['recurrenceInterval'] as String?,
+      recurrenceEndDate: json['recurrenceEndDate'] as String?,
+      nextInstallment: json['nextInstallment'] == null
+          ? null
+          : DocumentNextInstallment.fromJson(
+              json['nextInstallment'] as Map<String, dynamic>),
+      business: json['business'] == null
+          ? null
+          : DocumentBusinessRef.fromJson(
+              json['business'] as Map<String, dynamic>),
       language: json['language'] == null
           ? DocumentLanguage.en
           : documentLanguageFromJson(json['language'] as String),
@@ -122,6 +185,13 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'subtotal': instance.subtotal,
       'taxTotal': instance.taxTotal,
       'total': instance.total,
+      'currency': currencyToJson(instance.currency),
+      'exchangeRate': instance.exchangeRate,
+      'installments': instance.installments,
+      'recurrenceInterval': instance.recurrenceInterval,
+      'recurrenceEndDate': instance.recurrenceEndDate,
+      'nextInstallment': instance.nextInstallment,
+      'business': instance.business,
       'language': documentLanguageToJson(instance.language),
       'sentAt': instance.sentAt,
       'publicToken': instance.publicToken,

@@ -143,4 +143,33 @@ void main() {
       'This account has no business, so it signs in on the web. Use a business account here',
     );
   });
+
+  test('a payment plan that no longer adds up shows the server reason and what to do', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 400,
+        data: {
+          'error': 'invalid_installments',
+          'message': 'The instalments add up to RWF 10,000 but the total is RWF 12,000.',
+        },
+      ),
+    );
+
+    expect(
+      describeActionError(error),
+      'The instalments add up to RWF 10,000 but the total is RWF 12,000. '
+      'Change the amounts back, or update the instalments on the web.',
+    );
+  });
+
+  test('a payment plan error without a reason still says what to do', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), data: {'error': 'invalid_installments'}),
+    );
+
+    expect(describeActionError(error), contains('Change the amounts back'));
+  });
 }

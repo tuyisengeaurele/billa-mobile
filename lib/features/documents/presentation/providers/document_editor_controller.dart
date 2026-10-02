@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
+import '../../../../core/formatting/currency.dart';
 import '../../domain/document.dart';
 import '../../domain/document_draft_input.dart';
 import '../../domain/document_enums.dart';
@@ -73,6 +74,10 @@ class DocumentEditorState {
     this.customerReference = '',
     this.referencedDocument,
     this.language = DocumentLanguage.en,
+    this.currency = Currency.rwf,
+    this.exchangeRate,
+    this.installments = const [],
+    this.recurrence,
     this.lines = const [],
     this.autosaveStatus = AutosaveStatus.idle,
     this.autosaveError,
@@ -95,6 +100,18 @@ class DocumentEditorState {
         notes: document.notes ?? '',
         customerReference: document.customerReference ?? '',
         referencedDocument: document.referencedDocument,
+        currency: document.currency,
+        exchangeRate: document.exchangeRate,
+        installments: [
+          for (final step in document.installments)
+            InstallmentInput(label: step.label, amount: step.amount, dueDate: step.dueDate.split('T').first),
+        ],
+        recurrence: document.recurrenceInterval == null
+            ? null
+            : RecurrenceInput(
+                interval: document.recurrenceInterval!,
+                endDate: document.recurrenceEndDate?.split('T').first,
+              ),
         lines: document.lines
             .map((line) => DocumentLineDraft(
                   localId: line.sortOrder,
@@ -119,6 +136,12 @@ class DocumentEditorState {
   final String customerReference;
   final DocumentRef? referencedDocument;
   final DocumentLanguage language;
+  final Currency currency;
+  final double? exchangeRate;
+
+  // Set up on the web and sent back exactly as loaded, because saving replaces the whole draft.
+  final List<InstallmentInput> installments;
+  final RecurrenceInput? recurrence;
   final List<DocumentLineDraft> lines;
   final AutosaveStatus autosaveStatus;
   final String? autosaveError;
@@ -138,8 +161,22 @@ class DocumentEditorState {
       (line.discountValue == null || line.discountValue! >= 0) &&
       (line.discountType != DiscountType.percent || (line.discountValue ?? 0) <= 100));
 
+  // A foreign draft with no rate would be refused by the server.
   bool get isSavable =>
-      customerId != null && (!referencedDocumentRequired || referencedDocument != null) && _linesValid;
+      customerId != null &&
+      (!referencedDocumentRequired || referencedDocument != null) &&
+      _linesValid &&
+      rateProblem(currency, exchangeRate) == null;
+
+  // These are kept but not editable on the phone, so the phone says so instead of hiding them.
+  String? get preservedPlanNote {
+    if (installments.isNotEmpty) {
+      return 'This draft is paid in instalments set up on the web. Keep the total the same, or change the plan there.';
+    }
+    final interval = recurrence?.interval;
+    if (interval == null) return null;
+    return 'This draft repeats ${_recurrenceWords(interval)}. Change how often on the web.';
+  }
 
   DocumentTotals get totals => calculateDocumentTotals(lines.map((line) => line.toInput()).toList());
 
@@ -152,6 +189,11 @@ class DocumentEditorState {
         customerReference: customerReference.isEmpty ? null : customerReference,
         referencedDocumentId: referencedDocument?.id,
         language: language,
+        currency: currency,
+        exchangeRate: currency == Currency.rwf ? null : exchangeRate,
+        // The server refuses an empty plan, so no plan is sent as no field at all.
+        installments: installments.isEmpty ? null : installments,
+        recurrence: recurrence,
         lines: lines.map((line) => line.toInput()).toList(),
       );
 
@@ -165,6 +207,8 @@ class DocumentEditorState {
     String? customerReference,
     Object? referencedDocument = _unset,
     DocumentLanguage? language,
+    Currency? currency,
+    Object? exchangeRate = _unset,
     List<DocumentLineDraft>? lines,
     AutosaveStatus? autosaveStatus,
     Object? autosaveError = _unset,
@@ -184,12 +228,24 @@ class DocumentEditorState {
       referencedDocument:
           identical(referencedDocument, _unset) ? this.referencedDocument : referencedDocument as DocumentRef?,
       language: language ?? this.language,
+      currency: currency ?? this.currency,
+      exchangeRate: identical(exchangeRate, _unset) ? this.exchangeRate : exchangeRate as double?,
+      installments: installments,
+      recurrence: recurrence,
       lines: lines ?? this.lines,
       autosaveStatus: autosaveStatus ?? this.autosaveStatus,
       autosaveError: identical(autosaveError, _unset) ? this.autosaveError : autosaveError as String?,
     );
   }
 }
+
+String _recurrenceWords(String interval) => switch (interval) {
+      'WEEKLY' => 'every week',
+      'MONTHLY' => 'every month',
+      'QUARTERLY' => 'every quarter',
+      'ANNUALLY' => 'every year',
+      _ => 'on a schedule',
+    };
 
 String _formatDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';

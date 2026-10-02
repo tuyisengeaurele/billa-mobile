@@ -31,6 +31,10 @@ DocumentDraftInput draftFromDocument(Document source, {DateTime? today}) {
     // type would be rejected or, worse, accepted and wrong.
     referencedDocumentId: source.type == DocumentType.creditNote ? source.referencedDocumentId : null,
     language: source.language,
+    // A repeat is a new document in the same currency, but it starts without the original plan (its dates
+    // are in the past) and without a repeat schedule (the original keeps repeating by itself).
+    currency: source.currency,
+    exchangeRate: source.exchangeRate,
     lines: [
       for (final line in source.lines)
         DocumentLineInput(

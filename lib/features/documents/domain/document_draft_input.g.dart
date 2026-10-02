@@ -38,6 +38,53 @@ Map<String, dynamic> _$$DocumentLineInputImplToJson(
   return val;
 }
 
+_$InstallmentInputImpl _$$InstallmentInputImplFromJson(
+        Map<String, dynamic> json) =>
+    _$InstallmentInputImpl(
+      label: json['label'] as String?,
+      amount: (json['amount'] as num).toInt(),
+      dueDate: json['dueDate'] as String,
+    );
+
+Map<String, dynamic> _$$InstallmentInputImplToJson(
+    _$InstallmentInputImpl instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('label', instance.label);
+  val['amount'] = instance.amount;
+  val['dueDate'] = instance.dueDate;
+  return val;
+}
+
+_$RecurrenceInputImpl _$$RecurrenceInputImplFromJson(
+        Map<String, dynamic> json) =>
+    _$RecurrenceInputImpl(
+      interval: json['interval'] as String,
+      endDate: json['endDate'] as String?,
+    );
+
+Map<String, dynamic> _$$RecurrenceInputImplToJson(
+    _$RecurrenceInputImpl instance) {
+  final val = <String, dynamic>{
+    'interval': instance.interval,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('endDate', instance.endDate);
+  return val;
+}
+
 _$DocumentDraftInputImpl _$$DocumentDraftInputImplFromJson(
         Map<String, dynamic> json) =>
     _$DocumentDraftInputImpl(
@@ -51,6 +98,17 @@ _$DocumentDraftInputImpl _$$DocumentDraftInputImplFromJson(
       language: json['language'] == null
           ? DocumentLanguage.en
           : documentLanguageFromJson(json['language'] as String),
+      currency: json['currency'] == null
+          ? Currency.rwf
+          : currencyFromJson(json['currency']),
+      exchangeRate: (json['exchangeRate'] as num?)?.toDouble(),
+      installments: (json['installments'] as List<dynamic>?)
+          ?.map((e) => InstallmentInput.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      recurrence: json['recurrence'] == null
+          ? null
+          : RecurrenceInput.fromJson(
+              json['recurrence'] as Map<String, dynamic>),
       lines: (json['lines'] as List<dynamic>?)
               ?.map(
                   (e) => DocumentLineInput.fromJson(e as Map<String, dynamic>))
@@ -77,6 +135,11 @@ Map<String, dynamic> _$$DocumentDraftInputImplToJson(
   writeNotNull('customerReference', instance.customerReference);
   writeNotNull('referencedDocumentId', instance.referencedDocumentId);
   val['language'] = documentLanguageToJson(instance.language);
+  val['currency'] = currencyToJson(instance.currency);
+  writeNotNull('exchangeRate', instance.exchangeRate);
+  writeNotNull(
+      'installments', instance.installments?.map((e) => e.toJson()).toList());
+  writeNotNull('recurrence', instance.recurrence?.toJson());
   val['lines'] = instance.lines.map((e) => e.toJson()).toList();
   return val;
 }

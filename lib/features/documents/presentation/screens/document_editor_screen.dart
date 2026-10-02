@@ -122,6 +122,13 @@ class _DocumentEditorForm extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (state.preservedPlanNote case final note?) ...[
+            Card(
+              key: const Key('editor-plan-note'),
+              child: Padding(padding: const EdgeInsets.all(12), child: Text(note)),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (state.autosaveStatus == AutosaveStatus.error) ...[
             ActionErrorBanner(
               retryKey: const Key('editor-save-retry'),

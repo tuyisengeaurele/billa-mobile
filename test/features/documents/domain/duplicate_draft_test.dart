@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:billa_mobile/features/documents/domain/document.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
@@ -7,6 +8,10 @@ Document _source({
   DocumentType type = DocumentType.invoice,
   String? dueDate = '2026-02-15T00:00:00.000Z',
   String? referencedDocumentId,
+  Currency currency = Currency.rwf,
+  double? exchangeRate,
+  List<DocumentInstallment> installments = const [],
+  String? recurrenceInterval,
 }) =>
     Document(
       id: 'd-old',
@@ -27,6 +32,10 @@ Document _source({
       sentAt: '2026-02-01T10:00:00.000Z',
       publicToken: 'tok',
       referencedDocumentId: referencedDocumentId,
+      currency: currency,
+      exchangeRate: exchangeRate,
+      installments: installments,
+      recurrenceInterval: recurrenceInterval,
       createdAt: '2026-02-01T00:00:00.000Z',
       updatedAt: '2026-02-01T00:00:00.000Z',
       lines: const [
@@ -108,5 +117,22 @@ void main() {
     expect(json.containsKey('publicToken'), isFalse);
     final lines = (json['lines'] as List).cast<Map<String, dynamic>>();
     expect(lines.every((line) => !line.containsKey('id')), isTrue);
+  });
+
+  test('a repeat of a foreign document stays in that currency at the same rate', () {
+    final draft = draftFromDocument(_source(currency: Currency.usd, exchangeRate: 1450.5));
+
+    expect(draft.currency, Currency.usd);
+    expect(draft.exchangeRate, 1450.5);
+  });
+
+  test('a repeat starts without the original payment plan or repeat schedule', () {
+    final draft = draftFromDocument(_source(
+      installments: [const DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z')],
+      recurrenceInterval: 'MONTHLY',
+    ));
+
+    expect(draft.installments, isNull);
+    expect(draft.recurrence, isNull);
   });
 }

@@ -16,6 +16,13 @@ String describeActionError(Object error) {
   // Proxies and gateways answer with HTML or plain text, not a JSON body.
   final data = error is DioException ? error.response?.data : null;
   final code = data is Map ? data['error'] as String? : null;
+  // The server says exactly how the plan and the total disagree; the phone adds the way out, because
+  // it cannot edit the plan itself.
+  if (code == 'invalid_installments') {
+    final detail = data is Map ? data['message'] as String? : null;
+    return '${detail ?? 'The instalments no longer match the total.'} '
+        'Change the amounts back, or update the instalments on the web.';
+  }
   if (code == 'invalid_body') return _firstValidationMessage(data) ?? "Some details aren't valid. Check the form and try again";
   return switch (code) {
     'no_lines' => 'Add at least one line before finalizing',

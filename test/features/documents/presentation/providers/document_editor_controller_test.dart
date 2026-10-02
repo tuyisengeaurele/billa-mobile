@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -129,5 +130,85 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 900));
 
     verifyNever(() => repository.create(any()));
+  });
+
+  group('a draft made on the web', () {
+    Document webDraft({
+      Currency currency = Currency.rwf,
+      double? rate,
+      List<DocumentInstallment> installments = const [],
+      String? interval,
+    }) =>
+        Document(
+          id: 'd1',
+          type: DocumentType.invoice,
+          status: DocumentStatus.draft,
+          customerId: 'c1',
+          customer: _customer,
+          issueDate: '2026-01-01T00:00:00.000Z',
+          dueDate: '2026-11-01T00:00:00.000Z',
+          subtotal: 11800,
+          taxTotal: 0,
+          total: 11800,
+          currency: currency,
+          exchangeRate: rate,
+          installments: installments,
+          recurrenceInterval: interval,
+          recurrenceEndDate: interval == null ? null : '2027-01-01T00:00:00.000Z',
+          amountPaid: 0,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        );
+
+    Future<DocumentEditorState> open(Document document) async {
+      when(() => repository.get('d1')).thenAnswer((_) async => document);
+      const arg = DocumentEditorArgs.edit('d1');
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      return container.read(documentEditorControllerProvider(arg).future);
+    }
+
+    test('keeps its currency and rate when saved', () async {
+      final state = await open(webDraft(currency: Currency.usd, rate: 1450.5));
+
+      expect(state.currency, Currency.usd);
+      expect(state.exchangeRate, 1450.5);
+      expect(state.toInput().currency, Currency.usd);
+      expect(state.toInput().exchangeRate, 1450.5);
+    });
+
+    test('keeps its payment plan, with dates as plain dates, when saved', () async {
+      final state = await open(webDraft(installments: const [
+        DocumentInstallment(label: 'Deposit', amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+        DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+      ]));
+
+      expect(state.toInput().installments, const [
+        InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
+        InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
+      ]);
+      expect(state.preservedPlanNote, contains('instalments'));
+    });
+
+    test('keeps its repeat schedule when saved', () async {
+      final state = await open(webDraft(interval: 'MONTHLY'));
+
+      expect(state.toInput().recurrence, const RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'));
+      expect(state.toInput().installments, isNull);
+      expect(state.preservedPlanNote, 'This draft repeats every month. Change how often on the web.');
+    });
+
+    test('a plain RWF draft sends neither a plan nor a schedule', () async {
+      final state = await open(webDraft());
+
+      expect(state.toInput().installments, isNull);
+      expect(state.toInput().recurrence, isNull);
+      expect(state.preservedPlanNote, isNull);
+    });
+
+    test('a foreign draft with no saved rate is not savable until one is typed', () async {
+      final state = await open(webDraft(currency: Currency.usd));
+
+      expect(state.isSavable, isFalse);
+    });
   });
 }

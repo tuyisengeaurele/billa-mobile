@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../core/formatting/currency.dart';
 import 'document_enums.dart';
 
 part 'document.freezed.dart';
@@ -23,6 +24,30 @@ class DocumentRef with _$DocumentRef {
   }) = _DocumentRef;
 
   factory DocumentRef.fromJson(Map<String, dynamic> json) => _$DocumentRefFromJson(json);
+}
+
+@freezed
+class DocumentInstallment with _$DocumentInstallment {
+  const factory DocumentInstallment({String? label, required int amount, required String dueDate}) =
+      _DocumentInstallment;
+
+  factory DocumentInstallment.fromJson(Map<String, dynamic> json) => _$DocumentInstallmentFromJson(json);
+}
+
+/// The step of a payment plan the customer should pay next, as the server works it out from what is paid.
+@freezed
+class DocumentNextInstallment with _$DocumentNextInstallment {
+  const factory DocumentNextInstallment({String? label, required int remaining, required String dueDate}) =
+      _DocumentNextInstallment;
+
+  factory DocumentNextInstallment.fromJson(Map<String, dynamic> json) => _$DocumentNextInstallmentFromJson(json);
+}
+
+@freezed
+class DocumentBusinessRef with _$DocumentBusinessRef {
+  const factory DocumentBusinessRef({@Default(false) bool momoEnabled}) = _DocumentBusinessRef;
+
+  factory DocumentBusinessRef.fromJson(Map<String, dynamic> json) => _$DocumentBusinessRefFromJson(json);
 }
 
 @freezed
@@ -69,6 +94,13 @@ class Document with _$Document {
     required int subtotal,
     required int taxTotal,
     required int total,
+    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
+    @JsonKey(fromJson: rateFromJson) double? exchangeRate,
+    @Default(<DocumentInstallment>[]) List<DocumentInstallment> installments,
+    String? recurrenceInterval,
+    String? recurrenceEndDate,
+    DocumentNextInstallment? nextInstallment,
+    DocumentBusinessRef? business,
     @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
     @Default(DocumentLanguage.en)
     DocumentLanguage language,

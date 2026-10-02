@@ -223,4 +223,18 @@ void main() {
       expect(store.read('b1').map((i) => i.id), ['i1']);
     });
   });
+
+  testWidgets('a draft with a payment plan says the plan is kept and where to change it', (tester) async {
+    when(() => documentRepository.get('d1')).thenAnswer((_) async => _savedDocument().copyWith(
+          installments: const [
+            DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+            DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+          ],
+        ));
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.edit(documentId: 'd1')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('paid in instalments set up on the web'), findsOneWidget);
+  });
 }
