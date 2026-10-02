@@ -43,7 +43,10 @@ double? rateFromJson(Object? value) {
 int? parseMajorAmount(String text, Currency currency) {
   final cleaned = text.replaceAll(RegExp(r'[\s,]'), '');
   if (cleaned.isEmpty || cleaned == '.' || !RegExp(r'^\d*\.?\d*$').hasMatch(cleaned)) return null;
-  return (double.parse(cleaned) * currency.minorPerMajor).round();
+  final minor = double.parse(cleaned) * currency.minorPerMajor;
+  // Past this the server's integer column cannot hold it, and a very long paste would not even be finite.
+  if (!minor.isFinite || minor >= 2147483647.5) return null;
+  return minor.round();
 }
 
 /// 1250 for USD becomes "12.5" for a price box; whole units for RWF.

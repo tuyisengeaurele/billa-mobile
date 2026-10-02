@@ -100,4 +100,12 @@ void main() {
       (currency: Currency.usd, amount: 750),
     ]);
   });
+
+  test('an amount too large to store is rejected instead of throwing or overflowing', () {
+    expect(parseMajorAmount('9' * 400, Currency.usd), isNull);
+    expect(parseMajorAmount('21474836.48', Currency.usd), isNull);
+    expect(parseMajorAmount('21474836.47', Currency.usd), 2147483647);
+    expect(parseMajorAmount('2147483648', Currency.rwf), isNull);
+    expect(parseMajorAmount('2147483647', Currency.rwf), 2147483647);
+  });
 }
