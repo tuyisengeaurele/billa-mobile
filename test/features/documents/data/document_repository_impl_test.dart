@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -305,5 +306,18 @@ void main() {
     final bytes = await repository.fetchPdfBytes('d1', language: DocumentLanguage.fr);
 
     expect(bytes, [9, 9]);
+  });
+
+  test('rates reads the bank and last used rates', () async {
+    when(() => dio.get<Map<String, dynamic>>('/documents/rates')).thenAnswer(
+      (_) async => _response(200, {
+        'rates': {'USD': 1450.5},
+        'info': {'USD': {'source': 'BNR', 'date': '2026-09-29'}},
+      }, RequestOptions(path: '/documents/rates')),
+    );
+
+    final rates = await repository.rates();
+
+    expect(rates[Currency.usd]!.rate, 1450.5);
   });
 }
