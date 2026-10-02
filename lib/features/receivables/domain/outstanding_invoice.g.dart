@@ -14,6 +14,10 @@ _$OutstandingInvoiceImpl _$$OutstandingInvoiceImplFromJson(
       customerName: json['customerName'] as String,
       total: (json['total'] as num).toInt(),
       amountOwed: (json['amountOwed'] as num).toInt(),
+      currency: json['currency'] == null
+          ? Currency.rwf
+          : currencyFromJson(json['currency']),
+      amountOwedRwf: (json['amountOwedRwf'] as num?)?.toInt() ?? 0,
       dueDate: json['dueDate'] as String?,
       daysOverdue: (json['daysOverdue'] as num).toInt(),
       agingBucket: json['agingBucket'] as String,
@@ -27,6 +31,8 @@ Map<String, dynamic> _$$OutstandingInvoiceImplToJson(
       'customerName': instance.customerName,
       'total': instance.total,
       'amountOwed': instance.amountOwed,
+      'currency': currencyToJson(instance.currency),
+      'amountOwedRwf': instance.amountOwedRwf,
       'dueDate': instance.dueDate,
       'daysOverdue': instance.daysOverdue,
       'agingBucket': instance.agingBucket,

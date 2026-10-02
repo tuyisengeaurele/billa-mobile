@@ -252,7 +252,7 @@ class _InvoicePickerState extends ConsumerState<_InvoicePicker> {
                     subtitle: Text(invoice.dueDate == null
                         ? (invoice.number ?? 'Draft')
                         : '${invoice.number ?? 'Draft'} · Due ${invoice.dueDate}'),
-                    trailing: MoneyText(invoice.amountOwed),
+                    trailing: MoneyText(invoice.amountOwed, currency: invoice.currency),
                     onTap: () => Navigator.of(context).pop(invoice),
                   ),
               ],

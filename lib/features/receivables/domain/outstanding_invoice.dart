@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../core/formatting/currency.dart';
 
 part 'outstanding_invoice.freezed.dart';
 part 'outstanding_invoice.g.dart';
@@ -11,6 +12,8 @@ class OutstandingInvoice with _$OutstandingInvoice {
     required String customerName,
     required int total,
     required int amountOwed,
+    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
+    @Default(0) int amountOwedRwf,
     String? dueDate,
     required int daysOverdue,
     required String agingBucket,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/formatting/currency.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
@@ -79,14 +80,16 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
               ),
             );
           }
-          final owed = invoices.fold<int>(0, (sum, invoice) => sum + invoice.amountOwed);
+          final totals = sumByCurrency(
+            invoices.map((invoice) => (currency: invoice.currency, amount: invoice.amountOwed)),
+          );
           final overdue = invoices.where((invoice) => invoice.daysOverdue > 0).length;
           return ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
             itemCount: invoices.length + 1,
             itemBuilder: (context, index) {
-              if (index == 0) return _SummaryCard(owed: owed, count: invoices.length, overdue: overdue);
+              if (index == 0) return _SummaryCard(totals: totals, count: invoices.length, overdue: overdue);
               final invoice = invoices[index - 1];
               return SwipeRow(
                 startActions: [
@@ -120,7 +123,7 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
                     AgingPill(bucket: invoice.agingBucket),
                   ],
                 ),
-                trailing: MoneyText(invoice.amountOwed),
+                trailing: MoneyText(invoice.amountOwed, currency: invoice.currency),
                 onTap: () => context.push('/documents/${invoice.id}'),
                 ),
               );
@@ -134,9 +137,9 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.owed, required this.count, required this.overdue});
+  const _SummaryCard({required this.totals, required this.count, required this.overdue});
 
-  final int owed;
+  final List<MoneyAmount> totals;
   final int count;
   final int overdue;
 
@@ -154,7 +157,12 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text('Total outstanding', style: textTheme.labelLarge?.copyWith(color: colors.neutral700)),
           const SizedBox(height: 4),
-          MoneyText(owed, style: textTheme.headlineMedium?.copyWith(color: colors.neutral900)),
+          for (final total in totals)
+            MoneyText(
+              total.amount,
+              currency: total.currency,
+              style: textTheme.headlineMedium?.copyWith(color: colors.neutral900),
+            ),
           const SizedBox(height: 8),
           Row(
             children: [
