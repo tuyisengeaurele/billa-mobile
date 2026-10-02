@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -538,5 +539,53 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => repository.reactivate('d1')).called(1);
+  });
+
+  testWidgets('a foreign invoice shows lines, totals and payments in its own currency', (tester) async {
+    const usdLine = DocumentLine(
+      id: 'l2',
+      description: 'Consulting',
+      quantity: 1.0,
+      unitPrice: 125050,
+      taxRate: 0.0,
+      lineTotal: 125050,
+      sortOrder: 0,
+    );
+    const usd = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0002',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 125050,
+      taxTotal: 0,
+      total: 125050,
+      currency: Currency.usd,
+      exchangeRate: 1450,
+      amountPaid: 25050,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      lines: [usdLine],
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => usd);
+    when(() => repository.listPayments('d1')).thenAnswer((_) async => [
+          const Payment(
+            id: 'p1',
+            amount: 25050,
+            method: PaymentMethod.cash,
+            paidOn: '2026-01-05',
+            createdAt: '2026-01-05T00:00:00.000Z',
+          ),
+        ]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('1.00 × USD 1,250.50'), findsOneWidget);
+    expect(find.text('USD 1,250.50'), findsWidgets);
+    expect(find.text('USD 250.50'), findsOneWidget);
+    expect(find.textContaining('RWF'), findsNothing);
   });
 }

@@ -17,6 +17,8 @@ import '../../domain/document_enums.dart';
 import '../../domain/payment.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/formatting/currency.dart';
+import '../../../../core/formatting/money.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -27,11 +29,11 @@ import '../providers/document_repository_provider.dart';
 import '../widgets/document_status_pill.dart';
 import 'record_payment_screen.dart' show paymentMethodLabel;
 
-String _lineDiscountLabel(DocumentLine line) {
+String _lineDiscountLabel(DocumentLine line, Currency currency) {
   if (line.discountType == null || line.discountValue == null) return '';
   return line.discountType == DiscountType.percent
       ? '${line.discountValue!.toStringAsFixed(0)}% off'
-      : 'RWF ${line.discountValue!.toStringAsFixed(0)} off';
+      : '${formatMoney(line.discountValue!.round(), currency: currency)} off';
 }
 
 class DocumentDetailScreen extends ConsumerStatefulWidget {
@@ -297,26 +299,27 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                             children: [
                               Text(line.description),
                               Text(
-                                '${line.quantity.toStringAsFixed(2)} × RWF ${line.unitPrice}'
-                                '${_lineDiscountLabel(line).isEmpty ? '' : ' · ${_lineDiscountLabel(line)}'}',
+                                '${line.quantity.toStringAsFixed(2)} × '
+                                '${formatMoney(line.unitPrice, currency: document.currency)}'
+                                '${_lineDiscountLabel(line, document.currency).isEmpty ? '' : ' · ${_lineDiscountLabel(line, document.currency)}'}',
                               ),
                             ],
                           ),
                         ),
-                        MoneyText(line.lineTotal),
+                        MoneyText(line.lineTotal, currency: document.currency),
                       ],
                     ),
                   ),
                 const Divider(height: 32),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), MoneyText(document.subtotal)]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), MoneyText(document.subtotal, currency: document.currency)]),
                 const SizedBox(height: 4),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Tax'), MoneyText(document.taxTotal)]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Tax'), MoneyText(document.taxTotal, currency: document.currency)]),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Total', style: Theme.of(context).textTheme.titleMedium),
-                    MoneyText(document.total, style: Theme.of(context).textTheme.titleMedium),
+                    MoneyText(document.total, currency: document.currency, style: Theme.of(context).textTheme.titleMedium),
                   ],
                 ),
                 if (document.convertedFrom != null) ...[
@@ -357,7 +360,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                           for (final payment in payments)
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: MoneyText(payment.amount),
+                              title: MoneyText(payment.amount, currency: document.currency),
                               subtitle: Text(
                                 '${paymentMethodLabel(payment.method)} · ${payment.paidOn.split('T').first}'
                                 '${payment.voidedAt != null ? ' · Voided' : ''}',
