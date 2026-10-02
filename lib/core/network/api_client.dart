@@ -7,17 +7,24 @@ import 'response_cache.dart';
 
 const apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:4000');
 
+BaseOptions buildApiOptions({required String deviceName}) => BaseOptions(
+      baseUrl: apiBaseUrl,
+      connectTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 20),
+      headers: {'X-Billa-Device': deviceName},
+    );
+
 class ApiClient {
   ApiClient._(this.dio);
 
   final Dio dio;
 
-  static Future<ApiClient> create({required ResponseCache cache, required CacheScope scope}) async {
-    final dio = Dio(BaseOptions(
-      baseUrl: apiBaseUrl,
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 20),
-    ));
+  static Future<ApiClient> create({
+    required ResponseCache cache,
+    required CacheScope scope,
+    required String deviceName,
+  }) async {
+    final dio = Dio(buildApiOptions(deviceName: deviceName));
     final jar = await createCookieJar();
     dio.interceptors.add(CookieManager(jar));
     dio.interceptors.add(AuthInterceptor(dio));

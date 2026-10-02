@@ -11,6 +11,7 @@ import 'app/theme/theme_preference_store.dart';
 import 'core/network/api_client.dart';
 import 'core/network/api_client_provider.dart';
 import 'core/network/response_cache.dart';
+import 'core/platform/device_name.dart';
 import 'core/platform/glass_support.dart';
 import 'core/privacy/privacy_settings.dart';
 import 'core/storage/secure_storage.dart';
@@ -28,9 +29,10 @@ void main() async {
   final supportDir = await getApplicationSupportDirectory();
   final responseCache = FileResponseCache(Directory('${supportDir.path}/response_cache'));
   final cacheScope = CacheScope();
+  final deviceName = await detectDeviceName();
   final (_, apiClient, glassBlur, sessionSnapshot, preferences) = await (
     Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
-    ApiClient.create(cache: responseCache, scope: cacheScope),
+    ApiClient.create(cache: responseCache, scope: cacheScope, deviceName: deviceName),
     detectGlassBlurSupport(),
     SharedPreferences.getInstance().then((preferences) => SecureSessionSnapshotStore.load(SecureStorage(), preferences)),
     SharedPreferences.getInstance(),
