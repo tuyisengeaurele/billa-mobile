@@ -1,3 +1,5 @@
+import 'package:billa_mobile/features/documents/domain/exchange_rates.dart';
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -236,5 +238,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('paid in instalments set up on the web'), findsOneWidget);
+  });
+
+  testWidgets('choosing USD shows the bank rate, and a price is typed in dollars and cents', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer(
+      (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+    );
+    when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1400'), findsOneWidget);
+    expect(find.textContaining('National Bank of Rwanda reference rate, 29 Sep 2026.'), findsOneWidget);
+
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '12.50');
+    await tester.pumpAndSettle();
+
+    expect(find.text('USD 12.50'), findsWidgets);
   });
 }
