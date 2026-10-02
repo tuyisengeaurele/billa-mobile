@@ -346,6 +346,40 @@ void main() {
       expect(current().lines.single.unitPrice, 1000);
     });
 
+    test('picking the invoice of a credit note reprices the typed lines into the invoice currency', () async {
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+
+      notifier.setReferencedDocument(
+        const DocumentRef(id: 'inv1', number: 'INV-1', type: DocumentType.invoice),
+        currency: Currency.usd,
+        exchangeRate: 1400,
+      );
+
+      expect(current().currency, Currency.usd);
+      expect(current().lines.single.unitPrice, 1000);
+      expect(current().repriceNote, isFalse);
+    });
+
+    test('when the typed prices cannot be converted into the invoice currency the user is told to check them', () async {
+      when(() => repository.rates()).thenAnswer((_) async => const ExchangeRates({}));
+      final notifier = await open();
+      await notifier.setCurrency(Currency.usd);
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 1000);
+
+      notifier.setReferencedDocument(
+        const DocumentRef(id: 'inv1', number: 'INV-1', type: DocumentType.invoice),
+        currency: Currency.eur,
+        exchangeRate: 1500,
+      );
+
+      expect(current().currency, Currency.eur);
+      expect(current().lines.single.unitPrice, 1000);
+      expect(current().repriceNote, isTrue);
+    });
+
     test('the request carries the currency and rate, and none for RWF', () async {
       when(() => repository.rates()).thenAnswer((_) async => usdRates);
       final notifier = await open();

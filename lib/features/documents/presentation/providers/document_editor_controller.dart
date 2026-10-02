@@ -309,13 +309,26 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
   void setDueDate(DateTime? date) => _update((s) => s.copyWith(dueDate: date));
   void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setCustomerReference(String value) => _update((s) => s.copyWith(customerReference: value));
+  // The typed prices were written in the old currency, so they are converted into the invoice's rather than
+  // quietly relabelled, as a credit note for a dollar invoice would otherwise read a franc price as dollars.
   void setReferencedDocument(DocumentRef? reference, {Currency? currency, double? exchangeRate}) =>
-      _update((s) => s.copyWith(
-            referencedDocument: reference,
-            currency: reference == null ? null : currency,
-            exchangeRate: reference == null || currency == null ? _unset : exchangeRate,
-            repriceNote: false,
-          ));
+      _update((s) {
+        if (reference == null || currency == null) return s.copyWith(referencedDocument: reference);
+        final repriced = _repriceLines(
+          s.lines,
+          from: s.currency,
+          fromRate: s.exchangeRate,
+          to: currency,
+          toRate: exchangeRate,
+        );
+        return s.copyWith(
+          referencedDocument: reference,
+          currency: currency,
+          exchangeRate: exchangeRate,
+          lines: repriced ?? s.lines,
+          repriceNote: repriced == null && s.lines.any((line) => line.unitPrice > 0),
+        );
+      });
   void setLanguage(DocumentLanguage language) => _update((s) => s.copyWith(language: language));
 
   // Asked every time a currency is chosen, as the web form does: the server keeps the rates fresh, and a
@@ -329,6 +342,27 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
     }
   }
 
+  // Null when a rate is missing, so the caller keeps the typed numbers and asks the user to check them.
+  List<DocumentLineDraft>? _repriceLines(
+    List<DocumentLineDraft> lines, {
+    required Currency from,
+    required double? fromRate,
+    required Currency to,
+    required double? toRate,
+  }) {
+    final repriced = <DocumentLineDraft>[];
+    for (final line in lines) {
+      final price = convertMinor(line.unitPrice, from: from, fromRate: fromRate, to: to, toRate: toRate);
+      final flat = line.discountType == DiscountType.flat;
+      final discount = flat
+          ? convertMinor((line.discountValue ?? 0).round(), from: from, fromRate: fromRate, to: to, toRate: toRate)
+          : null;
+      if (price == null || (flat && discount == null)) return null;
+      repriced.add(_cloneLine(line, unitPrice: price, discountValue: flat ? discount!.toDouble() : line.discountValue));
+    }
+    return repriced;
+  }
+
   Future<void> setCurrency(Currency next) async {
     final current = state.value;
     if (current == null || current.currencyLocked || next == current.currency) return;
@@ -339,39 +373,20 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
     final latest = state.value;
     if (latest == null || latest.currencyLocked) return;
 
-    final repriced = <DocumentLineDraft>[];
-    var canConvert = true;
-    for (final line in latest.lines) {
-      final price = convertMinor(
-        line.unitPrice,
-        from: latest.currency,
-        fromRate: latest.exchangeRate,
-        to: next,
-        toRate: rate,
-      );
-      final flat = line.discountType == DiscountType.flat;
-      final discount = flat
-          ? convertMinor(
-              (line.discountValue ?? 0).round(),
-              from: latest.currency,
-              fromRate: latest.exchangeRate,
-              to: next,
-              toRate: rate,
-            )
-          : line.discountValue?.round();
-      if (price == null || (flat && discount == null)) {
-        canConvert = false;
-        break;
-      }
-      repriced.add(_cloneLine(line, unitPrice: price, discountValue: flat ? discount!.toDouble() : line.discountValue));
-    }
+    final repriced = _repriceLines(
+      latest.lines,
+      from: latest.currency,
+      fromRate: latest.exchangeRate,
+      to: next,
+      toRate: rate,
+    );
 
     _update((s) => s.copyWith(
           currency: next,
           exchangeRate: rate,
           rateHint: rateHint(quote),
-          lines: canConvert ? repriced : s.lines,
-          repriceNote: !canConvert && s.lines.any((line) => line.unitPrice > 0),
+          lines: repriced ?? s.lines,
+          repriceNote: repriced == null && s.lines.any((line) => line.unitPrice > 0),
         ));
   }
 
