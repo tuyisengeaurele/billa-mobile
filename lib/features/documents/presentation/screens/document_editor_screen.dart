@@ -324,7 +324,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
     if (parseMajorAmount(_unitPriceController.text, widget.currency) != widget.line.unitPrice) {
       _unitPriceController.text = minorToMajorText(widget.line.unitPrice, widget.currency);
     }
-    if (oldWidget.currency != widget.currency) {
+    if (oldWidget.currency != widget.currency || oldWidget.line.discountType != widget.line.discountType) {
       _discountValueController.text = _discountText(widget.line, widget.currency);
     }
     if (widget.line.taxRate.toString() != _taxRateController.text) {
@@ -450,8 +450,12 @@ class _LineCardState extends ConsumerState<_LineCard> {
                     const DropdownMenuItem(value: DiscountType.percent, child: Text('% off')),
                     DropdownMenuItem(value: DiscountType.flat, child: Text('${widget.currency.code} off')),
                   ],
-                  onChanged: (type) =>
-                      controller.setLineDiscount(line.localId, type, type == null ? null : (line.discountValue ?? 0)),
+                  // A percent and a flat amount mean different things, so changing between them starts again at zero.
+                  onChanged: (type) => controller.setLineDiscount(
+                    line.localId,
+                    type,
+                    type == null ? null : (type == line.discountType ? (line.discountValue ?? 0) : 0),
+                  ),
                 ),
                 if (line.discountType != null) ...[
                   const SizedBox(width: 8),

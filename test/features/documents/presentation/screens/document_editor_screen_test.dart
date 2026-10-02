@@ -264,4 +264,35 @@ void main() {
 
     expect(find.text('USD 12.50'), findsWidgets);
   });
+
+  testWidgets('switching a discount from percent to a flat amount starts the amount at zero, not at the percent', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer(
+      (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+    );
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<DiscountType?>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('% off').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-discount-value-0')), '10');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<DiscountType?>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD off').last);
+    await tester.pumpAndSettle();
+
+    final box = tester.widget<TextField>(
+      find.descendant(of: find.byKey(const ValueKey('line-discount-value-0')), matching: find.byType(TextField)),
+    );
+    expect(box.controller!.text, '0');
+  });
 }
