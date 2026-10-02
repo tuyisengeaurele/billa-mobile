@@ -1,23 +1,10 @@
-enum TeamRole { owner, member, accountant }
+enum TeamRole { owner, member }
 
-TeamRole teamRoleFromJson(String value) => switch (value) {
-      'owner' => TeamRole.owner,
-      'member' => TeamRole.member,
-      'accountant' => TeamRole.accountant,
-      _ => throw ArgumentError('Unknown team role: $value'),
-    };
+// A saved row can still carry a role the server has since retired (accountant), and
+// failing the whole team list over a label would be worse than showing a plain member.
+TeamRole teamRoleFromJson(String value) => value == 'owner' ? TeamRole.owner : TeamRole.member;
 
 String teamRoleToJson(TeamRole value) => switch (value) {
       TeamRole.owner => 'owner',
       TeamRole.member => 'member',
-      TeamRole.accountant => 'accountant',
-    };
-
-// Requests use the backend's uppercase enum, unlike its lowercase responses,
-// and the owner is never assignable, failing loudly here beats sending a
-// request the server would reject.
-String teamRoleToRequest(TeamRole role) => switch (role) {
-      TeamRole.member => 'MEMBER',
-      TeamRole.accountant => 'ACCOUNTANT',
-      TeamRole.owner => throw ArgumentError('An owner role can never be assigned or invited'),
     };

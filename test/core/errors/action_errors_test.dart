@@ -38,7 +38,6 @@ void main() {
       describeActionError(_error('subscription_required')),
       'An active subscription is required to do that',
     );
-    expect(describeActionError(_error('read_only_role')), 'Your role on this business is read-only');
     expect(describeActionError(_error('business_limit_reached')), "You've reached the limit of 3 businesses");
     expect(describeActionError(_error('already_member')), 'That person is already on this team');
     expect(describeActionError(_error('no_access')), "You don't have access to that business");
