@@ -139,6 +139,7 @@ void main() {
       double? rate,
       List<DocumentInstallment> installments = const [],
       String? interval,
+      DocumentLanguage language = DocumentLanguage.en,
     }) =>
         Document(
           id: 'd1',
@@ -151,6 +152,7 @@ void main() {
           subtotal: 11800,
           taxTotal: 0,
           total: 11800,
+          language: language,
           currency: currency,
           exchangeRate: rate,
           installments: installments,
@@ -196,6 +198,28 @@ void main() {
       expect(state.toInput().recurrence, const RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'));
       expect(state.toInput().installments, isNull);
       expect(state.preservedPlanNote, 'This draft repeats every month. Change how often on the web.');
+    });
+
+    test('keeps its language when saved, so a French draft is not turned into an English one', () async {
+      final state = await open(webDraft(language: DocumentLanguage.fr));
+
+      expect(state.language, DocumentLanguage.fr);
+      expect(state.toInput().language, DocumentLanguage.fr);
+    });
+
+    test('a draft with a payment plan cannot change currency, because the plan is in the old one', () async {
+      final state = await open(webDraft(installments: const [
+        DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+        DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+      ]));
+      expect(state.currencyLocked, isTrue);
+
+      final notifier = container.read(documentEditorControllerProvider(const DocumentEditorArgs.edit('d1')).notifier);
+      await notifier.setCurrency(Currency.usd);
+
+      final after = container.read(documentEditorControllerProvider(const DocumentEditorArgs.edit('d1'))).requireValue;
+      expect(after.currency, Currency.rwf);
+      verifyNever(() => repository.rates());
     });
 
     test('a plain RWF draft sends neither a plan nor a schedule', () async {

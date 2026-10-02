@@ -13,6 +13,7 @@ class CurrencySection extends StatefulWidget {
     this.rateHint,
     this.repriceNote = false,
     this.locked = false,
+    this.lockedNote = 'Kept the same as the invoice this document is for.',
   });
 
   final Currency currency;
@@ -20,6 +21,7 @@ class CurrencySection extends StatefulWidget {
   final String? rateHint;
   final bool repriceNote;
   final bool locked;
+  final String lockedNote;
   final ValueChanged<Currency> onCurrencyChanged;
   final ValueChanged<double?> onRateChanged;
 
@@ -63,7 +65,7 @@ class _CurrencySectionState extends State<CurrencySection> {
     final currency = widget.currency;
     final problem = rateProblem(currency, widget.exchangeRate);
     final notes = <String>[
-      if (widget.locked) 'Kept the same as the invoice this document is for.',
+      if (widget.locked) widget.lockedNote,
       if (widget.repriceNote) 'The prices below are still the numbers you had. Check them in ${currency.code}.',
       if (currency != Currency.rwf && problem == null)
         '${widget.rateHint == null ? '' : '${widget.rateHint} '}'

@@ -248,6 +248,7 @@ class _DocumentEditorForm extends ConsumerWidget {
             rateHint: state.rateHint,
             repriceNote: state.repriceNote,
             locked: state.currencyLocked,
+            lockedNote: state.currencyLockNote ?? 'Kept the same as the invoice this document is for.',
             onCurrencyChanged: controller.setCurrency,
             onRateChanged: controller.setExchangeRate,
           ),

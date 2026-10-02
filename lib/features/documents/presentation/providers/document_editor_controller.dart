@@ -103,6 +103,7 @@ class DocumentEditorState {
         notes: document.notes ?? '',
         customerReference: document.customerReference ?? '',
         referencedDocument: document.referencedDocument,
+        language: document.language,
         currency: document.currency,
         exchangeRate: document.exchangeRate,
         installments: [
@@ -150,8 +151,13 @@ class DocumentEditorState {
   /// True when the currency changed but the prices could not be converted, so the user must check them.
   final bool repriceNote;
 
-  // A document that refers to an invoice is always in the invoice's currency at its rate.
-  bool get currencyLocked => referencedDocument != null;
+  // A document that refers to an invoice is always in the invoice's currency at its rate, and a payment plan
+  // is a list of amounts in the draft's currency that the phone cannot rewrite.
+  bool get currencyLocked => referencedDocument != null || installments.isNotEmpty;
+
+  String? get currencyLockNote => installments.isEmpty
+      ? null
+      : "This draft's payment plan is in ${currency.code}. Change the currency on the web.";
 
   final List<DocumentLineDraft> lines;
   final AutosaveStatus autosaveStatus;
