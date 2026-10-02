@@ -2,6 +2,7 @@ import '../widgets/item_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/formatting/currency.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../items/domain/item.dart';
 import '../../../items/presentation/providers/recent_items_provider.dart';
@@ -16,6 +17,7 @@ import '../../domain/document_enums.dart';
 import '../../domain/document_totals.dart';
 import '../providers/document_editor_controller.dart';
 import '../providers/document_repository_provider.dart';
+import '../widgets/currency_section.dart';
 import '../widgets/document_list_tile.dart' show documentTypeLabel;
 
 String _formatDisplayDate(DateTime date) =>
@@ -122,6 +124,13 @@ class _DocumentEditorForm extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (state.preservedPlanNote case final note?) ...[
+            Card(
+              key: const Key('editor-plan-note'),
+              child: Padding(padding: const EdgeInsets.all(12), child: Text(note)),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (state.autosaveStatus == AutosaveStatus.error) ...[
             ActionErrorBanner(
               retryKey: const Key('editor-save-retry'),
@@ -201,6 +210,8 @@ class _DocumentEditorForm extends ConsumerWidget {
                       if (reference != null) {
                         controller.setReferencedDocument(
                           DocumentRef(id: reference.id, number: reference.number, type: reference.type),
+                          currency: reference.currency,
+                          exchangeRate: reference.exchangeRate,
                         );
                       }
                     },
@@ -231,24 +242,35 @@ class _DocumentEditorForm extends ConsumerWidget {
             onSelectionChanged: (selection) => controller.setLanguage(selection.first),
           ),
           const SizedBox(height: 16),
+          CurrencySection(
+            currency: state.currency,
+            exchangeRate: state.exchangeRate,
+            rateHint: state.rateHint,
+            repriceNote: state.repriceNote,
+            locked: state.currencyLocked,
+            lockedNote: state.currencyLockNote ?? 'Kept the same as the invoice this document is for.',
+            onCurrencyChanged: controller.setCurrency,
+            onRateChanged: controller.setExchangeRate,
+          ),
+          const SizedBox(height: 16),
           Text('Line items', style: Theme.of(context).textTheme.titleMedium),
           for (var i = 0; i < state.lines.length; i++)
             // calculateDocumentTotals preserves list order, so index i's
             // LineTotals always matches index i's line, computed once here
             // rather than re-derived per card, so a card's total can never
             // drift from what the footer's subtotal actually sums.
-            _LineCard(args: args, line: state.lines[i], lineTotal: totals.lines[i]),
+            _LineCard(args: args, line: state.lines[i], lineTotal: totals.lines[i], currency: state.currency),
           TextButton(onPressed: controller.addLine, child: const Text('Add line')),
           const Divider(height: 32),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), MoneyText(totals.subtotal)]),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), MoneyText(totals.subtotal, currency: state.currency)]),
           const SizedBox(height: 4),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Tax'), MoneyText(totals.taxTotal)]),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Tax'), MoneyText(totals.taxTotal, currency: state.currency)]),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Total', style: Theme.of(context).textTheme.titleMedium),
-              MoneyText(totals.total, style: Theme.of(context).textTheme.titleMedium),
+              MoneyText(totals.total, currency: state.currency, style: Theme.of(context).textTheme.titleMedium),
             ],
           ),
         ],
@@ -264,12 +286,19 @@ class _DocumentEditorForm extends ConsumerWidget {
 // new value in from the controller. This owns real TextEditingControllers
 // and re-syncs them in didUpdateWidget whenever the incoming value differs
 // from what's currently displayed.
+// A flat discount is money and reads in whole units of the currency; a percent discount is a plain number.
+String _discountText(DocumentLineDraft line, Currency currency) {
+  final value = line.discountValue ?? 0;
+  return line.discountType == DiscountType.flat ? minorToMajorText(value.round(), currency) : value.toString();
+}
+
 class _LineCard extends ConsumerStatefulWidget {
-  const _LineCard({required this.args, required this.line, required this.lineTotal});
+  const _LineCard({required this.args, required this.line, required this.lineTotal, required this.currency});
 
   final DocumentEditorArgs args;
   final DocumentLineDraft line;
   final LineTotals lineTotal;
+  final Currency currency;
 
   @override
   ConsumerState<_LineCard> createState() => _LineCardState();
@@ -278,9 +307,10 @@ class _LineCard extends ConsumerStatefulWidget {
 class _LineCardState extends ConsumerState<_LineCard> {
   late final _descriptionController = TextEditingController(text: widget.line.description);
   late final _quantityController = TextEditingController(text: widget.line.quantity.toString());
-  late final _unitPriceController = TextEditingController(text: widget.line.unitPrice.toString());
+  late final _unitPriceController =
+      TextEditingController(text: minorToMajorText(widget.line.unitPrice, widget.currency));
   late final _taxRateController = TextEditingController(text: widget.line.taxRate.toString());
-  late final _discountValueController = TextEditingController(text: (widget.line.discountValue ?? 0).toString());
+  late final _discountValueController = TextEditingController(text: _discountText(widget.line, widget.currency));
 
   @override
   void didUpdateWidget(covariant _LineCard oldWidget) {
@@ -290,8 +320,12 @@ class _LineCardState extends ConsumerState<_LineCard> {
     if (widget.line.description != _descriptionController.text) {
       _descriptionController.text = widget.line.description;
     }
-    if (widget.line.unitPrice.toString() != _unitPriceController.text) {
-      _unitPriceController.text = widget.line.unitPrice.toString();
+    // Parsed first, so what the user is typing ("12.") is not rewritten into what the state holds ("12").
+    if (parseMajorAmount(_unitPriceController.text, widget.currency) != widget.line.unitPrice) {
+      _unitPriceController.text = minorToMajorText(widget.line.unitPrice, widget.currency);
+    }
+    if (oldWidget.currency != widget.currency || oldWidget.line.discountType != widget.line.discountType) {
+      _discountValueController.text = _discountText(widget.line, widget.currency);
     }
     if (widget.line.taxRate.toString() != _taxRateController.text) {
       _taxRateController.text = widget.line.taxRate.toString();
@@ -377,10 +411,12 @@ class _LineCardState extends ConsumerState<_LineCard> {
                       labelText: 'Price',
                       errorText: line.unitPrice >= 0 ? null : "Price can't be negative",
                     ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    keyboardType: TextInputType.numberWithOptions(decimal: widget.currency.decimals > 0),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(widget.currency.decimals > 0 ? RegExp(r'[0-9.,]') : RegExp(r'[0-9]')),
+                    ],
                     onChanged: (value) {
-                      final parsed = int.tryParse(value);
+                      final parsed = parseMajorAmount(value, widget.currency);
                       if (parsed != null) controller.setLineUnitPrice(line.localId, parsed);
                     },
                   ),
@@ -409,13 +445,17 @@ class _LineCardState extends ConsumerState<_LineCard> {
                 DropdownButton<DiscountType?>(
                   value: line.discountType,
                   hint: const Text('No discount'),
-                  items: const [
-                    DropdownMenuItem(value: null, child: Text('No discount')),
-                    DropdownMenuItem(value: DiscountType.percent, child: Text('% off')),
-                    DropdownMenuItem(value: DiscountType.flat, child: Text('RWF off')),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('No discount')),
+                    const DropdownMenuItem(value: DiscountType.percent, child: Text('% off')),
+                    DropdownMenuItem(value: DiscountType.flat, child: Text('${widget.currency.code} off')),
                   ],
-                  onChanged: (type) =>
-                      controller.setLineDiscount(line.localId, type, type == null ? null : (line.discountValue ?? 0)),
+                  // A percent and a flat amount mean different things, so changing between them starts again at zero.
+                  onChanged: (type) => controller.setLineDiscount(
+                    line.localId,
+                    type,
+                    type == null ? null : (type == line.discountType ? (line.discountValue ?? 0) : 0),
+                  ),
                 ),
                 if (line.discountType != null) ...[
                   const SizedBox(width: 8),
@@ -432,7 +472,9 @@ class _LineCardState extends ConsumerState<_LineCard> {
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       onChanged: (value) {
-                        final parsed = double.tryParse(value);
+                        final parsed = line.discountType == DiscountType.flat
+                            ? parseMajorAmount(value, widget.currency)?.toDouble()
+                            : double.tryParse(value);
                         if (parsed != null) controller.setLineDiscount(line.localId, line.discountType, parsed);
                       },
                     ),
@@ -443,7 +485,7 @@ class _LineCardState extends ConsumerState<_LineCard> {
             const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerRight,
-              child: MoneyText(widget.lineTotal.lineTotal),
+              child: MoneyText(widget.lineTotal.lineTotal, currency: widget.currency),
             ),
           ],
         ),

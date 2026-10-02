@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:billa_mobile/features/documents/domain/document_draft_input.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
@@ -96,5 +97,47 @@ void main() {
     expect(json['customerReference'], 'PO-1');
     expect(json['referencedDocumentId'], 'inv-1');
     expect(((json['lines'] as List).single as Map)['itemId'], 'i1');
+  });
+
+  test('a foreign draft sends its currency and rate, an RWF draft sends no rate', () {
+    final usd = const DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-01-01',
+      currency: Currency.usd,
+      exchangeRate: 1450.5,
+    ).toJson();
+    final rwf = const DocumentDraftInput(type: DocumentType.invoice, customerId: 'c1', issueDate: '2026-01-01').toJson();
+
+    expect(usd['currency'], 'USD');
+    expect(usd['exchangeRate'], 1450.5);
+    expect(rwf['currency'], 'RWF');
+    expect(rwf.containsKey('exchangeRate'), isFalse);
+    expect(rwf.containsKey('installments'), isFalse);
+    expect(rwf.containsKey('recurrence'), isFalse);
+  });
+
+  test('a plan and a repeat schedule are written the way the server reads them', () {
+    final plan = const DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-01-01',
+      installments: [
+        InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
+        InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
+      ],
+    ).toJson();
+    final repeat = const DocumentDraftInput(
+      type: DocumentType.invoice,
+      customerId: 'c1',
+      issueDate: '2026-01-01',
+      recurrence: RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'),
+    ).toJson();
+
+    expect(plan['installments'], [
+      {'label': 'Deposit', 'amount': 4000, 'dueDate': '2026-10-01'},
+      {'amount': 7800, 'dueDate': '2026-11-01'},
+    ]);
+    expect(repeat['recurrence'], {'interval': 'MONTHLY', 'endDate': '2027-01-01'});
   });
 }

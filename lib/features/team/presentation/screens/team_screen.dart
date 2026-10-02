@@ -14,10 +14,7 @@ import '../providers/team_repository_provider.dart';
 String teamRoleLabel(TeamRole role) => switch (role) {
       TeamRole.owner => 'Owner',
       TeamRole.member => 'Member',
-      TeamRole.accountant => 'Accountant',
     };
-
-const _assignableRoles = [TeamRole.member, TeamRole.accountant];
 
 class TeamScreen extends ConsumerStatefulWidget {
   const TeamScreen({super.key});
@@ -65,11 +62,6 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
     }
   }
 
-  Future<void> _changeRole(TeamMember member, TeamRole role) => _runAction(() async {
-        await ref.read(teamRepositoryProvider).updateRole(member.id, role);
-        _reloadAll();
-      });
-
   Future<void> _remove(TeamMember member) async {
     final confirmed = await showConfirmDialog(
       context,
@@ -85,16 +77,15 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
     });
   }
 
-  Future<(String, TeamRole)?> _promptInvite() {
-    return showAppSheet<(String, TeamRole)>(context, builder: (context) => const _InviteSheet());
+  Future<String?> _promptInvite() {
+    return showAppSheet<String>(context, builder: (context) => const _InviteSheet());
   }
 
   Future<void> _invite() async {
-    final result = await _promptInvite();
-    if (result == null) return;
-    final (email, role) = result;
+    final email = await _promptInvite();
+    if (email == null) return;
     await _runAction(() async {
-      await ref.read(teamRepositoryProvider).invite(email, role);
+      await ref.read(teamRepositoryProvider).invite(email);
       _reloadAll();
     });
   }
@@ -141,30 +132,13 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(member.email),
-                      subtitle: member.role == TeamRole.owner ? const Text('Owner') : null,
+                      subtitle: Text(teamRoleLabel(member.role)),
                       trailing: member.role == TeamRole.owner
                           ? null
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                DropdownButton<TeamRole>(
-                                  value: member.role,
-                                  items: [
-                                    for (final r in _assignableRoles)
-                                      DropdownMenuItem(value: r, child: Text(teamRoleLabel(r))),
-                                  ],
-                                  onChanged: _actionInProgress
-                                      ? null
-                                      : (role) {
-                                          if (role != null && role != member.role) _changeRole(member, role);
-                                        },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.person_remove),
-                                  tooltip: 'Remove',
-                                  onPressed: _actionInProgress ? null : () => _remove(member),
-                                ),
-                              ],
+                          : IconButton(
+                              icon: const Icon(Icons.person_remove),
+                              tooltip: 'Remove',
+                              onPressed: _actionInProgress ? null : () => _remove(member),
                             ),
                     ),
                 ],
@@ -238,7 +212,6 @@ class _InviteSheet extends StatefulWidget {
 
 class _InviteSheetState extends State<_InviteSheet> {
   final _email = TextEditingController();
-  var _role = TeamRole.member;
 
   @override
   void dispose() {
@@ -255,7 +228,7 @@ class _InviteSheetState extends State<_InviteSheet> {
       actions: SheetActions(
         confirmLabel: 'Send invite',
         onCancel: () => Navigator.pop(context),
-        onConfirm: email.contains('@') ? () => Navigator.pop(context, (email, _role)) : null,
+        onConfirm: email.contains('@') ? () => Navigator.pop(context, email) : null,
       ),
       children: [
         TextField(
@@ -265,12 +238,6 @@ class _InviteSheetState extends State<_InviteSheet> {
           keyboardType: TextInputType.emailAddress,
           autofocus: true,
           onChanged: (_) => setState(() {}),
-        ),
-        const SizedBox(height: 16),
-        SegmentedButton<TeamRole>(
-          segments: [for (final role in _assignableRoles) ButtonSegment(value: role, label: Text(teamRoleLabel(role)))],
-          selected: {_role},
-          onSelectionChanged: (selection) => setState(() => _role = selection.first),
         ),
       ],
     );

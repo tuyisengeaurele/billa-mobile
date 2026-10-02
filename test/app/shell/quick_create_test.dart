@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -186,5 +187,28 @@ void main() {
 
     expect(find.byKey(const Key('quick-create-invoice')), findsNothing);
     expect(find.byKey(const Key('quick-create')), findsOneWidget);
+  });
+
+  testWidgets('the invoice picker shows a foreign balance in its own currency', (tester) async {
+    when(() => receivables.list()).thenAnswer((_) async => [
+          const OutstandingInvoice(
+            id: 'd1',
+            number: 'INV-1',
+            customerName: 'Acme Ltd',
+            total: 300000,
+            amountOwed: 250050,
+            currency: Currency.usd,
+            amountOwedRwf: 3625725,
+            dueDate: '2026-02-01',
+            daysOverdue: 0,
+            agingBucket: 'current',
+          ),
+        ]);
+
+    await open(tester);
+    await tester.tap(find.byKey(const Key('quick-create-payment')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('USD 2,500.50'), findsOneWidget);
   });
 }

@@ -25,6 +25,9 @@ mixin _$OutstandingInvoice {
   String get customerName => throw _privateConstructorUsedError;
   int get total => throw _privateConstructorUsedError;
   int get amountOwed => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency => throw _privateConstructorUsedError;
+  int get amountOwedRwf => throw _privateConstructorUsedError;
   String? get dueDate => throw _privateConstructorUsedError;
   int get daysOverdue => throw _privateConstructorUsedError;
   String get agingBucket => throw _privateConstructorUsedError;
@@ -47,6 +50,9 @@ abstract class $OutstandingInvoiceCopyWith<$Res> {
       String customerName,
       int total,
       int amountOwed,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      int amountOwedRwf,
       String? dueDate,
       int daysOverdue,
       String agingBucket});
@@ -70,6 +76,8 @@ class _$OutstandingInvoiceCopyWithImpl<$Res, $Val extends OutstandingInvoice>
     Object? customerName = null,
     Object? total = null,
     Object? amountOwed = null,
+    Object? currency = null,
+    Object? amountOwedRwf = null,
     Object? dueDate = freezed,
     Object? daysOverdue = null,
     Object? agingBucket = null,
@@ -94,6 +102,14 @@ class _$OutstandingInvoiceCopyWithImpl<$Res, $Val extends OutstandingInvoice>
       amountOwed: null == amountOwed
           ? _value.amountOwed
           : amountOwed // ignore: cast_nullable_to_non_nullable
+              as int,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      amountOwedRwf: null == amountOwedRwf
+          ? _value.amountOwedRwf
+          : amountOwedRwf // ignore: cast_nullable_to_non_nullable
               as int,
       dueDate: freezed == dueDate
           ? _value.dueDate
@@ -125,6 +141,9 @@ abstract class _$$OutstandingInvoiceImplCopyWith<$Res>
       String customerName,
       int total,
       int amountOwed,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      int amountOwedRwf,
       String? dueDate,
       int daysOverdue,
       String agingBucket});
@@ -146,6 +165,8 @@ class __$$OutstandingInvoiceImplCopyWithImpl<$Res>
     Object? customerName = null,
     Object? total = null,
     Object? amountOwed = null,
+    Object? currency = null,
+    Object? amountOwedRwf = null,
     Object? dueDate = freezed,
     Object? daysOverdue = null,
     Object? agingBucket = null,
@@ -170,6 +191,14 @@ class __$$OutstandingInvoiceImplCopyWithImpl<$Res>
       amountOwed: null == amountOwed
           ? _value.amountOwed
           : amountOwed // ignore: cast_nullable_to_non_nullable
+              as int,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      amountOwedRwf: null == amountOwedRwf
+          ? _value.amountOwedRwf
+          : amountOwedRwf // ignore: cast_nullable_to_non_nullable
               as int,
       dueDate: freezed == dueDate
           ? _value.dueDate
@@ -196,6 +225,9 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
       required this.customerName,
       required this.total,
       required this.amountOwed,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      this.currency = Currency.rwf,
+      this.amountOwedRwf = 0,
       this.dueDate,
       required this.daysOverdue,
       required this.agingBucket});
@@ -214,6 +246,12 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
   @override
   final int amountOwed;
   @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  final Currency currency;
+  @override
+  @JsonKey()
+  final int amountOwedRwf;
+  @override
   final String? dueDate;
   @override
   final int daysOverdue;
@@ -222,7 +260,7 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
 
   @override
   String toString() {
-    return 'OutstandingInvoice(id: $id, number: $number, customerName: $customerName, total: $total, amountOwed: $amountOwed, dueDate: $dueDate, daysOverdue: $daysOverdue, agingBucket: $agingBucket)';
+    return 'OutstandingInvoice(id: $id, number: $number, customerName: $customerName, total: $total, amountOwed: $amountOwed, currency: $currency, amountOwedRwf: $amountOwedRwf, dueDate: $dueDate, daysOverdue: $daysOverdue, agingBucket: $agingBucket)';
   }
 
   @override
@@ -237,6 +275,10 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
             (identical(other.total, total) || other.total == total) &&
             (identical(other.amountOwed, amountOwed) ||
                 other.amountOwed == amountOwed) &&
+            (identical(other.currency, currency) ||
+                other.currency == currency) &&
+            (identical(other.amountOwedRwf, amountOwedRwf) ||
+                other.amountOwedRwf == amountOwedRwf) &&
             (identical(other.dueDate, dueDate) || other.dueDate == dueDate) &&
             (identical(other.daysOverdue, daysOverdue) ||
                 other.daysOverdue == daysOverdue) &&
@@ -247,7 +289,7 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, id, number, customerName, total,
-      amountOwed, dueDate, daysOverdue, agingBucket);
+      amountOwed, currency, amountOwedRwf, dueDate, daysOverdue, agingBucket);
 
   @JsonKey(ignore: true)
   @override
@@ -271,6 +313,9 @@ abstract class _OutstandingInvoice implements OutstandingInvoice {
       required final String customerName,
       required final int total,
       required final int amountOwed,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      final Currency currency,
+      final int amountOwedRwf,
       final String? dueDate,
       required final int daysOverdue,
       required final String agingBucket}) = _$OutstandingInvoiceImpl;
@@ -288,6 +333,11 @@ abstract class _OutstandingInvoice implements OutstandingInvoice {
   int get total;
   @override
   int get amountOwed;
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency;
+  @override
+  int get amountOwedRwf;
   @override
   String? get dueDate;
   @override

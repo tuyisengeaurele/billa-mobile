@@ -38,7 +38,6 @@ void main() {
       describeActionError(_error('subscription_required')),
       'An active subscription is required to do that',
     );
-    expect(describeActionError(_error('read_only_role')), 'Your role on this business is read-only');
     expect(describeActionError(_error('business_limit_reached')), "You've reached the limit of 3 businesses");
     expect(describeActionError(_error('already_member')), 'That person is already on this team');
     expect(describeActionError(_error('no_access')), "You don't have access to that business");
@@ -143,5 +142,34 @@ void main() {
       describeActionError(const AdminOnlyAccountException()),
       'This account has no business, so it signs in on the web. Use a business account here',
     );
+  });
+
+  test('a payment plan that no longer adds up shows the server reason and what to do', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/x'),
+        statusCode: 400,
+        data: {
+          'error': 'invalid_installments',
+          'message': 'The instalments add up to RWF 10,000 but the total is RWF 12,000.',
+        },
+      ),
+    );
+
+    expect(
+      describeActionError(error),
+      'The instalments add up to RWF 10,000 but the total is RWF 12,000. '
+      'Change the amounts back, or update the instalments on the web.',
+    );
+  });
+
+  test('a payment plan error without a reason still says what to do', () {
+    final error = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), data: {'error': 'invalid_installments'}),
+    );
+
+    expect(describeActionError(error), contains('Change the amounts back'));
   });
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
+import '../../../../core/formatting/currency.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/contact_actions.dart';
+import '../../../auth/domain/auth_status.dart';
+import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../customers/presentation/providers/customer_repository_provider.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/share_message.dart';
@@ -25,6 +28,12 @@ Future<void> startDocumentContact(BuildContext context, WidgetRef ref, {required
     final link = publicDocumentUrl(apiBaseUrl, token);
     final owed = document.total - document.amountPaid;
     final isChase = document.type == DocumentType.invoice && owed > 0;
+    final status = ref.read(authControllerProvider).valueOrNull;
+    final business = status is Authenticated ? status.business.name : '';
+    final payable = document.business?.momoEnabled == true && document.currency == Currency.rwf;
+    final next = document.nextInstallment;
+    // Only a plan with something already covered has a smaller amount due now than the whole balance.
+    final instalment = next != null && next.remaining < owed ? (label: next.label, amount: next.remaining) : null;
 
     if (!context.mounted) return;
     await showContactActions(
@@ -33,13 +42,28 @@ Future<void> startDocumentContact(BuildContext context, WidgetRef ref, {required
       title: customer.name,
       phone: customer.phone,
       message: isChase
-          ? reminderMessage(customer: customer.name, number: document.number, amountOwed: owed, link: link)
+          ? reminderMessage(
+              customer: customer.name,
+              business: business,
+              number: document.number,
+              amountOwed: owed,
+              dueDate: document.dueDate,
+              link: link,
+              currency: document.currency,
+              payable: payable,
+              instalment: instalment,
+            )
           : shareMessage(
               customer: customer.name,
+              business: business,
+              type: document.type,
               typeLabel: documentTypeLabel(document.type).toLowerCase(),
               number: document.number,
               total: document.total,
+              dueDate: document.dueDate,
               link: link,
+              currency: document.currency,
+              payable: payable,
             ),
     );
   } catch (e) {

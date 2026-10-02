@@ -289,6 +289,337 @@ abstract class _DocumentLineInput implements DocumentLineInput {
       throw _privateConstructorUsedError;
 }
 
+InstallmentInput _$InstallmentInputFromJson(Map<String, dynamic> json) {
+  return _InstallmentInput.fromJson(json);
+}
+
+/// @nodoc
+mixin _$InstallmentInput {
+  String? get label => throw _privateConstructorUsedError;
+  int get amount => throw _privateConstructorUsedError;
+  String get dueDate => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $InstallmentInputCopyWith<InstallmentInput> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $InstallmentInputCopyWith<$Res> {
+  factory $InstallmentInputCopyWith(
+          InstallmentInput value, $Res Function(InstallmentInput) then) =
+      _$InstallmentInputCopyWithImpl<$Res, InstallmentInput>;
+  @useResult
+  $Res call({String? label, int amount, String dueDate});
+}
+
+/// @nodoc
+class _$InstallmentInputCopyWithImpl<$Res, $Val extends InstallmentInput>
+    implements $InstallmentInputCopyWith<$Res> {
+  _$InstallmentInputCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? amount = null,
+    Object? dueDate = null,
+  }) {
+    return _then(_value.copyWith(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$InstallmentInputImplCopyWith<$Res>
+    implements $InstallmentInputCopyWith<$Res> {
+  factory _$$InstallmentInputImplCopyWith(_$InstallmentInputImpl value,
+          $Res Function(_$InstallmentInputImpl) then) =
+      __$$InstallmentInputImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? label, int amount, String dueDate});
+}
+
+/// @nodoc
+class __$$InstallmentInputImplCopyWithImpl<$Res>
+    extends _$InstallmentInputCopyWithImpl<$Res, _$InstallmentInputImpl>
+    implements _$$InstallmentInputImplCopyWith<$Res> {
+  __$$InstallmentInputImplCopyWithImpl(_$InstallmentInputImpl _value,
+      $Res Function(_$InstallmentInputImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? amount = null,
+    Object? dueDate = null,
+  }) {
+    return _then(_$InstallmentInputImpl(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+@JsonSerializable(includeIfNull: false)
+class _$InstallmentInputImpl implements _InstallmentInput {
+  const _$InstallmentInputImpl(
+      {this.label, required this.amount, required this.dueDate});
+
+  factory _$InstallmentInputImpl.fromJson(Map<String, dynamic> json) =>
+      _$$InstallmentInputImplFromJson(json);
+
+  @override
+  final String? label;
+  @override
+  final int amount;
+  @override
+  final String dueDate;
+
+  @override
+  String toString() {
+    return 'InstallmentInput(label: $label, amount: $amount, dueDate: $dueDate)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$InstallmentInputImpl &&
+            (identical(other.label, label) || other.label == label) &&
+            (identical(other.amount, amount) || other.amount == amount) &&
+            (identical(other.dueDate, dueDate) || other.dueDate == dueDate));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, label, amount, dueDate);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$InstallmentInputImplCopyWith<_$InstallmentInputImpl> get copyWith =>
+      __$$InstallmentInputImplCopyWithImpl<_$InstallmentInputImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$InstallmentInputImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _InstallmentInput implements InstallmentInput {
+  const factory _InstallmentInput(
+      {final String? label,
+      required final int amount,
+      required final String dueDate}) = _$InstallmentInputImpl;
+
+  factory _InstallmentInput.fromJson(Map<String, dynamic> json) =
+      _$InstallmentInputImpl.fromJson;
+
+  @override
+  String? get label;
+  @override
+  int get amount;
+  @override
+  String get dueDate;
+  @override
+  @JsonKey(ignore: true)
+  _$$InstallmentInputImplCopyWith<_$InstallmentInputImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+RecurrenceInput _$RecurrenceInputFromJson(Map<String, dynamic> json) {
+  return _RecurrenceInput.fromJson(json);
+}
+
+/// @nodoc
+mixin _$RecurrenceInput {
+  String get interval => throw _privateConstructorUsedError;
+  String? get endDate => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $RecurrenceInputCopyWith<RecurrenceInput> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $RecurrenceInputCopyWith<$Res> {
+  factory $RecurrenceInputCopyWith(
+          RecurrenceInput value, $Res Function(RecurrenceInput) then) =
+      _$RecurrenceInputCopyWithImpl<$Res, RecurrenceInput>;
+  @useResult
+  $Res call({String interval, String? endDate});
+}
+
+/// @nodoc
+class _$RecurrenceInputCopyWithImpl<$Res, $Val extends RecurrenceInput>
+    implements $RecurrenceInputCopyWith<$Res> {
+  _$RecurrenceInputCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? interval = null,
+    Object? endDate = freezed,
+  }) {
+    return _then(_value.copyWith(
+      interval: null == interval
+          ? _value.interval
+          : interval // ignore: cast_nullable_to_non_nullable
+              as String,
+      endDate: freezed == endDate
+          ? _value.endDate
+          : endDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$RecurrenceInputImplCopyWith<$Res>
+    implements $RecurrenceInputCopyWith<$Res> {
+  factory _$$RecurrenceInputImplCopyWith(_$RecurrenceInputImpl value,
+          $Res Function(_$RecurrenceInputImpl) then) =
+      __$$RecurrenceInputImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String interval, String? endDate});
+}
+
+/// @nodoc
+class __$$RecurrenceInputImplCopyWithImpl<$Res>
+    extends _$RecurrenceInputCopyWithImpl<$Res, _$RecurrenceInputImpl>
+    implements _$$RecurrenceInputImplCopyWith<$Res> {
+  __$$RecurrenceInputImplCopyWithImpl(
+      _$RecurrenceInputImpl _value, $Res Function(_$RecurrenceInputImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? interval = null,
+    Object? endDate = freezed,
+  }) {
+    return _then(_$RecurrenceInputImpl(
+      interval: null == interval
+          ? _value.interval
+          : interval // ignore: cast_nullable_to_non_nullable
+              as String,
+      endDate: freezed == endDate
+          ? _value.endDate
+          : endDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+@JsonSerializable(includeIfNull: false)
+class _$RecurrenceInputImpl implements _RecurrenceInput {
+  const _$RecurrenceInputImpl({required this.interval, this.endDate});
+
+  factory _$RecurrenceInputImpl.fromJson(Map<String, dynamic> json) =>
+      _$$RecurrenceInputImplFromJson(json);
+
+  @override
+  final String interval;
+  @override
+  final String? endDate;
+
+  @override
+  String toString() {
+    return 'RecurrenceInput(interval: $interval, endDate: $endDate)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$RecurrenceInputImpl &&
+            (identical(other.interval, interval) ||
+                other.interval == interval) &&
+            (identical(other.endDate, endDate) || other.endDate == endDate));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, interval, endDate);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$RecurrenceInputImplCopyWith<_$RecurrenceInputImpl> get copyWith =>
+      __$$RecurrenceInputImplCopyWithImpl<_$RecurrenceInputImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$RecurrenceInputImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _RecurrenceInput implements RecurrenceInput {
+  const factory _RecurrenceInput(
+      {required final String interval,
+      final String? endDate}) = _$RecurrenceInputImpl;
+
+  factory _RecurrenceInput.fromJson(Map<String, dynamic> json) =
+      _$RecurrenceInputImpl.fromJson;
+
+  @override
+  String get interval;
+  @override
+  String? get endDate;
+  @override
+  @JsonKey(ignore: true)
+  _$$RecurrenceInputImplCopyWith<_$RecurrenceInputImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 DocumentDraftInput _$DocumentDraftInputFromJson(Map<String, dynamic> json) {
   return _DocumentDraftInput.fromJson(json);
 }
@@ -305,6 +636,12 @@ mixin _$DocumentDraftInput {
   String? get referencedDocumentId => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency => throw _privateConstructorUsedError;
+  double? get exchangeRate => throw _privateConstructorUsedError;
+  List<InstallmentInput>? get installments =>
+      throw _privateConstructorUsedError;
+  RecurrenceInput? get recurrence => throw _privateConstructorUsedError;
   List<DocumentLineInput> get lines => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -331,7 +668,14 @@ abstract class $DocumentDraftInputCopyWith<$Res> {
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      double? exchangeRate,
+      List<InstallmentInput>? installments,
+      RecurrenceInput? recurrence,
       List<DocumentLineInput> lines});
+
+  $RecurrenceInputCopyWith<$Res>? get recurrence;
 }
 
 /// @nodoc
@@ -355,6 +699,10 @@ class _$DocumentDraftInputCopyWithImpl<$Res, $Val extends DocumentDraftInput>
     Object? customerReference = freezed,
     Object? referencedDocumentId = freezed,
     Object? language = null,
+    Object? currency = null,
+    Object? exchangeRate = freezed,
+    Object? installments = freezed,
+    Object? recurrence = freezed,
     Object? lines = null,
   }) {
     return _then(_value.copyWith(
@@ -390,11 +738,39 @@ class _$DocumentDraftInputCopyWithImpl<$Res, $Val extends DocumentDraftInput>
           ? _value.language
           : language // ignore: cast_nullable_to_non_nullable
               as DocumentLanguage,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      exchangeRate: freezed == exchangeRate
+          ? _value.exchangeRate
+          : exchangeRate // ignore: cast_nullable_to_non_nullable
+              as double?,
+      installments: freezed == installments
+          ? _value.installments
+          : installments // ignore: cast_nullable_to_non_nullable
+              as List<InstallmentInput>?,
+      recurrence: freezed == recurrence
+          ? _value.recurrence
+          : recurrence // ignore: cast_nullable_to_non_nullable
+              as RecurrenceInput?,
       lines: null == lines
           ? _value.lines
           : lines // ignore: cast_nullable_to_non_nullable
               as List<DocumentLineInput>,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $RecurrenceInputCopyWith<$Res>? get recurrence {
+    if (_value.recurrence == null) {
+      return null;
+    }
+
+    return $RecurrenceInputCopyWith<$Res>(_value.recurrence!, (value) {
+      return _then(_value.copyWith(recurrence: value) as $Val);
+    });
   }
 }
 
@@ -418,7 +794,15 @@ abstract class _$$DocumentDraftInputImplCopyWith<$Res>
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      double? exchangeRate,
+      List<InstallmentInput>? installments,
+      RecurrenceInput? recurrence,
       List<DocumentLineInput> lines});
+
+  @override
+  $RecurrenceInputCopyWith<$Res>? get recurrence;
 }
 
 /// @nodoc
@@ -440,6 +824,10 @@ class __$$DocumentDraftInputImplCopyWithImpl<$Res>
     Object? customerReference = freezed,
     Object? referencedDocumentId = freezed,
     Object? language = null,
+    Object? currency = null,
+    Object? exchangeRate = freezed,
+    Object? installments = freezed,
+    Object? recurrence = freezed,
     Object? lines = null,
   }) {
     return _then(_$DocumentDraftInputImpl(
@@ -475,6 +863,22 @@ class __$$DocumentDraftInputImplCopyWithImpl<$Res>
           ? _value.language
           : language // ignore: cast_nullable_to_non_nullable
               as DocumentLanguage,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      exchangeRate: freezed == exchangeRate
+          ? _value.exchangeRate
+          : exchangeRate // ignore: cast_nullable_to_non_nullable
+              as double?,
+      installments: freezed == installments
+          ? _value._installments
+          : installments // ignore: cast_nullable_to_non_nullable
+              as List<InstallmentInput>?,
+      recurrence: freezed == recurrence
+          ? _value.recurrence
+          : recurrence // ignore: cast_nullable_to_non_nullable
+              as RecurrenceInput?,
       lines: null == lines
           ? _value._lines
           : lines // ignore: cast_nullable_to_non_nullable
@@ -499,8 +903,14 @@ class _$DocumentDraftInputImpl implements _DocumentDraftInput {
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       this.language = DocumentLanguage.en,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      this.currency = Currency.rwf,
+      this.exchangeRate,
+      final List<InstallmentInput>? installments,
+      this.recurrence,
       final List<DocumentLineInput> lines = const <DocumentLineInput>[]})
-      : _lines = lines;
+      : _installments = installments,
+        _lines = lines;
 
   factory _$DocumentDraftInputImpl.fromJson(Map<String, dynamic> json) =>
       _$$DocumentDraftInputImplFromJson(json);
@@ -523,6 +933,23 @@ class _$DocumentDraftInputImpl implements _DocumentDraftInput {
   @override
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   final DocumentLanguage language;
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  final Currency currency;
+  @override
+  final double? exchangeRate;
+  final List<InstallmentInput>? _installments;
+  @override
+  List<InstallmentInput>? get installments {
+    final value = _installments;
+    if (value == null) return null;
+    if (_installments is EqualUnmodifiableListView) return _installments;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  @override
+  final RecurrenceInput? recurrence;
   final List<DocumentLineInput> _lines;
   @override
   @JsonKey()
@@ -534,7 +961,7 @@ class _$DocumentDraftInputImpl implements _DocumentDraftInput {
 
   @override
   String toString() {
-    return 'DocumentDraftInput(type: $type, customerId: $customerId, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, referencedDocumentId: $referencedDocumentId, language: $language, lines: $lines)';
+    return 'DocumentDraftInput(type: $type, customerId: $customerId, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, referencedDocumentId: $referencedDocumentId, language: $language, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrence: $recurrence, lines: $lines)';
   }
 
   @override
@@ -555,6 +982,14 @@ class _$DocumentDraftInputImpl implements _DocumentDraftInput {
                 other.referencedDocumentId == referencedDocumentId) &&
             (identical(other.language, language) ||
                 other.language == language) &&
+            (identical(other.currency, currency) ||
+                other.currency == currency) &&
+            (identical(other.exchangeRate, exchangeRate) ||
+                other.exchangeRate == exchangeRate) &&
+            const DeepCollectionEquality()
+                .equals(other._installments, _installments) &&
+            (identical(other.recurrence, recurrence) ||
+                other.recurrence == recurrence) &&
             const DeepCollectionEquality().equals(other._lines, _lines));
   }
 
@@ -570,6 +1005,10 @@ class _$DocumentDraftInputImpl implements _DocumentDraftInput {
       customerReference,
       referencedDocumentId,
       language,
+      currency,
+      exchangeRate,
+      const DeepCollectionEquality().hash(_installments),
+      recurrence,
       const DeepCollectionEquality().hash(_lines));
 
   @JsonKey(ignore: true)
@@ -600,6 +1039,11 @@ abstract class _DocumentDraftInput implements DocumentDraftInput {
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       final DocumentLanguage language,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      final Currency currency,
+      final double? exchangeRate,
+      final List<InstallmentInput>? installments,
+      final RecurrenceInput? recurrence,
       final List<DocumentLineInput> lines}) = _$DocumentDraftInputImpl;
 
   factory _DocumentDraftInput.fromJson(Map<String, dynamic> json) =
@@ -623,6 +1067,15 @@ abstract class _DocumentDraftInput implements DocumentDraftInput {
   @override
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language;
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency;
+  @override
+  double? get exchangeRate;
+  @override
+  List<InstallmentInput>? get installments;
+  @override
+  RecurrenceInput? get recurrence;
   @override
   List<DocumentLineInput> get lines;
   @override

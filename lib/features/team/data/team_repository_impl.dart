@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import '../domain/pending_invite.dart';
 import '../domain/team_member.dart';
 import '../domain/team_repository.dart';
-import '../domain/team_role.dart';
 
 class TeamRepositoryImpl implements TeamRepository {
   TeamRepositoryImpl(this._dio);
@@ -15,11 +14,6 @@ class TeamRepositoryImpl implements TeamRepository {
     return (response.data!['members'] as List)
         .map((json) => TeamMember.fromJson(json as Map<String, dynamic>))
         .toList();
-  }
-
-  @override
-  Future<void> updateRole(String userId, TeamRole role) async {
-    await _dio.patch<Map<String, dynamic>>('/business/members/$userId/role', data: {'role': teamRoleToRequest(role)});
   }
 
   @override
@@ -36,8 +30,8 @@ class TeamRepositoryImpl implements TeamRepository {
   }
 
   @override
-  Future<void> invite(String email, TeamRole role) async {
-    await _dio.post<Map<String, dynamic>>('/business/invites', data: {'email': email, 'role': teamRoleToRequest(role)});
+  Future<void> invite(String email) async {
+    await _dio.post<Map<String, dynamic>>('/business/invites', data: {'email': email});
   }
 
   @override

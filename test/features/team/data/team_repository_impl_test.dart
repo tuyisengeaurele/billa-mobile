@@ -31,16 +31,6 @@ void main() {
     expect(members.map((m) => m.role), [TeamRole.owner, TeamRole.member]);
   });
 
-  test('updateRole sends the uppercase role', () async {
-    when(() => dio.patch<Map<String, dynamic>>('/business/members/u2/role', data: {'role': 'ACCOUNTANT'}))
-        .thenAnswer((_) async => _response(200, {'ok': true}, '/business/members/u2/role'));
-
-    await repository.updateRole('u2', TeamRole.accountant);
-
-    verify(() => dio.patch<Map<String, dynamic>>('/business/members/u2/role', data: {'role': 'ACCOUNTANT'}))
-        .called(1);
-  });
-
   test('removeMember sends a DELETE', () async {
     when(() => dio.delete<Map<String, dynamic>>('/business/members/u2'))
         .thenAnswer((_) async => _response(200, {'ok': true}, '/business/members/u2'));
@@ -69,14 +59,13 @@ void main() {
     expect(invites.single.email, 'n@x.com');
   });
 
-  test('invite posts the email and uppercase role', () async {
-    when(() => dio.post<Map<String, dynamic>>('/business/invites', data: {'email': 'n@x.com', 'role': 'MEMBER'}))
+  test('invite posts only the email, because the server makes every invitee a member', () async {
+    when(() => dio.post<Map<String, dynamic>>('/business/invites', data: {'email': 'n@x.com'}))
         .thenAnswer((_) async => _response(201, {'invite': {'id': 'i1'}, 'link': 'l'}, '/business/invites'));
 
-    await repository.invite('n@x.com', TeamRole.member);
+    await repository.invite('n@x.com');
 
-    verify(() => dio.post<Map<String, dynamic>>('/business/invites', data: {'email': 'n@x.com', 'role': 'MEMBER'}))
-        .called(1);
+    verify(() => dio.post<Map<String, dynamic>>('/business/invites', data: {'email': 'n@x.com'})).called(1);
   });
 
   test('resendInvite and revokeInvite hit their endpoints', () async {

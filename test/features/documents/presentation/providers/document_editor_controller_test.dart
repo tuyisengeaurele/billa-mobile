@@ -1,3 +1,5 @@
+import 'package:billa_mobile/features/documents/domain/exchange_rates.dart';
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -129,5 +131,266 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 900));
 
     verifyNever(() => repository.create(any()));
+  });
+
+  group('a draft made on the web', () {
+    Document webDraft({
+      Currency currency = Currency.rwf,
+      double? rate,
+      List<DocumentInstallment> installments = const [],
+      String? interval,
+      DocumentLanguage language = DocumentLanguage.en,
+    }) =>
+        Document(
+          id: 'd1',
+          type: DocumentType.invoice,
+          status: DocumentStatus.draft,
+          customerId: 'c1',
+          customer: _customer,
+          issueDate: '2026-01-01T00:00:00.000Z',
+          dueDate: '2026-11-01T00:00:00.000Z',
+          subtotal: 11800,
+          taxTotal: 0,
+          total: 11800,
+          language: language,
+          currency: currency,
+          exchangeRate: rate,
+          installments: installments,
+          recurrenceInterval: interval,
+          recurrenceEndDate: interval == null ? null : '2027-01-01T00:00:00.000Z',
+          amountPaid: 0,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        );
+
+    Future<DocumentEditorState> open(Document document) async {
+      when(() => repository.get('d1')).thenAnswer((_) async => document);
+      const arg = DocumentEditorArgs.edit('d1');
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      return container.read(documentEditorControllerProvider(arg).future);
+    }
+
+    test('keeps its currency and rate when saved', () async {
+      final state = await open(webDraft(currency: Currency.usd, rate: 1450.5));
+
+      expect(state.currency, Currency.usd);
+      expect(state.exchangeRate, 1450.5);
+      expect(state.toInput().currency, Currency.usd);
+      expect(state.toInput().exchangeRate, 1450.5);
+    });
+
+    test('keeps its payment plan, with dates as plain dates, when saved', () async {
+      final state = await open(webDraft(installments: const [
+        DocumentInstallment(label: 'Deposit', amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+        DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+      ]));
+
+      expect(state.toInput().installments, const [
+        InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
+        InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
+      ]);
+      expect(state.preservedPlanNote, contains('instalments'));
+    });
+
+    test('keeps its repeat schedule when saved', () async {
+      final state = await open(webDraft(interval: 'MONTHLY'));
+
+      expect(state.toInput().recurrence, const RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'));
+      expect(state.toInput().installments, isNull);
+      expect(state.preservedPlanNote, 'This draft repeats every month. Change how often on the web.');
+    });
+
+    test('keeps its language when saved, so a French draft is not turned into an English one', () async {
+      final state = await open(webDraft(language: DocumentLanguage.fr));
+
+      expect(state.language, DocumentLanguage.fr);
+      expect(state.toInput().language, DocumentLanguage.fr);
+    });
+
+    test('a draft with a payment plan cannot change currency, because the plan is in the old one', () async {
+      final state = await open(webDraft(installments: const [
+        DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+        DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+      ]));
+      expect(state.currencyLocked, isTrue);
+
+      final notifier = container.read(documentEditorControllerProvider(const DocumentEditorArgs.edit('d1')).notifier);
+      await notifier.setCurrency(Currency.usd);
+
+      final after = container.read(documentEditorControllerProvider(const DocumentEditorArgs.edit('d1'))).requireValue;
+      expect(after.currency, Currency.rwf);
+      verifyNever(() => repository.rates());
+    });
+
+    test('a plain RWF draft sends neither a plan nor a schedule', () async {
+      final state = await open(webDraft());
+
+      expect(state.toInput().installments, isNull);
+      expect(state.toInput().recurrence, isNull);
+      expect(state.preservedPlanNote, isNull);
+    });
+
+    test('a foreign draft with no saved rate is not savable until one is typed', () async {
+      final state = await open(webDraft(currency: Currency.usd));
+
+      expect(state.isSavable, isFalse);
+    });
+  });
+
+  group('currency', () {
+    const usdRates = ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')});
+
+    Future<DocumentEditorController> open() async {
+      const arg = DocumentEditorArgs.create(DocumentType.invoice);
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      await container.read(documentEditorControllerProvider(arg).future);
+      return container.read(documentEditorControllerProvider(arg).notifier);
+    }
+
+    DocumentEditorState current() =>
+        container.read(documentEditorControllerProvider(const DocumentEditorArgs.create(DocumentType.invoice))).requireValue;
+
+    test('switching to a foreign currency prefills the bank rate and reprices the lines through RWF', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().currency, Currency.usd);
+      expect(current().exchangeRate, 1400);
+      expect(current().lines.single.unitPrice, 1000);
+      expect(current().rateHint, 'National Bank of Rwanda reference rate, 29 Sep 2026.');
+      expect(current().repriceNote, isFalse);
+    });
+
+    test('a flat discount is repriced with the prices, a percent discount is left alone', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      notifier.addLine();
+      notifier.setLineDiscount(0, DiscountType.flat, 1400);
+      notifier.setLineDiscount(1, DiscountType.percent, 10);
+
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().lines[0].discountValue, 100);
+      expect(current().lines[1].discountValue, 10);
+    });
+
+    test('when the rates cannot be loaded the prices stay as typed and the user is told', () async {
+      when(() => repository.rates()).thenAnswer((_) async => throw Exception('offline'));
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().currency, Currency.usd);
+      expect(current().exchangeRate, isNull);
+      expect(current().lines.single.unitPrice, 14000);
+      expect(current().repriceNote, isTrue);
+    });
+
+    test('a foreign draft with no rate is not savable, and is once a rate is typed', () async {
+      when(() => repository.rates()).thenAnswer((_) async => const ExchangeRates({}));
+      final notifier = await open();
+      notifier.setCustomer('c1', 'Acme');
+
+      await notifier.setCurrency(Currency.usd);
+      expect(current().isSavable, isFalse);
+
+      notifier.setExchangeRate(1400);
+      expect(current().isSavable, isTrue);
+    });
+
+    test('switching back to RWF clears the rate and reprices back', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+      await notifier.setCurrency(Currency.usd);
+
+      await notifier.setCurrency(Currency.rwf);
+
+      expect(current().currency, Currency.rwf);
+      expect(current().exchangeRate, isNull);
+      expect(current().lines.single.unitPrice, 14000);
+    });
+
+    test('a document that refers to an invoice keeps the invoice currency and cannot change it', () async {
+      final notifier = await open();
+
+      notifier.setReferencedDocument(
+        const DocumentRef(id: 'inv1', number: 'INV-1', type: DocumentType.invoice),
+        currency: Currency.usd,
+        exchangeRate: 1450,
+      );
+      expect(current().currency, Currency.usd);
+      expect(current().exchangeRate, 1450);
+      expect(current().currencyLocked, isTrue);
+
+      await notifier.setCurrency(Currency.eur);
+      expect(current().currency, Currency.usd);
+    });
+
+    test('picking a catalog item converts its RWF price into the draft currency', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.addLine();
+      await notifier.setCurrency(Currency.usd);
+
+      notifier.selectLineItem(0, itemId: 'i1', description: 'Printing', unitPrice: 14000, taxRate: 18);
+
+      expect(current().lines.single.unitPrice, 1000);
+    });
+
+    test('picking the invoice of a credit note reprices the typed lines into the invoice currency', () async {
+      final notifier = await open();
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 14000);
+
+      notifier.setReferencedDocument(
+        const DocumentRef(id: 'inv1', number: 'INV-1', type: DocumentType.invoice),
+        currency: Currency.usd,
+        exchangeRate: 1400,
+      );
+
+      expect(current().currency, Currency.usd);
+      expect(current().lines.single.unitPrice, 1000);
+      expect(current().repriceNote, isFalse);
+    });
+
+    test('when the typed prices cannot be converted into the invoice currency the user is told to check them', () async {
+      when(() => repository.rates()).thenAnswer((_) async => const ExchangeRates({}));
+      final notifier = await open();
+      await notifier.setCurrency(Currency.usd);
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 1000);
+
+      notifier.setReferencedDocument(
+        const DocumentRef(id: 'inv1', number: 'INV-1', type: DocumentType.invoice),
+        currency: Currency.eur,
+        exchangeRate: 1500,
+      );
+
+      expect(current().currency, Currency.eur);
+      expect(current().lines.single.unitPrice, 1000);
+      expect(current().repriceNote, isTrue);
+    });
+
+    test('the request carries the currency and rate, and none for RWF', () async {
+      when(() => repository.rates()).thenAnswer((_) async => usdRates);
+      final notifier = await open();
+      notifier.setCustomer('c1', 'Acme');
+
+      expect(current().toInput().currency, Currency.rwf);
+      expect(current().toInput().exchangeRate, isNull);
+
+      await notifier.setCurrency(Currency.usd);
+      expect(current().toInput().currency, Currency.usd);
+      expect(current().toInput().exchangeRate, 1400);
+    });
   });
 }

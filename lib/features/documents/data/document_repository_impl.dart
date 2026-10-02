@@ -4,6 +4,7 @@ import '../domain/document.dart';
 import '../domain/document_draft_input.dart';
 import '../domain/document_enums.dart';
 import '../domain/document_repository.dart';
+import '../domain/exchange_rates.dart';
 import '../domain/payment.dart';
 import '../domain/payment_input.dart';
 
@@ -45,6 +46,12 @@ class DocumentRepositoryImpl implements DocumentRepository {
   Future<Document> get(String id) async {
     final response = await _dio.get<Map<String, dynamic>>('/documents/$id');
     return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ExchangeRates> rates() async {
+    final response = await _dio.get<Map<String, dynamic>>('/documents/rates');
+    return ExchangeRates.fromJson(response.data!);
   }
 
   @override

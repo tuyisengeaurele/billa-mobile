@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -115,5 +116,42 @@ void main() {
 
     expect(find.text('1 invoice'), findsOneWidget);
     expect(find.text('None overdue'), findsOneWidget);
+  });
+
+  testWidgets('totals each currency on its own and shows each row in its own currency', (tester) async {
+    when(() => repository.list()).thenAnswer((_) async => [
+          const OutstandingInvoice(
+            id: 'd1',
+            number: 'INV-0001',
+            customerName: 'Acme',
+            total: 10000,
+            amountOwed: 4000,
+            dueDate: '2026-12-01',
+            daysOverdue: 0,
+            agingBucket: 'current',
+          ),
+          const OutstandingInvoice(
+            id: 'd2',
+            number: 'INV-0002',
+            customerName: 'Beta',
+            total: 300000,
+            amountOwed: 250050,
+            currency: Currency.usd,
+            amountOwedRwf: 3625725,
+            dueDate: '2026-12-01',
+            daysOverdue: 0,
+            agingBucket: 'current',
+          ),
+        ]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    final summary = find.byKey(const Key('payments-summary'));
+    expect(find.descendant(of: summary, matching: find.text('RWF 4,000')), findsOneWidget);
+    expect(find.descendant(of: summary, matching: find.text('USD 2,500.50')), findsOneWidget);
+    expect(find.text('USD 2,500.50'), findsNWidgets(2));
+    expect(find.text('RWF 4,000'), findsNWidgets(2));
+    expect(find.text('RWF 254,050'), findsNothing);
   });
 }

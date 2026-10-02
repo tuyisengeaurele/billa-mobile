@@ -1,3 +1,5 @@
+import 'package:billa_mobile/features/documents/domain/exchange_rates.dart';
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -222,5 +224,75 @@ void main() {
 
       expect(store.read('b1').map((i) => i.id), ['i1']);
     });
+  });
+
+  testWidgets('a draft with a payment plan says the plan is kept and where to change it', (tester) async {
+    when(() => documentRepository.get('d1')).thenAnswer((_) async => _savedDocument().copyWith(
+          installments: const [
+            DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
+            DocumentInstallment(amount: 7800, dueDate: '2026-11-01T00:00:00.000Z'),
+          ],
+        ));
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.edit(documentId: 'd1')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('paid in instalments set up on the web'), findsOneWidget);
+  });
+
+  testWidgets('choosing USD shows the bank rate, and a price is typed in dollars and cents', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer(
+      (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+    );
+    when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1400'), findsOneWidget);
+    expect(find.textContaining('National Bank of Rwanda reference rate, 29 Sep 2026.'), findsOneWidget);
+
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '12.50');
+    await tester.pumpAndSettle();
+
+    expect(find.text('USD 12.50'), findsWidgets);
+  });
+
+  testWidgets('switching a discount from percent to a flat amount starts the amount at zero, not at the percent', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer(
+      (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+    );
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<DiscountType?>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('% off').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-discount-value-0')), '10');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<DiscountType?>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD off').last);
+    await tester.pumpAndSettle();
+
+    final box = tester.widget<TextField>(
+      find.descendant(of: find.byKey(const ValueKey('line-discount-value-0')), matching: find.byType(TextField)),
+    );
+    expect(box.controller!.text, '0');
   });
 }

@@ -47,7 +47,7 @@ class DocumentListTile extends StatelessWidget {
           DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
         ],
       ),
-      trailing: MoneyText(document.total),
+      trailing: MoneyText(document.total, currency: document.currency),
     );
 
     if (onDuplicate == null && onContact == null) return tile;

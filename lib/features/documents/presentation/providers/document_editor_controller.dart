@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
+import '../../../../core/formatting/currency.dart';
 import '../../domain/document.dart';
 import '../../domain/document_draft_input.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/document_totals.dart';
+import '../../domain/exchange_rates.dart';
 import 'document_repository_provider.dart';
 
 enum AutosaveStatus { idle, saving, saved, error }
@@ -73,6 +75,12 @@ class DocumentEditorState {
     this.customerReference = '',
     this.referencedDocument,
     this.language = DocumentLanguage.en,
+    this.currency = Currency.rwf,
+    this.exchangeRate,
+    this.installments = const [],
+    this.recurrence,
+    this.rateHint,
+    this.repriceNote = false,
     this.lines = const [],
     this.autosaveStatus = AutosaveStatus.idle,
     this.autosaveError,
@@ -95,6 +103,19 @@ class DocumentEditorState {
         notes: document.notes ?? '',
         customerReference: document.customerReference ?? '',
         referencedDocument: document.referencedDocument,
+        language: document.language,
+        currency: document.currency,
+        exchangeRate: document.exchangeRate,
+        installments: [
+          for (final step in document.installments)
+            InstallmentInput(label: step.label, amount: step.amount, dueDate: step.dueDate.split('T').first),
+        ],
+        recurrence: document.recurrenceInterval == null
+            ? null
+            : RecurrenceInput(
+                interval: document.recurrenceInterval!,
+                endDate: document.recurrenceEndDate?.split('T').first,
+              ),
         lines: document.lines
             .map((line) => DocumentLineDraft(
                   localId: line.sortOrder,
@@ -119,6 +140,25 @@ class DocumentEditorState {
   final String customerReference;
   final DocumentRef? referencedDocument;
   final DocumentLanguage language;
+  final Currency currency;
+  final double? exchangeRate;
+
+  // Set up on the web and sent back exactly as loaded, because saving replaces the whole draft.
+  final List<InstallmentInput> installments;
+  final RecurrenceInput? recurrence;
+  final String? rateHint;
+
+  /// True when the currency changed but the prices could not be converted, so the user must check them.
+  final bool repriceNote;
+
+  // A document that refers to an invoice is always in the invoice's currency at its rate, and a payment plan
+  // is a list of amounts in the draft's currency that the phone cannot rewrite.
+  bool get currencyLocked => referencedDocument != null || installments.isNotEmpty;
+
+  String? get currencyLockNote => installments.isEmpty
+      ? null
+      : "This draft's payment plan is in ${currency.code}. Change the currency on the web.";
+
   final List<DocumentLineDraft> lines;
   final AutosaveStatus autosaveStatus;
   final String? autosaveError;
@@ -138,8 +178,22 @@ class DocumentEditorState {
       (line.discountValue == null || line.discountValue! >= 0) &&
       (line.discountType != DiscountType.percent || (line.discountValue ?? 0) <= 100));
 
+  // A foreign draft with no rate would be refused by the server.
   bool get isSavable =>
-      customerId != null && (!referencedDocumentRequired || referencedDocument != null) && _linesValid;
+      customerId != null &&
+      (!referencedDocumentRequired || referencedDocument != null) &&
+      _linesValid &&
+      rateProblem(currency, exchangeRate) == null;
+
+  // These are kept but not editable on the phone, so the phone says so instead of hiding them.
+  String? get preservedPlanNote {
+    if (installments.isNotEmpty) {
+      return 'This draft is paid in instalments set up on the web. Keep the total the same, or change the plan there.';
+    }
+    final interval = recurrence?.interval;
+    if (interval == null) return null;
+    return 'This draft repeats ${_recurrenceWords(interval)}. Change how often on the web.';
+  }
 
   DocumentTotals get totals => calculateDocumentTotals(lines.map((line) => line.toInput()).toList());
 
@@ -152,6 +206,11 @@ class DocumentEditorState {
         customerReference: customerReference.isEmpty ? null : customerReference,
         referencedDocumentId: referencedDocument?.id,
         language: language,
+        currency: currency,
+        exchangeRate: currency == Currency.rwf ? null : exchangeRate,
+        // The server refuses an empty plan, so no plan is sent as no field at all.
+        installments: installments.isEmpty ? null : installments,
+        recurrence: recurrence,
         lines: lines.map((line) => line.toInput()).toList(),
       );
 
@@ -165,6 +224,10 @@ class DocumentEditorState {
     String? customerReference,
     Object? referencedDocument = _unset,
     DocumentLanguage? language,
+    Currency? currency,
+    Object? exchangeRate = _unset,
+    Object? rateHint = _unset,
+    bool? repriceNote,
     List<DocumentLineDraft>? lines,
     AutosaveStatus? autosaveStatus,
     Object? autosaveError = _unset,
@@ -184,12 +247,26 @@ class DocumentEditorState {
       referencedDocument:
           identical(referencedDocument, _unset) ? this.referencedDocument : referencedDocument as DocumentRef?,
       language: language ?? this.language,
+      currency: currency ?? this.currency,
+      exchangeRate: identical(exchangeRate, _unset) ? this.exchangeRate : exchangeRate as double?,
+      installments: installments,
+      recurrence: recurrence,
+      rateHint: identical(rateHint, _unset) ? this.rateHint : rateHint as String?,
+      repriceNote: repriceNote ?? this.repriceNote,
       lines: lines ?? this.lines,
       autosaveStatus: autosaveStatus ?? this.autosaveStatus,
       autosaveError: identical(autosaveError, _unset) ? this.autosaveError : autosaveError as String?,
     );
   }
 }
+
+String _recurrenceWords(String interval) => switch (interval) {
+      'WEEKLY' => 'every week',
+      'MONTHLY' => 'every month',
+      'QUARTERLY' => 'every quarter',
+      'ANNUALLY' => 'every year',
+      _ => 'on a schedule',
+    };
 
 String _formatDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -232,8 +309,88 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
   void setDueDate(DateTime? date) => _update((s) => s.copyWith(dueDate: date));
   void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setCustomerReference(String value) => _update((s) => s.copyWith(customerReference: value));
-  void setReferencedDocument(DocumentRef? reference) => _update((s) => s.copyWith(referencedDocument: reference));
+  // The typed prices were written in the old currency, so they are converted into the invoice's rather than
+  // quietly relabelled, as a credit note for a dollar invoice would otherwise read a franc price as dollars.
+  void setReferencedDocument(DocumentRef? reference, {Currency? currency, double? exchangeRate}) =>
+      _update((s) {
+        if (reference == null || currency == null) return s.copyWith(referencedDocument: reference);
+        final repriced = _repriceLines(
+          s.lines,
+          from: s.currency,
+          fromRate: s.exchangeRate,
+          to: currency,
+          toRate: exchangeRate,
+        );
+        return s.copyWith(
+          referencedDocument: reference,
+          currency: currency,
+          exchangeRate: exchangeRate,
+          lines: repriced ?? s.lines,
+          repriceNote: repriced == null && s.lines.any((line) => line.unitPrice > 0),
+        );
+      });
   void setLanguage(DocumentLanguage language) => _update((s) => s.copyWith(language: language));
+
+  // Asked every time a currency is chosen, as the web form does: the server keeps the rates fresh, and a
+  // long editing session should not keep using a rate from when the draft was opened. A failure is not
+  // an error to show, it just means no rate could be prefilled, and the user types one.
+  Future<ExchangeRates?> _loadRates() async {
+    try {
+      return await ref.read(documentRepositoryProvider).rates();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Null when a rate is missing, so the caller keeps the typed numbers and asks the user to check them.
+  List<DocumentLineDraft>? _repriceLines(
+    List<DocumentLineDraft> lines, {
+    required Currency from,
+    required double? fromRate,
+    required Currency to,
+    required double? toRate,
+  }) {
+    final repriced = <DocumentLineDraft>[];
+    for (final line in lines) {
+      final price = convertMinor(line.unitPrice, from: from, fromRate: fromRate, to: to, toRate: toRate);
+      final flat = line.discountType == DiscountType.flat;
+      final discount = flat
+          ? convertMinor((line.discountValue ?? 0).round(), from: from, fromRate: fromRate, to: to, toRate: toRate)
+          : null;
+      if (price == null || (flat && discount == null)) return null;
+      repriced.add(_cloneLine(line, unitPrice: price, discountValue: flat ? discount!.toDouble() : line.discountValue));
+    }
+    return repriced;
+  }
+
+  Future<void> setCurrency(Currency next) async {
+    final current = state.value;
+    if (current == null || current.currencyLocked || next == current.currency) return;
+
+    final quote = next == Currency.rwf ? null : (await _loadRates())?[next];
+    final rate = quote?.rate;
+    // The state may have moved on while the rates were loading.
+    final latest = state.value;
+    if (latest == null || latest.currencyLocked) return;
+
+    final repriced = _repriceLines(
+      latest.lines,
+      from: latest.currency,
+      fromRate: latest.exchangeRate,
+      to: next,
+      toRate: rate,
+    );
+
+    _update((s) => s.copyWith(
+          currency: next,
+          exchangeRate: rate,
+          rateHint: rateHint(quote),
+          lines: repriced ?? s.lines,
+          repriceNote: repriced == null && s.lines.any((line) => line.unitPrice > 0),
+        ));
+  }
+
+  void setExchangeRate(double? rate) => _update((s) => s.copyWith(exchangeRate: rate, rateHint: null));
 
   void addLine() {
     final localId = _nextLocalId++;
@@ -276,17 +433,21 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
   void setLineDescription(int localId, String text) =>
       _updateLine(localId, (line) => _cloneLine(line, description: text, itemId: null));
 
+  // [unitPrice] is the catalog price, which is always in RWF.
   void selectLineItem(
     int localId, {
     required String itemId,
     required String description,
     required int unitPrice,
     required double taxRate,
-  }) =>
-      _updateLine(
-        localId,
-        (line) => _cloneLine(line, itemId: itemId, description: description, unitPrice: unitPrice, taxRate: taxRate),
-      );
+  }) {
+    final current = state.value;
+    final price = current == null ? unitPrice : fromRwf(unitPrice, current.currency, current.exchangeRate);
+    _updateLine(
+      localId,
+      (line) => _cloneLine(line, itemId: itemId, description: description, unitPrice: price, taxRate: taxRate),
+    );
+  }
 
   void setLineQuantity(int localId, double quantity) =>
       _updateLine(localId, (line) => _cloneLine(line, quantity: quantity));

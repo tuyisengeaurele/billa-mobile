@@ -7,6 +7,8 @@ part 'session_info.g.dart';
 class SessionInfo with _$SessionInfo {
   const factory SessionInfo({
     required String id,
+    String? deviceName,
+    String? lastUsedAt,
     required String createdAt,
     required String expiresAt,
     required bool isCurrent,

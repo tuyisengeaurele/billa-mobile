@@ -10,8 +10,7 @@ final myBusinessesProvider = FutureProvider.autoDispose<List<BusinessSummary>>((
   return ref.watch(businessesRepositoryProvider).list();
 });
 
-/// The only signal the backend exposes for ownership; it says nothing about
-/// member versus accountant, so owner-only UI keys off this and nothing finer.
+/// The only signal the backend exposes for ownership, so owner-only UI keys off this.
 final isOwnerOfActiveBusinessProvider = Provider.autoDispose<bool>((ref) {
   final activeId = ref.watch(activeBusinessIdProvider);
   final businesses = ref.watch(myBusinessesProvider).valueOrNull;
