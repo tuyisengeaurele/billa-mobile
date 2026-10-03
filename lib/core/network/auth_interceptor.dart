@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import '../error/app_exception.dart';
+import 'refresh_session.dart';
 
 // Matches the server's own exempt list in apiClient.ts: a 401 from any of
 // these is a normal, expected outcome, not "the session died".
@@ -15,11 +16,6 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor(this._dio);
 
   final Dio _dio;
-
-  // The refresh token rotates on every use and the server revokes the whole
-  // session family if a rotated token is presented twice, so every request
-  // waiting on a 401 must await the *same* refresh call, never start its own.
-  Completer<bool>? _refreshCompleter;
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
@@ -53,21 +49,11 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  Future<bool> _refresh() {
-    final inFlight = _refreshCompleter;
-    if (inFlight != null) return inFlight.future;
-
-    final completer = Completer<bool>();
-    _refreshCompleter = completer;
-
-    _dio.post<void>('/auth/refresh').then((_) {
-      completer.complete(true);
-    }).catchError((_) {
-      completer.complete(false);
-    }).whenComplete(() {
-      _refreshCompleter = null;
-    });
-
-    return completer.future;
+  Future<bool> _refresh() async {
+    try {
+      return await refreshOnce(_dio);
+    } catch (_) {
+      return false;
+    }
   }
 }
