@@ -19,6 +19,7 @@ abstract class CustomerRepository {
     String? address,
     String? phone,
     String? email,
+    int? creditLimit,
   });
 
   Future<Customer> update(
@@ -29,5 +30,7 @@ abstract class CustomerRepository {
     String? phone,
     String? email,
     bool? isActive,
+    int? creditLimit,
+    bool clearCreditLimit = false,
   });
 }

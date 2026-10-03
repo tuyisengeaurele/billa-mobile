@@ -117,4 +117,45 @@ void main() {
     expect(stats.paidInvoiceCount, 3);
     expect(stats.averageDaysToPay, -2);
   });
+
+  Map<String, dynamic> customerJson() => {
+        'customer': {'id': 'c1', 'name': 'Acme', 'isActive': true, 'createdAt': '2026-01-01T00:00:00.000Z'},
+      };
+
+  test('create sends the credit limit when there is one', () async {
+    when(() => dio.post<Map<String, dynamic>>('/customers', data: {'name': 'Acme', 'creditLimit': 500000}))
+        .thenAnswer((_) async => _response(201, customerJson(), RequestOptions(path: '/customers')));
+
+    await repository.create(name: 'Acme', creditLimit: 500000);
+
+    verify(() => dio.post<Map<String, dynamic>>('/customers', data: {'name': 'Acme', 'creditLimit': 500000}))
+        .called(1);
+  });
+
+  test('update sends a new credit limit', () async {
+    when(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'creditLimit': 250000}))
+        .thenAnswer((_) async => _response(200, customerJson(), RequestOptions(path: '/customers/c1')));
+
+    await repository.update('c1', creditLimit: 250000);
+
+    verify(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'creditLimit': 250000})).called(1);
+  });
+
+  test('update clears the credit limit by sending null, which is not the same as leaving it out', () async {
+    when(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'creditLimit': null}))
+        .thenAnswer((_) async => _response(200, customerJson(), RequestOptions(path: '/customers/c1')));
+
+    await repository.update('c1', clearCreditLimit: true);
+
+    verify(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'creditLimit': null})).called(1);
+  });
+
+  test('update leaves the credit limit alone when asked about nothing else', () async {
+    when(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'name': 'Acme Ltd'}))
+        .thenAnswer((_) async => _response(200, customerJson(), RequestOptions(path: '/customers/c1')));
+
+    await repository.update('c1', name: 'Acme Ltd');
+
+    verify(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'name': 'Acme Ltd'})).called(1);
+  });
 }
