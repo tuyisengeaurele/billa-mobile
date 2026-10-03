@@ -16,6 +16,7 @@ import '../../../items/presentation/providers/item_repository_provider.dart';
 import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/document_totals.dart';
+import '../../domain/payment_terms.dart';
 import '../providers/document_editor_controller.dart';
 import '../providers/document_repository_provider.dart';
 import '../widgets/currency_section.dart';
@@ -190,6 +191,18 @@ class _DocumentEditorForm extends ConsumerWidget {
               );
               if (picked != null) controller.setDueDate(picked);
             },
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final option in paymentTermOptions)
+                ChoiceChip(
+                  key: Key('payment-term-${option.days}'),
+                  label: Text(option.label),
+                  selected: state.paymentTermDays == option.days,
+                  onSelected: (_) => controller.setPaymentTerm(option.days),
+                ),
+            ],
           ),
           if (state.referencedDocumentAllowed) ...[
             const SizedBox(height: 8),

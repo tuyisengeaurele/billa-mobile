@@ -312,4 +312,20 @@ void main() {
     expect(find.text('RWF 5,900'), findsOneWidget);
     expect(find.textContaining('•'), findsNothing);
   });
+
+  testWidgets('picking a payment term fills the due date and marks the term', (tester) async {
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('payment-term-14')));
+    await tester.pumpAndSettle();
+
+    final due = DateTime.now().add(const Duration(days: 14));
+    final expected =
+        '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}';
+    expect(find.text('Due $expected'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('payment-term-14'))).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('payment-term-30'))).selected, isFalse);
+  });
 }

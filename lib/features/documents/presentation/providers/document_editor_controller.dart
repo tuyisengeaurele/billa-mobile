@@ -7,6 +7,7 @@ import '../../domain/document_draft_input.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/document_totals.dart';
 import '../../domain/exchange_rates.dart';
+import '../../domain/payment_terms.dart';
 import 'document_repository_provider.dart';
 
 enum AutosaveStatus { idle, saving, saved, error }
@@ -178,6 +179,9 @@ class DocumentEditorState {
       (line.discountValue == null || line.discountValue! >= 0) &&
       (line.discountType != DiscountType.percent || (line.discountValue ?? 0) <= 100));
 
+  /// The preset the due date equals, or null for a custom date.
+  int? get paymentTermDays => matchPaymentTerm(issueDate, dueDate);
+
   // A foreign draft with no rate would be refused by the server.
   bool get isSavable =>
       customerId != null &&
@@ -305,7 +309,13 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
         : s.copyWith(customerId: customerId, customerName: customerName, referencedDocument: null));
   }
 
-  void setIssueDate(DateTime date) => _update((s) => s.copyWith(issueDate: date));
+  // A due date picked from a term keeps its term when the issue date moves, as "Net 30" would; a date the
+  // user chose by hand is theirs and stays put.
+  void setIssueDate(DateTime date) => _update((s) {
+        final term = s.paymentTermDays;
+        return s.copyWith(issueDate: date, dueDate: term == null ? _unset : addDays(date, term));
+      });
+  void setPaymentTerm(int days) => _update((s) => s.copyWith(dueDate: addDays(s.issueDate, days)));
   void setDueDate(DateTime? date) => _update((s) => s.copyWith(dueDate: date));
   void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setCustomerReference(String value) => _update((s) => s.copyWith(customerReference: value));

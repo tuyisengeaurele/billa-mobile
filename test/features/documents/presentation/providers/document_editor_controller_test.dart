@@ -393,4 +393,57 @@ void main() {
       expect(current().toInput().exchangeRate, 1400);
     });
   });
+
+  group('payment terms', () {
+    const arg = DocumentEditorArgs.create(DocumentType.invoice);
+
+    Future<DocumentEditorController> open() async {
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      await container.read(documentEditorControllerProvider(arg).future);
+      return container.read(documentEditorControllerProvider(arg).notifier);
+    }
+
+    DocumentEditorState current() => container.read(documentEditorControllerProvider(arg)).requireValue;
+
+    test('choosing a term sets the due date that many days after the issue date', () async {
+      final notifier = await open();
+      notifier.setIssueDate(DateTime(2026, 9, 1));
+
+      notifier.setPaymentTerm(30);
+
+      expect(current().dueDate, DateTime(2026, 10, 1));
+      expect(current().paymentTermDays, 30);
+    });
+
+    test('moving the issue date moves a preset due date with it', () async {
+      final notifier = await open();
+      notifier.setIssueDate(DateTime(2026, 9, 1));
+      notifier.setPaymentTerm(14);
+
+      notifier.setIssueDate(DateTime(2026, 9, 10));
+
+      expect(current().dueDate, DateTime(2026, 9, 24));
+      expect(current().paymentTermDays, 14);
+    });
+
+    test('a custom due date stays where the user put it when the issue date moves', () async {
+      final notifier = await open();
+      notifier.setIssueDate(DateTime(2026, 9, 1));
+      notifier.setDueDate(DateTime(2026, 9, 11));
+      expect(current().paymentTermDays, isNull);
+
+      notifier.setIssueDate(DateTime(2026, 9, 5));
+
+      expect(current().dueDate, DateTime(2026, 9, 11));
+    });
+
+    test('a draft with no due date still has none after the issue date moves', () async {
+      final notifier = await open();
+
+      notifier.setIssueDate(DateTime(2026, 9, 5));
+
+      expect(current().dueDate, isNull);
+      expect(current().paymentTermDays, isNull);
+    });
+  });
 }
