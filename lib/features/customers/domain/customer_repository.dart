@@ -13,6 +13,9 @@ abstract class CustomerRepository {
   Future<Customer> get(String id);
   Future<CustomerPaymentStats> paymentStats(String id);
 
+  /// Emails the customer their statement and returns the address it went to.
+  Future<String> sendStatement(String id);
+
   Future<Customer> create({
     required String name,
     String? tin,

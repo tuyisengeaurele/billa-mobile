@@ -172,4 +172,11 @@ void main() {
 
     expect(describeActionError(error), contains('Change the amounts back'));
   });
+
+  test('a statement for a customer who owes nothing says why and not what to fix', () {
+    expect(
+      describeActionError(_error('nothing_owed')),
+      'They owe nothing right now, so there is no statement to send',
+    );
+  });
 }

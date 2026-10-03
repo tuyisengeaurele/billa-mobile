@@ -26,6 +26,8 @@ class BusinessSettings with _$BusinessSettings {
     @Default(true) bool remindersEnabled,
     @Default(7) int reminderCadenceDays,
     @Default(false) bool requireApprovalToFinalize,
+    // Whether customers can pay on the public page, which decides how a statement is worded.
+    @Default(false) bool momoEnabled,
     @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
     @Default(DocumentTemplate.minimal)
     DocumentTemplate defaultTemplate,

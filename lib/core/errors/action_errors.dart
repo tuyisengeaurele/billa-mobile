@@ -32,6 +32,7 @@ String describeActionError(Object error) {
     'not_finalized' => 'Finalize this document first',
     'already_converted' => 'This was already converted to an invoice',
     'already_declined' => 'The customer already declined this',
+    'nothing_owed' => 'They owe nothing right now, so there is no statement to send',
     'customer_has_no_email' => 'This customer has no email on file',
     'pdf_render_failed' => "Couldn't generate the PDF",
     'email_send_failed' => "Couldn't send the email",

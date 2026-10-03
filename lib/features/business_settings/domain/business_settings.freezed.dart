@@ -38,7 +38,9 @@ mixin _$BusinessSettings {
   List<String> get accentColors => throw _privateConstructorUsedError;
   bool get remindersEnabled => throw _privateConstructorUsedError;
   int get reminderCadenceDays => throw _privateConstructorUsedError;
-  bool get requireApprovalToFinalize => throw _privateConstructorUsedError;
+  bool get requireApprovalToFinalize =>
+      throw _privateConstructorUsedError; // Whether customers can pay on the public page, which decides how a statement is worded.
+  bool get momoEnabled => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
   DocumentTemplate get defaultTemplate => throw _privateConstructorUsedError;
 
@@ -74,6 +76,7 @@ abstract class $BusinessSettingsCopyWith<$Res> {
       bool remindersEnabled,
       int reminderCadenceDays,
       bool requireApprovalToFinalize,
+      bool momoEnabled,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       DocumentTemplate defaultTemplate});
@@ -111,6 +114,7 @@ class _$BusinessSettingsCopyWithImpl<$Res, $Val extends BusinessSettings>
     Object? remindersEnabled = null,
     Object? reminderCadenceDays = null,
     Object? requireApprovalToFinalize = null,
+    Object? momoEnabled = null,
     Object? defaultTemplate = null,
   }) {
     return _then(_value.copyWith(
@@ -190,6 +194,10 @@ class _$BusinessSettingsCopyWithImpl<$Res, $Val extends BusinessSettings>
           ? _value.requireApprovalToFinalize
           : requireApprovalToFinalize // ignore: cast_nullable_to_non_nullable
               as bool,
+      momoEnabled: null == momoEnabled
+          ? _value.momoEnabled
+          : momoEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
       defaultTemplate: null == defaultTemplate
           ? _value.defaultTemplate
           : defaultTemplate // ignore: cast_nullable_to_non_nullable
@@ -226,6 +234,7 @@ abstract class _$$BusinessSettingsImplCopyWith<$Res>
       bool remindersEnabled,
       int reminderCadenceDays,
       bool requireApprovalToFinalize,
+      bool momoEnabled,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       DocumentTemplate defaultTemplate});
@@ -261,6 +270,7 @@ class __$$BusinessSettingsImplCopyWithImpl<$Res>
     Object? remindersEnabled = null,
     Object? reminderCadenceDays = null,
     Object? requireApprovalToFinalize = null,
+    Object? momoEnabled = null,
     Object? defaultTemplate = null,
   }) {
     return _then(_$BusinessSettingsImpl(
@@ -340,6 +350,10 @@ class __$$BusinessSettingsImplCopyWithImpl<$Res>
           ? _value.requireApprovalToFinalize
           : requireApprovalToFinalize // ignore: cast_nullable_to_non_nullable
               as bool,
+      momoEnabled: null == momoEnabled
+          ? _value.momoEnabled
+          : momoEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
       defaultTemplate: null == defaultTemplate
           ? _value.defaultTemplate
           : defaultTemplate // ignore: cast_nullable_to_non_nullable
@@ -371,6 +385,7 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
       this.remindersEnabled = true,
       this.reminderCadenceDays = 7,
       this.requireApprovalToFinalize = false,
+      this.momoEnabled = false,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       this.defaultTemplate = DocumentTemplate.minimal})
@@ -427,13 +442,17 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
   @override
   @JsonKey()
   final bool requireApprovalToFinalize;
+// Whether customers can pay on the public page, which decides how a statement is worded.
+  @override
+  @JsonKey()
+  final bool momoEnabled;
   @override
   @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
   final DocumentTemplate defaultTemplate;
 
   @override
   String toString() {
-    return 'BusinessSettings(id: $id, name: $name, tin: $tin, industry: $industry, phone: $phone, email: $email, address: $address, rraEbmNumber: $rraEbmNumber, bankName: $bankName, bankAccountNumber: $bankAccountNumber, signatoryName: $signatoryName, signatoryTitle: $signatoryTitle, signatureUrl: $signatureUrl, logoUrl: $logoUrl, primaryColor: $primaryColor, accentColors: $accentColors, remindersEnabled: $remindersEnabled, reminderCadenceDays: $reminderCadenceDays, requireApprovalToFinalize: $requireApprovalToFinalize, defaultTemplate: $defaultTemplate)';
+    return 'BusinessSettings(id: $id, name: $name, tin: $tin, industry: $industry, phone: $phone, email: $email, address: $address, rraEbmNumber: $rraEbmNumber, bankName: $bankName, bankAccountNumber: $bankAccountNumber, signatoryName: $signatoryName, signatoryTitle: $signatoryTitle, signatureUrl: $signatureUrl, logoUrl: $logoUrl, primaryColor: $primaryColor, accentColors: $accentColors, remindersEnabled: $remindersEnabled, reminderCadenceDays: $reminderCadenceDays, requireApprovalToFinalize: $requireApprovalToFinalize, momoEnabled: $momoEnabled, defaultTemplate: $defaultTemplate)';
   }
 
   @override
@@ -473,6 +492,8 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
             (identical(other.requireApprovalToFinalize,
                     requireApprovalToFinalize) ||
                 other.requireApprovalToFinalize == requireApprovalToFinalize) &&
+            (identical(other.momoEnabled, momoEnabled) ||
+                other.momoEnabled == momoEnabled) &&
             (identical(other.defaultTemplate, defaultTemplate) ||
                 other.defaultTemplate == defaultTemplate));
   }
@@ -500,6 +521,7 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
         remindersEnabled,
         reminderCadenceDays,
         requireApprovalToFinalize,
+        momoEnabled,
         defaultTemplate
       ]);
 
@@ -539,6 +561,7 @@ abstract class _BusinessSettings implements BusinessSettings {
       final bool remindersEnabled,
       final int reminderCadenceDays,
       final bool requireApprovalToFinalize,
+      final bool momoEnabled,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       final DocumentTemplate defaultTemplate}) = _$BusinessSettingsImpl;
@@ -584,6 +607,8 @@ abstract class _BusinessSettings implements BusinessSettings {
   int get reminderCadenceDays;
   @override
   bool get requireApprovalToFinalize;
+  @override // Whether customers can pay on the public page, which decides how a statement is worded.
+  bool get momoEnabled;
   @override
   @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
   DocumentTemplate get defaultTemplate;

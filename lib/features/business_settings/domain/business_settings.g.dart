@@ -32,6 +32,7 @@ _$BusinessSettingsImpl _$$BusinessSettingsImplFromJson(
       reminderCadenceDays: (json['reminderCadenceDays'] as num?)?.toInt() ?? 7,
       requireApprovalToFinalize:
           json['requireApprovalToFinalize'] as bool? ?? false,
+      momoEnabled: json['momoEnabled'] as bool? ?? false,
       defaultTemplate: json['defaultTemplate'] == null
           ? DocumentTemplate.minimal
           : documentTemplateFromJson(json['defaultTemplate'] as String),
@@ -59,5 +60,6 @@ Map<String, dynamic> _$$BusinessSettingsImplToJson(
       'remindersEnabled': instance.remindersEnabled,
       'reminderCadenceDays': instance.reminderCadenceDays,
       'requireApprovalToFinalize': instance.requireApprovalToFinalize,
+      'momoEnabled': instance.momoEnabled,
       'defaultTemplate': documentTemplateToJson(instance.defaultTemplate),
     };
