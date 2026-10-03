@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../core/error/app_exception.dart';
+import '../../../core/network/refresh_session.dart';
 import '../domain/auth_repository.dart';
 import '../domain/auth_status.dart';
 import '../domain/auth_user.dart';
@@ -71,15 +72,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> refreshSession() async {
-    try {
-      await _dio.post<void>('/auth/refresh');
-      return true;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) return false;
-      rethrow;
-    }
-  }
+  Future<bool> refreshSession() => refreshOnce(_dio);
 
   @override
   Future<AuthStatus> submitTwoFactorChallenge({required String challengeId, required String code}) async {
