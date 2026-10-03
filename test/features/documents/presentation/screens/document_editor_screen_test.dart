@@ -328,4 +328,62 @@ void main() {
     expect(tester.widget<ChoiceChip>(find.byKey(const Key('payment-term-14'))).selected, isTrue);
     expect(tester.widget<ChoiceChip>(find.byKey(const Key('payment-term-30'))).selected, isFalse);
   });
+
+  testWidgets('an invoice that would pass the customer credit limit says so, a quote does not', (tester) async {
+    when(() => customerRepository.get('c1')).thenAnswer(
+      (_) async => const Customer(
+        id: 'c1',
+        name: 'Acme',
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        creditLimit: 100,
+        outstandingBalance: 0,
+      ),
+    );
+    when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Acme'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '5000');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Acme already owes RWF 0. With this invoice they would owe RWF 5,900, which is over their RWF 100 limit.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a quote is not held to the credit limit', (tester) async {
+    when(() => customerRepository.get('c1')).thenAnswer(
+      (_) async => const Customer(
+        id: 'c1',
+        name: 'Acme',
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        creditLimit: 100,
+      ),
+    );
+    when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.quote)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Acme'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '5000');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('over their'), findsNothing);
+  });
 }

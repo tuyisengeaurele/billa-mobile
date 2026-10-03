@@ -19,6 +19,7 @@ import '../../domain/document_totals.dart';
 import '../../domain/payment_terms.dart';
 import '../providers/document_editor_controller.dart';
 import '../providers/document_repository_provider.dart';
+import '../widgets/credit_limit_warning.dart';
 import '../widgets/currency_section.dart';
 import '../widgets/document_list_tile.dart' show documentTypeLabel;
 
@@ -260,6 +261,13 @@ class _DocumentEditorForm extends ConsumerWidget {
             selected: {state.language},
             onSelectionChanged: (selection) => controller.setLanguage(selection.first),
           ),
+          if (state.type == DocumentType.invoice && state.customerId != null) ...[
+            const SizedBox(height: 16),
+            CreditLimitWarning(
+              customerId: state.customerId!,
+              invoiceTotalRwf: toRwf(totals.total, state.currency, state.exchangeRate),
+            ),
+          ],
           const SizedBox(height: 16),
           CurrencySection(
             currency: state.currency,
