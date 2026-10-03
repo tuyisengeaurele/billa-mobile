@@ -40,6 +40,7 @@ Document _document({
   String? publicToken = 'tok',
   int total = 10000,
   int amountPaid = 6000,
+  String? sentAt = '2026-01-02T00:00:00.000Z',
 }) =>
     Document(
       id: 'd1',
@@ -54,6 +55,7 @@ Document _document({
       total: total,
       amountPaid: amountPaid,
       publicToken: publicToken,
+      sentAt: sentAt,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     );
@@ -224,5 +226,16 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('the first WhatsApp message about an unpaid invoice is the invoice going out, and is recorded', (tester) async {
+    when(() => documents.markShared('d1')).thenAnswer((_) async => '2026-02-01T10:00:00.000Z');
+    await start(tester, _document(sentAt: null));
+
+    expect(find.textContaining('sent you invoice INV-0001'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    verify(() => documents.markShared('d1')).called(1);
   });
 }
