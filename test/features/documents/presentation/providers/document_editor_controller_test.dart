@@ -446,4 +446,21 @@ void main() {
       expect(current().paymentTermDays, isNull);
     });
   });
+
+  test('linking a line to an item keeps its text and price and marks it as a catalog line', () async {
+    const arg = DocumentEditorArgs.create(DocumentType.invoice);
+    container.listen(documentEditorControllerProvider(arg), (_, _) {});
+    await container.read(documentEditorControllerProvider(arg).future);
+    final notifier = container.read(documentEditorControllerProvider(arg).notifier);
+    notifier.addLine();
+    notifier.setLineDescription(0, 'Printing');
+    notifier.setLineUnitPrice(0, 5000);
+
+    notifier.linkLineItem(0, 'i9');
+
+    final line = container.read(documentEditorControllerProvider(arg)).requireValue.lines.single;
+    expect(line.itemId, 'i9');
+    expect(line.description, 'Printing');
+    expect(line.unitPrice, 5000);
+  });
 }

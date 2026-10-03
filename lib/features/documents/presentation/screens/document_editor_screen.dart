@@ -6,6 +6,7 @@ import '../../../../core/formatting/currency.dart';
 import '../../../../core/privacy/privacy_scope.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../items/domain/item.dart';
+import '../../../../core/errors/action_errors.dart';
 import '../../../items/presentation/providers/recent_items_provider.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
@@ -286,7 +287,13 @@ class _DocumentEditorForm extends ConsumerWidget {
             // LineTotals always matches index i's line, computed once here
             // rather than re-derived per card, so a card's total can never
             // drift from what the footer's subtotal actually sums.
-            _LineCard(args: args, line: state.lines[i], lineTotal: totals.lines[i], currency: state.currency),
+            _LineCard(
+              args: args,
+              line: state.lines[i],
+              lineTotal: totals.lines[i],
+              currency: state.currency,
+              exchangeRate: state.exchangeRate,
+            ),
           TextButton(onPressed: controller.addLine, child: const Text('Add line')),
           const Divider(height: 32),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), MoneyText(totals.subtotal, currency: state.currency)]),
@@ -320,12 +327,19 @@ String _discountText(DocumentLineDraft line, Currency currency) {
 }
 
 class _LineCard extends ConsumerStatefulWidget {
-  const _LineCard({required this.args, required this.line, required this.lineTotal, required this.currency});
+  const _LineCard({
+    required this.args,
+    required this.line,
+    required this.lineTotal,
+    required this.currency,
+    required this.exchangeRate,
+  });
 
   final DocumentEditorArgs args;
   final DocumentLineDraft line;
   final LineTotals lineTotal;
   final Currency currency;
+  final double? exchangeRate;
 
   @override
   ConsumerState<_LineCard> createState() => _LineCardState();
@@ -338,6 +352,8 @@ class _LineCardState extends ConsumerState<_LineCard> {
       TextEditingController(text: minorToMajorText(widget.line.unitPrice, widget.currency));
   late final _taxRateController = TextEditingController(text: widget.line.taxRate.toString());
   late final _discountValueController = TextEditingController(text: _discountText(widget.line, widget.currency));
+  bool _savingItem = false;
+  String? _saveItemError;
 
   @override
   void didUpdateWidget(covariant _LineCard oldWidget) {
@@ -370,6 +386,37 @@ class _LineCardState extends ConsumerState<_LineCard> {
     ref.read(recentItemsProvider.notifier).remember(item);
   }
 
+  // The catalog is always in RWF, so a foreign price is converted at the draft's rate, and a draft that
+  // has no rate yet cannot say what the price is in francs.
+  Future<void> _saveAsItem() async {
+    final line = widget.line;
+    if (widget.currency != Currency.rwf && (widget.exchangeRate == null || widget.exchangeRate! <= 0)) {
+      setState(() => _saveItemError = 'Enter the exchange rate first, so the price can be saved in RWF');
+      return;
+    }
+    setState(() {
+      _savingItem = true;
+      _saveItemError = null;
+    });
+    try {
+      final item = await ref.read(itemRepositoryProvider).create(
+            description: line.description.trim(),
+            unitPrice: toRwf(line.unitPrice, widget.currency, widget.exchangeRate),
+            unit: 'unit',
+            taxRate: line.taxRate,
+          );
+      ref.read(documentEditorControllerProvider(widget.args).notifier).linkLineItem(line.localId, item.id);
+      ref.read(recentItemsProvider.notifier).remember(item);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved to your items')));
+      }
+    } catch (e) {
+      if (mounted) setState(() => _saveItemError = describeActionError(e));
+    } finally {
+      if (mounted) setState(() => _savingItem = false);
+    }
+  }
+
   @override
   void dispose() {
     _descriptionController.dispose();
@@ -392,7 +439,10 @@ class _LineCardState extends ConsumerState<_LineCard> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (line.description.trim().isEmpty && line.itemId == null) _RecentItemChips(onPicked: _pickItem),
+            // Keyed because the widgets around it come and go as the line fills in, and without a key the
+            // field would be rebuilt with them, losing its focus in the middle of typing.
             Row(
+              key: ValueKey('line-description-row-${line.localId}'),
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
@@ -509,6 +559,19 @@ class _LineCardState extends ConsumerState<_LineCard> {
                 ],
               ],
             ),
+            if (line.itemId == null && line.description.trim().isNotEmpty) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  key: Key('line-save-item-${line.localId}'),
+                  onPressed: _savingItem ? null : _saveAsItem,
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: const Text('Save to my items'),
+                ),
+              ),
+              if (_saveItemError != null)
+                ActionErrorBanner(message: _saveItemError!, onRetry: _savingItem ? null : _saveAsItem),
+            ],
             const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerRight,

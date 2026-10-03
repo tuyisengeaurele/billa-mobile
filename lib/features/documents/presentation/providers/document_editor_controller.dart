@@ -459,6 +459,9 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
     );
   }
 
+  // Saving a typed line to the catalog links it afterwards, without touching the text or the price.
+  void linkLineItem(int localId, String itemId) => _updateLine(localId, (line) => _cloneLine(line, itemId: itemId));
+
   void setLineQuantity(int localId, double quantity) =>
       _updateLine(localId, (line) => _cloneLine(line, quantity: quantity));
   void setLineUnitPrice(int localId, int unitPrice) =>

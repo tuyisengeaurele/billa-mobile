@@ -386,4 +386,129 @@ void main() {
 
     expect(find.textContaining('over their'), findsNothing);
   });
+
+  Future<void> typeLine(WidgetTester tester, {required String description, required String price}) async {
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(ItemSearchField), description);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), price);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('a line with no text cannot be saved as an item, and a line picked from the catalog needs no saving',
+      (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('line-save-item-0')), findsNothing);
+
+    await tester.enterText(find.byType(ItemSearchField), 'Printing');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('line-save-item-0')), findsOneWidget);
+  });
+
+  testWidgets('saving a typed line adds it to the catalog at the same RWF price and links the line', (tester) async {
+    when(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0))
+        .thenAnswer((_) async => const Item(
+              id: 'i7',
+              description: 'Banner',
+              unitPrice: 5000,
+              unit: 'unit',
+              taxRate: 18,
+              isActive: true,
+            ));
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '5000');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+
+    verify(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0)).called(1);
+    expect(find.byKey(const Key('line-save-item-0')), findsNothing);
+    expect(find.text('Saved to your items'), findsOneWidget);
+  });
+
+  testWidgets('a dollar line is saved to the catalog in francs at the draft rate', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer(
+      (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+    );
+    when(() => itemRepository.create(description: 'Banner', unitPrice: 14000, unit: 'unit', taxRate: 18.0))
+        .thenAnswer((_) async => const Item(
+              id: 'i7',
+              description: 'Banner',
+              unitPrice: 14000,
+              unit: 'unit',
+              taxRate: 18,
+              isActive: true,
+            ));
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '10');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+
+    verify(() => itemRepository.create(description: 'Banner', unitPrice: 14000, unit: 'unit', taxRate: 18.0)).called(1);
+  });
+
+  testWidgets('a dollar line with no rate explains why it cannot be saved as an item yet', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer((_) async => const ExchangeRates({}));
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '10');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter the exchange rate first, so the price can be saved in RWF'), findsOneWidget);
+    verifyNever(() => itemRepository.create(
+          description: any(named: 'description'),
+          unitPrice: any(named: 'unitPrice'),
+          unit: any(named: 'unit'),
+          taxRate: any(named: 'taxRate'),
+        ));
+  });
+
+  testWidgets('a failed save keeps the line, says why, and Retry saves it', (tester) async {
+    var failing = true;
+    when(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0))
+        .thenAnswer((_) async {
+      if (failing) {
+        throw DioException(requestOptions: RequestOptions(path: '/items'), type: DioExceptionType.connectionError);
+      }
+      return const Item(id: 'i7', description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18, isActive: true);
+    });
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '5000');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.byKey(const Key('line-save-item-0')), findsOneWidget);
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Saved to your items'), findsOneWidget);
+    verify(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0)).called(2);
+  });
 }
