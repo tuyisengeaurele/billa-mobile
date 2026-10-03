@@ -150,4 +150,32 @@ void main() {
 
     expect(find.text('Opened'), findsNothing);
   });
+
+  testWidgets('a draft can be deleted with a swipe, a finalized document cannot', (tester) async {
+    var deleted = 0;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: DocumentListTile(
+          document: _document.copyWith(status: DocumentStatus.draft, number: null),
+          onTap: () {},
+          onDelete: () => deleted++,
+        ),
+      ),
+    ));
+
+    await tester.drag(find.text('Draft Invoice'), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-swipe-delete-d1')));
+    await tester.pumpAndSettle();
+    expect(deleted, 1);
+
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: DocumentListTile(document: _document, onTap: () {}, onContact: () {})),
+    ));
+    await tester.drag(find.text('INV-0001'), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('document-swipe-delete-d1')), findsNothing);
+  });
 }

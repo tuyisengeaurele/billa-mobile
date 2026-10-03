@@ -25,12 +25,22 @@ IconData documentTypeIcon(DocumentType type) => switch (type) {
     };
 
 class DocumentListTile extends StatelessWidget {
-  const DocumentListTile({super.key, required this.document, required this.onTap, this.onDuplicate, this.onContact});
+  const DocumentListTile({
+    super.key,
+    required this.document,
+    required this.onTap,
+    this.onDuplicate,
+    this.onContact,
+    this.onDelete,
+  });
 
   final Document document;
   final VoidCallback onTap;
   final VoidCallback? onDuplicate;
   final VoidCallback? onContact;
+
+  /// Only a draft can be deleted, so the list passes this for drafts alone.
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +77,7 @@ class DocumentListTile extends StatelessWidget {
       trailing: MoneyText(document.total, currency: document.currency),
     );
 
-    if (onDuplicate == null && onContact == null) return tile;
+    if (onDuplicate == null && onContact == null && onDelete == null) return tile;
     return SwipeRow(
       startActions: [
         if (onDuplicate != null)
@@ -85,6 +95,13 @@ class DocumentListTile extends StatelessWidget {
             label: 'Contact',
             icon: Icons.chat_outlined,
             onPressed: onContact!,
+          ),
+        if (onDelete != null)
+          SwipeAction(
+            key: Key('document-swipe-delete-${document.id}'),
+            label: 'Delete',
+            icon: Icons.delete_outline,
+            onPressed: onDelete!,
           ),
       ],
       child: tile,

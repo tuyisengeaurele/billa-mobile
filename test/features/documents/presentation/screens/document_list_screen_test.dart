@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -175,5 +176,94 @@ void main() {
 
     expect(tester.widget<ChoiceChip>(find.byKey(const Key('document-status-all'))).selected, isTrue);
     expect(find.text('INV-0001'), findsOneWidget);
+  });
+
+  PaginatedResult<Document> page(List<Document> documents) =>
+      PaginatedResult(results: documents, total: documents.length, page: 1, pageSize: 20);
+
+  Future<void> swipeToDelete(WidgetTester tester, String id) async {
+    await tester.drag(find.text('Draft Invoice'), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('document-swipe-delete-$id')));
+    await tester.pumpAndSettle();
+  }
+
+  final draft = Document(
+    id: 'd9',
+    type: DocumentType.invoice,
+    status: DocumentStatus.draft,
+    customerId: 'c1',
+    customer: _customer,
+    issueDate: '2026-01-01T00:00:00.000Z',
+    subtotal: 0,
+    taxTotal: 0,
+    total: 0,
+    amountPaid: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  );
+
+  testWidgets('deleting a draft asks first, removes it and says so', (tester) async {
+    var listed = [draft];
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20))
+        .thenAnswer((_) async => page(listed));
+    when(() => repository.delete('d9')).thenAnswer((_) async => listed = []);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await swipeToDelete(tester, 'd9');
+
+    expect(find.text('Delete this draft?'), findsOneWidget);
+    verifyNever(() => repository.delete(any()));
+
+    await tester.tap(find.text('Delete').last);
+    await tester.pumpAndSettle();
+
+    verify(() => repository.delete('d9')).called(1);
+    expect(find.text('Draft deleted'), findsOneWidget);
+    expect(find.text('Draft Invoice'), findsNothing);
+  });
+
+  testWidgets('cancelling the question leaves the draft alone', (tester) async {
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20))
+        .thenAnswer((_) async => page([draft]));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await swipeToDelete(tester, 'd9');
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => repository.delete(any()));
+    expect(find.text('Draft Invoice'), findsOneWidget);
+  });
+
+  testWidgets('a failed delete keeps the draft, says why and offers a retry that works', (tester) async {
+    var failing = true;
+    var listed = [draft];
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20))
+        .thenAnswer((_) async => page(listed));
+    when(() => repository.delete('d9')).thenAnswer((_) async {
+      if (failing) {
+        throw DioException(requestOptions: RequestOptions(path: '/documents/d9'), type: DioExceptionType.connectionError);
+      }
+      listed = [];
+    });
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await swipeToDelete(tester, 'd9');
+    await tester.tap(find.text('Delete').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.text('Draft Invoice'), findsOneWidget);
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Draft deleted'), findsOneWidget);
+    expect(find.text('Draft Invoice'), findsNothing);
   });
 }
