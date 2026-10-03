@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/formatting/currency.dart';
+import '../../../../core/formatting/money.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
@@ -119,6 +120,16 @@ class _ReceivablesScreenState extends ConsumerState<ReceivablesScreen> {
                           ? (invoice.number ?? 'Draft')
                           : '${invoice.number ?? 'Draft'} · Due ${invoice.dueDate}',
                     ),
+                    if (invoice.amountDue != null && invoice.amountDue! < invoice.amountOwed)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          [
+                            '${formatMoney(invoice.amountDue!, currency: invoice.currency)} due now',
+                            if (invoice.nextInstallmentLabel != null) invoice.nextInstallmentLabel!,
+                          ].join(' · '),
+                        ),
+                      ),
                     const SizedBox(height: 4),
                     AgingPill(bucket: invoice.agingBucket),
                   ],
