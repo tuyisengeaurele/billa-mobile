@@ -588,4 +588,70 @@ void main() {
     expect(find.text('USD 250.50'), findsOneWidget);
     expect(find.textContaining('RWF'), findsNothing);
   });
+
+  testWidgets('an invoice on a payment plan lists each instalment with where it stands', (tester) async {
+    const planned = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      number: 'INV-0003',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 10000,
+      taxTotal: 0,
+      total: 10000,
+      amountPaid: 4000,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      schedule: [
+        DocumentScheduleStep(
+          label: 'Deposit',
+          amount: 3000,
+          dueDate: '2026-02-01',
+          paid: 3000,
+          remaining: 0,
+          status: 'PAID',
+          number: 1,
+        ),
+        DocumentScheduleStep(
+          amount: 3000,
+          dueDate: '2026-03-01',
+          paid: 1000,
+          remaining: 2000,
+          status: 'PARTIALLY_PAID',
+          number: 2,
+        ),
+        DocumentScheduleStep(
+          amount: 4000,
+          dueDate: '2026-04-01',
+          paid: 0,
+          remaining: 4000,
+          status: 'OVERDUE',
+          number: 3,
+        ),
+      ],
+      nextInstallment: DocumentNextInstallment(remaining: 2000, dueDate: '2026-03-01', number: 2),
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => planned);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Payment plan'), findsOneWidget);
+    expect(find.text('Deposit'), findsOneWidget);
+    expect(find.text('Instalment 2'), findsOneWidget);
+    expect(find.text('Instalment 3'), findsOneWidget);
+    expect(find.text('Paid'), findsOneWidget);
+    expect(find.text('Partly paid'), findsOneWidget);
+    expect(find.text('Overdue'), findsOneWidget);
+    expect(find.text('Next: Instalment 2, RWF 2,000 due 2026-03-01.'), findsOneWidget);
+  });
+
+  testWidgets('an invoice with no plan shows no plan section', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Payment plan'), findsNothing);
+  });
 }

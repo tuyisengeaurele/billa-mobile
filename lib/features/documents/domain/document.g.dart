@@ -42,6 +42,7 @@ _$DocumentNextInstallmentImpl _$$DocumentNextInstallmentImplFromJson(
       label: json['label'] as String?,
       remaining: (json['remaining'] as num).toInt(),
       dueDate: json['dueDate'] as String,
+      number: (json['number'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$DocumentNextInstallmentImplToJson(
@@ -50,6 +51,31 @@ Map<String, dynamic> _$$DocumentNextInstallmentImplToJson(
       'label': instance.label,
       'remaining': instance.remaining,
       'dueDate': instance.dueDate,
+      'number': instance.number,
+    };
+
+_$DocumentScheduleStepImpl _$$DocumentScheduleStepImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DocumentScheduleStepImpl(
+      label: json['label'] as String?,
+      amount: (json['amount'] as num).toInt(),
+      dueDate: json['dueDate'] as String,
+      paid: (json['paid'] as num).toInt(),
+      remaining: (json['remaining'] as num).toInt(),
+      status: json['status'] as String,
+      number: (json['number'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$$DocumentScheduleStepImplToJson(
+        _$DocumentScheduleStepImpl instance) =>
+    <String, dynamic>{
+      'label': instance.label,
+      'amount': instance.amount,
+      'dueDate': instance.dueDate,
+      'paid': instance.paid,
+      'remaining': instance.remaining,
+      'status': instance.status,
+      'number': instance.number,
     };
 
 _$DocumentBusinessRefImpl _$$DocumentBusinessRefImplFromJson(
@@ -137,6 +163,11 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
           ? null
           : DocumentNextInstallment.fromJson(
               json['nextInstallment'] as Map<String, dynamic>),
+      schedule: (json['schedule'] as List<dynamic>?)
+              ?.map((e) =>
+                  DocumentScheduleStep.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <DocumentScheduleStep>[],
       business: json['business'] == null
           ? null
           : DocumentBusinessRef.fromJson(
@@ -191,6 +222,7 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'recurrenceInterval': instance.recurrenceInterval,
       'recurrenceEndDate': instance.recurrenceEndDate,
       'nextInstallment': instance.nextInstallment,
+      'schedule': instance.schedule,
       'business': instance.business,
       'language': documentLanguageToJson(instance.language),
       'sentAt': instance.sentAt,
