@@ -124,6 +124,10 @@ class Document with _$Document {
     @Default(DocumentLanguage.en)
     DocumentLanguage language,
     String? sentAt,
+    // When the customer opened the public page: first, last, and how many times, as the server counts them.
+    String? firstViewedAt,
+    String? lastViewedAt,
+    @Default(0) int viewCount,
     String? publicToken,
     required int amountPaid,
     @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson) PaymentStatus? paymentStatus,

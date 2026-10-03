@@ -4,7 +4,8 @@ enum NotificationType {
   memberJoined('MEMBER_JOINED', 'Team member joined'),
   contactMessageReceived('CONTACT_MESSAGE_RECEIVED', 'Contact message received'),
   documentAccepted('DOCUMENT_ACCEPTED', 'Document accepted'),
-  documentDeclined('DOCUMENT_DECLINED', 'Document declined');
+  documentDeclined('DOCUMENT_DECLINED', 'Document declined'),
+  documentViewed('DOCUMENT_VIEWED', 'Document opened');
 
   const NotificationType(this.wireName, this.label);
 

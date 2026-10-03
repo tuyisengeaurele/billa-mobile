@@ -123,4 +123,31 @@ void main() {
     expect(find.text('USD 1,250.50'), findsOneWidget);
     expect(find.textContaining('RWF'), findsNothing);
   });
+
+  Widget tileFor(Document document) => MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(body: DocumentListTile(document: document, onTap: () {})),
+      );
+
+  testWidgets('an unpaid invoice the customer has opened says so', (tester) async {
+    await tester.pumpWidget(tileFor(_document.copyWith(sentAt: '2026-01-02T00:00:00.000Z', lastViewedAt: '2026-01-03T00:00:00.000Z', viewCount: 2)));
+
+    expect(find.text('Opened'), findsOneWidget);
+  });
+
+  testWidgets('a paid invoice no longer needs the opened mark', (tester) async {
+    await tester.pumpWidget(tileFor(_document.copyWith(
+      lastViewedAt: '2026-01-03T00:00:00.000Z',
+      viewCount: 2,
+      paymentStatus: PaymentStatus.paid,
+    )));
+
+    expect(find.text('Opened'), findsNothing);
+  });
+
+  testWidgets('a document nobody has opened has no opened mark', (tester) async {
+    await tester.pumpWidget(tileFor(_document));
+
+    expect(find.text('Opened'), findsNothing);
+  });
 }

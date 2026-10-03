@@ -1542,7 +1542,11 @@ mixin _$Document {
   DocumentBusinessRef? get business => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language => throw _privateConstructorUsedError;
-  String? get sentAt => throw _privateConstructorUsedError;
+  String? get sentAt =>
+      throw _privateConstructorUsedError; // When the customer opened the public page: first, last, and how many times, as the server counts them.
+  String? get firstViewedAt => throw _privateConstructorUsedError;
+  String? get lastViewedAt => throw _privateConstructorUsedError;
+  int get viewCount => throw _privateConstructorUsedError;
   String? get publicToken => throw _privateConstructorUsedError;
   int get amountPaid => throw _privateConstructorUsedError;
   @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -1599,6 +1603,9 @@ abstract class $DocumentCopyWith<$Res> {
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
       String? sentAt,
+      String? firstViewedAt,
+      String? lastViewedAt,
+      int viewCount,
       String? publicToken,
       int amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -1659,6 +1666,9 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
+    Object? firstViewedAt = freezed,
+    Object? lastViewedAt = freezed,
+    Object? viewCount = null,
     Object? publicToken = freezed,
     Object? amountPaid = null,
     Object? paymentStatus = freezed,
@@ -1770,6 +1780,18 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
           ? _value.sentAt
           : sentAt // ignore: cast_nullable_to_non_nullable
               as String?,
+      firstViewedAt: freezed == firstViewedAt
+          ? _value.firstViewedAt
+          : firstViewedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastViewedAt: freezed == lastViewedAt
+          ? _value.lastViewedAt
+          : lastViewedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      viewCount: null == viewCount
+          ? _value.viewCount
+          : viewCount // ignore: cast_nullable_to_non_nullable
+              as int,
       publicToken: freezed == publicToken
           ? _value.publicToken
           : publicToken // ignore: cast_nullable_to_non_nullable
@@ -1933,6 +1955,9 @@ abstract class _$$DocumentImplCopyWith<$Res>
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
       String? sentAt,
+      String? firstViewedAt,
+      String? lastViewedAt,
+      int viewCount,
       String? publicToken,
       int amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -1997,6 +2022,9 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
+    Object? firstViewedAt = freezed,
+    Object? lastViewedAt = freezed,
+    Object? viewCount = null,
     Object? publicToken = freezed,
     Object? amountPaid = null,
     Object? paymentStatus = freezed,
@@ -2108,6 +2136,18 @@ class __$$DocumentImplCopyWithImpl<$Res>
           ? _value.sentAt
           : sentAt // ignore: cast_nullable_to_non_nullable
               as String?,
+      firstViewedAt: freezed == firstViewedAt
+          ? _value.firstViewedAt
+          : firstViewedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastViewedAt: freezed == lastViewedAt
+          ? _value.lastViewedAt
+          : lastViewedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
+      viewCount: null == viewCount
+          ? _value.viewCount
+          : viewCount // ignore: cast_nullable_to_non_nullable
+              as int,
       publicToken: freezed == publicToken
           ? _value.publicToken
           : publicToken // ignore: cast_nullable_to_non_nullable
@@ -2199,6 +2239,9 @@ class _$DocumentImpl implements _Document {
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       this.language = DocumentLanguage.en,
       this.sentAt,
+      this.firstViewedAt,
+      this.lastViewedAt,
+      this.viewCount = 0,
       this.publicToken,
       required this.amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -2287,6 +2330,14 @@ class _$DocumentImpl implements _Document {
   final DocumentLanguage language;
   @override
   final String? sentAt;
+// When the customer opened the public page: first, last, and how many times, as the server counts them.
+  @override
+  final String? firstViewedAt;
+  @override
+  final String? lastViewedAt;
+  @override
+  @JsonKey()
+  final int viewCount;
   @override
   final String? publicToken;
   @override
@@ -2324,7 +2375,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, business: $business, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, business: $business, language: $language, sentAt: $sentAt, firstViewedAt: $firstViewedAt, lastViewedAt: $lastViewedAt, viewCount: $viewCount, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -2371,6 +2422,12 @@ class _$DocumentImpl implements _Document {
             (identical(other.language, language) ||
                 other.language == language) &&
             (identical(other.sentAt, sentAt) || other.sentAt == sentAt) &&
+            (identical(other.firstViewedAt, firstViewedAt) ||
+                other.firstViewedAt == firstViewedAt) &&
+            (identical(other.lastViewedAt, lastViewedAt) ||
+                other.lastViewedAt == lastViewedAt) &&
+            (identical(other.viewCount, viewCount) ||
+                other.viewCount == viewCount) &&
             (identical(other.publicToken, publicToken) ||
                 other.publicToken == publicToken) &&
             (identical(other.amountPaid, amountPaid) ||
@@ -2426,6 +2483,9 @@ class _$DocumentImpl implements _Document {
         business,
         language,
         sentAt,
+        firstViewedAt,
+        lastViewedAt,
+        viewCount,
         publicToken,
         amountPaid,
         paymentStatus,
@@ -2486,6 +2546,9 @@ abstract class _Document implements Document {
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       final DocumentLanguage language,
       final String? sentAt,
+      final String? firstViewedAt,
+      final String? lastViewedAt,
+      final int viewCount,
       final String? publicToken,
       required final int amountPaid,
       @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson)
@@ -2557,6 +2620,12 @@ abstract class _Document implements Document {
   DocumentLanguage get language;
   @override
   String? get sentAt;
+  @override // When the customer opened the public page: first, last, and how many times, as the server counts them.
+  String? get firstViewedAt;
+  @override
+  String? get lastViewedAt;
+  @override
+  int get viewCount;
   @override
   String? get publicToken;
   @override

@@ -674,4 +674,59 @@ void main() {
 
     expect(find.textContaining('Repeats'), findsNothing);
   });
+
+  testWidgets('a sent invoice the customer opened says when and how many times', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document.copyWith(
+          sentAt: '2020-01-01T00:00:00.000Z',
+          lastViewedAt: '2020-01-02T00:00:00.000Z',
+          viewCount: 3,
+        ));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Opened by the customer 2020-01-02 (3 views)'), findsOneWidget);
+  });
+
+  testWidgets('one view reads as one view, not one views', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document.copyWith(
+          sentAt: '2020-01-01T00:00:00.000Z',
+          lastViewedAt: '2020-01-02T00:00:00.000Z',
+          viewCount: 1,
+        ));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Opened by the customer 2020-01-02 (1 view)'), findsOneWidget);
+  });
+
+  testWidgets('a sent invoice nobody has opened says so', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document.copyWith(sentAt: '2020-01-01T00:00:00.000Z'));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sent, not opened yet'), findsOneWidget);
+  });
+
+  testWidgets('an invoice that was never sent says nothing about being opened', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Opened by'), findsNothing);
+    expect(find.text('Sent, not opened yet'), findsNothing);
+  });
+
+  testWidgets('a draft says nothing about being opened even if it has a send date', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document.copyWith(
+          status: DocumentStatus.draft,
+          sentAt: '2020-01-01T00:00:00.000Z',
+        ));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sent, not opened yet'), findsNothing);
+  });
 }

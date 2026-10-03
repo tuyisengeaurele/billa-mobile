@@ -204,4 +204,24 @@ void main() {
     expect(document.nextRecurrenceAt, '2026-11-01T00:00:00.000Z');
     expect(Document.fromJson(_documentJson()).nextRecurrenceAt, isNull);
   });
+
+  test('reads when a customer first and last opened a document and how many times', () {
+    final document = Document.fromJson(_documentJson(extra: {
+      'firstViewedAt': '2026-02-01T08:00:00.000Z',
+      'lastViewedAt': '2026-02-03T09:30:00.000Z',
+      'viewCount': 4,
+    }));
+
+    expect(document.firstViewedAt, '2026-02-01T08:00:00.000Z');
+    expect(document.lastViewedAt, '2026-02-03T09:30:00.000Z');
+    expect(document.viewCount, 4);
+  });
+
+  test('a document nobody has opened has no view times and no views', () {
+    final document = Document.fromJson(_documentJson());
+
+    expect(document.firstViewedAt, isNull);
+    expect(document.lastViewedAt, isNull);
+    expect(document.viewCount, 0);
+  });
 }

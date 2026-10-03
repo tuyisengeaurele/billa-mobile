@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/money_text.dart';
 import '../../../../core/widgets/swipe_row.dart';
 import '../../domain/document.dart';
@@ -44,7 +45,23 @@ class DocumentListTile extends StatelessWidget {
         children: [
           Text('${documentTypeLabel(document.type)} · ${document.customer.name}'),
           const SizedBox(height: 4),
-          DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
+          Row(
+            children: [
+              DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
+              // Once it is paid the customer opening it again no longer matters.
+              if (document.lastViewedAt != null && document.paymentStatus != PaymentStatus.paid) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).extension<AppColors>()!.neutral100,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text('Opened', style: Theme.of(context).textTheme.labelSmall),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
       trailing: MoneyText(document.total, currency: document.currency),
