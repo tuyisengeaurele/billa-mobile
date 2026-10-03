@@ -25,14 +25,18 @@ Future<void> deleteDraft(BuildContext context, WidgetRef ref, {required Document
   Future<void> attempt() async {
     try {
       await repository.delete(document.id);
-      await list.refresh();
-      messenger?.showSnackBar(const SnackBar(content: Text('Draft deleted')));
     } catch (e) {
       messenger?.showSnackBar(SnackBar(
         content: Text(describeActionError(e)),
         action: SnackBarAction(label: 'Retry', onPressed: attempt),
       ));
+      return;
     }
+    // The draft is gone by now, so a failed refresh must not offer to delete it again.
+    final refreshed = await list.pullToRefresh();
+    messenger?.showSnackBar(SnackBar(
+      content: Text(refreshed ? 'Draft deleted' : 'Draft deleted. Pull down to refresh the list'),
+    ));
   }
 
   await attempt();

@@ -266,4 +266,27 @@ void main() {
     expect(find.text('Draft deleted'), findsOneWidget);
     expect(find.text('Draft Invoice'), findsNothing);
   });
+
+  testWidgets('if the list cannot refresh after the delete, says it was deleted and never deletes twice', (tester) async {
+    var listed = [draft];
+    var refreshFails = false;
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer((_) async {
+      if (refreshFails) throw DioException(requestOptions: RequestOptions(path: '/documents'), type: DioExceptionType.connectionError);
+      return page(listed);
+    });
+    when(() => repository.delete('d9')).thenAnswer((_) async {
+      listed = [];
+      refreshFails = true;
+    });
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await swipeToDelete(tester, 'd9');
+    await tester.tap(find.text('Delete').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Draft deleted. Pull down to refresh the list'), findsOneWidget);
+    verify(() => repository.delete('d9')).called(1);
+    expect(find.text('Retry'), findsNothing);
+  });
 }
