@@ -55,12 +55,14 @@ class DocumentListTile extends StatelessWidget {
         children: [
           Text('${documentTypeLabel(document.type)} · ${document.customer.name}'),
           const SizedBox(height: 4),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
               // Once it is paid the customer opening it again no longer matters.
-              if (document.lastViewedAt != null && document.paymentStatus != PaymentStatus.paid) ...[
-                const SizedBox(width: 8),
+              if (document.lastViewedAt != null && document.paymentStatus != PaymentStatus.paid)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -69,7 +71,6 @@ class DocumentListTile extends StatelessWidget {
                   ),
                   child: Text('Opened', style: Theme.of(context).textTheme.labelSmall),
                 ),
-              ],
             ],
           ),
         ],

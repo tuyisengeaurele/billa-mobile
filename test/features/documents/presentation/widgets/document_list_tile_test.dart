@@ -178,4 +178,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-swipe-delete-d1')), findsNothing);
   });
+
+  testWidgets('the status and opened chips wrap on a narrow phone with large text instead of overflowing', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: MediaQuery(
+        data: const MediaQueryData(size: Size(320, 640), textScaler: TextScaler.linear(1.6)),
+        child: Scaffold(
+          body: DocumentListTile(
+            document: _document.copyWith(
+              paymentStatus: PaymentStatus.partiallyPaid,
+              lastViewedAt: '2026-01-03T00:00:00.000Z',
+              amountPaid: 100,
+            ),
+            onTap: () {},
+          ),
+        ),
+      ),
+    ));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Opened'), findsOneWidget);
+  });
 }
