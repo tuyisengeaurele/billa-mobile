@@ -23,6 +23,7 @@ import '../providers/document_repository_provider.dart';
 import '../widgets/credit_limit_warning.dart';
 import '../widgets/currency_section.dart';
 import '../widgets/document_list_tile.dart' show documentTypeLabel;
+import '../widgets/installments_section.dart';
 
 String _formatDisplayDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -178,34 +179,42 @@ class _DocumentEditorForm extends ConsumerWidget {
               if (picked != null) controller.setIssueDate(picked);
             },
           ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(state.dueDate == null ? 'Add a due date' : 'Due ${_formatDisplayDate(state.dueDate!)}'),
-            trailing: state.dueDate == null
-                ? const Icon(Icons.calendar_today, size: 20)
-                : IconButton(icon: const Icon(Icons.close), onPressed: () => controller.setDueDate(null)),
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: state.dueDate ?? state.issueDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-              );
-              if (picked != null) controller.setDueDate(picked);
-            },
-          ),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final option in paymentTermOptions)
-                ChoiceChip(
-                  key: Key('payment-term-${option.days}'),
-                  label: Text(option.label),
-                  selected: state.paymentTermDays == option.days,
-                  onSelected: (_) => controller.setPaymentTerm(option.days),
-                ),
-            ],
-          ),
+          // With a payment plan the invoice falls due on its last instalment, so the date and terms
+          // are not offered; the server sets the due date from the plan.
+          if (state.installments.isEmpty) ...[
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(state.dueDate == null ? 'Add a due date' : 'Due ${_formatDisplayDate(state.dueDate!)}'),
+              trailing: state.dueDate == null
+                  ? const Icon(Icons.calendar_today, size: 20)
+                  : IconButton(icon: const Icon(Icons.close), onPressed: () => controller.setDueDate(null)),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: state.dueDate ?? state.issueDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) controller.setDueDate(picked);
+              },
+            ),
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final option in paymentTermOptions)
+                  ChoiceChip(
+                    key: Key('payment-term-${option.days}'),
+                    label: Text(option.label),
+                    selected: state.paymentTermDays == option.days,
+                    onSelected: (_) => controller.setPaymentTerm(option.days),
+                  ),
+              ],
+            ),
+          ] else
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Due ${state.plannedInstallments.last.dueDate}, the date of the last instalment'),
+            ),
           if (state.referencedDocumentAllowed) ...[
             const SizedBox(height: 8),
             ListTile(
@@ -307,6 +316,8 @@ class _DocumentEditorForm extends ConsumerWidget {
               MoneyText(totals.total, currency: state.currency, style: Theme.of(context).textTheme.titleMedium),
             ],
           ),
+          const SizedBox(height: 16),
+          InstallmentsSection(args: args, state: state),
         ],
       ),
     );

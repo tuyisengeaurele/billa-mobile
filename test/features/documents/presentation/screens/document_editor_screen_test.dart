@@ -511,4 +511,106 @@ void main() {
     expect(find.text('Saved to your items'), findsOneWidget);
     verify(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0)).called(2);
   });
+
+  Future<void> openInvoiceWithTotal(WidgetTester tester, {DocumentType type = DocumentType.invoice}) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: type)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '10000');
+    await tester.pumpAndSettle();
+  }
+
+  TextField field(WidgetTester tester, String key) => tester.widget<TextField>(find.byKey(Key(key)));
+
+  testWidgets('an invoice offers a payment plan, a quote does not', (tester) async {
+    await openInvoiceWithTotal(tester);
+    expect(find.text('Payment plan'), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-two')), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-three')), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-deposit')), findsOneWidget);
+
+    await openInvoiceWithTotal(tester, type: DocumentType.quote);
+    expect(find.text('Payment plan'), findsNothing);
+  });
+
+  testWidgets('choosing two parts shows two instalments, the last one being the balance', (tester) async {
+    await openInvoiceWithTotal(tester);
+
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('installment-row-0')), findsOneWidget);
+    expect(find.byKey(const Key('installment-row-1')), findsOneWidget);
+    expect(field(tester, 'installment-amount-0').controller!.text, '5900');
+    expect(field(tester, 'installment-amount-1').controller!.text, '5900');
+    expect(field(tester, 'installment-amount-1').readOnly, isTrue);
+    expect(find.text('Balance'), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-two')), findsNothing);
+  });
+
+  testWidgets('changing an earlier amount moves the balance', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('installment-amount-0')), '2000');
+    await tester.pumpAndSettle();
+
+    expect(field(tester, 'installment-amount-1').controller!.text, '9800');
+  });
+
+  testWidgets('instalments that add up to the whole total say what to do', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('installment-amount-0')), '20000');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('The earlier instalments already add up to the whole total. Lower them so the balance is more than zero.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a row can be added before the balance and removed again, never below two', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(find.byKey(const Key('installment-remove-0'))).onPressed, isNull);
+
+    await tester.tap(find.byKey(const Key('installment-add')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('installment-row-2')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('installment-remove-0')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('installment-row-2')), findsNothing);
+  });
+
+  testWidgets('a name can be given to an instalment', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('installment-label-0')), 'First half');
+    await tester.pumpAndSettle();
+
+    expect(field(tester, 'installment-label-0').controller!.text, 'First half');
+  });
+
+  testWidgets('paying in full again removes the plan and brings back the due date and terms', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('payment-term-30')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('plan-clear')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('plan-preset-two')), findsOneWidget);
+    expect(find.byKey(const Key('payment-term-30')), findsOneWidget);
+  });
 }
