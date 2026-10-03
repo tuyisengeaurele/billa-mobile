@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/formatting/file_size.dart';
+import '../../../../core/media/image_picker_provider.dart';
 import '../../../../core/media/photo_picker.dart';
 import '../../../../core/network/asset_url.dart';
 import '../../../../core/platform/link_launcher.dart';
@@ -10,6 +12,16 @@ import '../../domain/document.dart';
 import '../providers/document_repository_provider.dart';
 
 const maxAttachments = 5;
+const _maxBytes = 5 * 1024 * 1024;
+
+/// A reason the photo cannot be attached that the user can act on; [canRetry] is false when trying the same
+/// photo again could never work.
+class _AttachProblem implements Exception {
+  const _AttachProblem(this.message, {this.canRetry = true});
+
+  final String message;
+  final bool canRetry;
+}
 
 /// The files kept with a document. It owns its list because adding or removing a file changes nothing else on
 /// the document, so the screen around it need not reload.
@@ -40,7 +52,12 @@ class _AttachmentsSectionState extends ConsumerState<AttachmentsSection> {
       await action();
       if (mounted) setState(() => _retry = null);
     } catch (e) {
-      if (mounted) setState(() => _error = describeActionError(e));
+      if (mounted) {
+        setState(() {
+          _error = e is _AttachProblem ? e.message : describeActionError(e);
+          if (e is _AttachProblem && !e.canRetry) _retry = null;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -68,10 +85,26 @@ class _AttachmentsSectionState extends ConsumerState<AttachmentsSection> {
       ),
     );
     if (source == null || !mounted) return;
-    final photo = await ref.read(photoPickerProvider)(source);
-    if (photo == null) return;
+    // Kept across a retry so a failed upload sends the same photo again instead of asking for another.
+    PickedImage? photo;
     await _run(() async {
-      final saved = await ref.read(documentRepositoryProvider).uploadAttachment(widget.documentId, photo.bytes, photo.name);
+      try {
+        photo ??= await ref.read(photoPickerProvider)(source);
+      } on PlatformException {
+        throw const _AttachProblem(
+          "Couldn't open the camera or photos. Allow access in your phone's settings, then try again",
+        );
+      }
+      final chosen = photo;
+      if (chosen == null) return;
+      if (chosen.bytes.length > _maxBytes) {
+        throw const _AttachProblem('That photo is over 5 MB. Choose a smaller one or take it again', canRetry: false);
+      }
+      final saved = await ref.read(documentRepositoryProvider).uploadAttachment(
+            widget.documentId,
+            chosen.bytes,
+            chosen.name,
+          );
       if (mounted) setState(() => _files = [..._files, saved]);
     });
   }

@@ -9,6 +9,9 @@ final photoPickerProvider = Provider<Future<PickedImage?> Function(PhotoSource)>
   return (source) async {
     final picked = await ImagePicker().pickImage(
       source: source == PhotoSource.camera ? ImageSource.camera : ImageSource.gallery,
+      // A full-size photo from a modern camera can pass the server's 5 MB limit, so it is scaled down here.
+      maxWidth: 2000,
+      imageQuality: 85,
     );
     if (picked == null) return null;
     return (bytes: await picked.readAsBytes(), name: picked.name);

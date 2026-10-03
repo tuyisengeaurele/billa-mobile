@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -29,6 +30,7 @@ void main() {
   late List<PhotoSource> asked;
   late List<Uri> opened;
   PickedImage? picked;
+  Object? pickerError;
   var canOpen = true;
 
   setUp(() {
@@ -36,6 +38,7 @@ void main() {
     asked = [];
     opened = [];
     picked = (bytes: [1, 2, 3], name: 'photo.jpg');
+    pickerError = null;
     canOpen = true;
   });
 
@@ -44,6 +47,7 @@ void main() {
           documentRepositoryProvider.overrideWithValue(repository),
           photoPickerProvider.overrideWithValue((source) async {
             asked.add(source);
+            if (pickerError != null) throw pickerError!;
             return picked;
           }),
           externalUrlOpenerProvider.overrideWithValue((uri) async {
@@ -215,5 +219,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("Couldn't open the file. Check your connection and try again"), findsOneWidget);
+  });
+
+  testWidgets('a photo over 5 MB is refused up front, saying what to do, with no pointless retry', (tester) async {
+    picked = (bytes: List.filled(5 * 1024 * 1024 + 1, 0), name: 'big.jpg');
+    await tester.pumpWidget(build([]));
+
+    await tester.tap(find.byKey(const Key('attachment-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gallery'));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => repository.uploadAttachment(any(), any(), any()));
+    expect(find.text('That photo is over 5 MB. Choose a smaller one or take it again'), findsOneWidget);
+    expect(find.byKey(const Key('attachment-retry')), findsNothing);
+  });
+
+  testWidgets('a camera or photo access problem says how to fix it, and Retry asks again', (tester) async {
+    pickerError = PlatformException(code: 'camera_access_denied');
+    await tester.pumpWidget(build([]));
+
+    await tester.tap(find.byKey(const Key('attachment-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Camera'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text("Couldn't open the camera or photos. Allow access in your phone's settings, then try again"),
+      findsOneWidget,
+    );
+
+    pickerError = null;
+    when(() => repository.uploadAttachment('d1', [1, 2, 3], 'photo.jpg'))
+        .thenAnswer((_) async => _file('a9', name: 'photo.jpg'));
+    await tester.tap(find.byKey(const Key('attachment-retry')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('photo.jpg'), findsOneWidget);
   });
 }
