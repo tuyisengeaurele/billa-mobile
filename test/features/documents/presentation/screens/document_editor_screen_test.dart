@@ -227,7 +227,7 @@ void main() {
     });
   });
 
-  testWidgets('a draft with a payment plan says the plan is kept and where to change it', (tester) async {
+  testWidgets('a draft with a payment plan no longer says the plan can only be changed on the web', (tester) async {
     when(() => documentRepository.get('d1')).thenAnswer((_) async => _savedDocument().copyWith(
           installments: const [
             DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
@@ -238,7 +238,7 @@ void main() {
     await tester.pumpWidget(buildApp(DocumentEditorScreen.edit(documentId: 'd1')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('paid in instalments set up on the web'), findsOneWidget);
+    expect(find.textContaining('set up on the web'), findsNothing);
   });
 
   testWidgets('choosing USD shows the bank rate, and a price is typed in dollars and cents', (tester) async {

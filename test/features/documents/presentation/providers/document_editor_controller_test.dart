@@ -1,3 +1,4 @@
+import 'package:billa_mobile/features/documents/domain/installment_plan.dart';
 import 'package:billa_mobile/features/documents/domain/exchange_rates.dart';
 import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,6 +153,17 @@ void main() {
           subtotal: 11800,
           taxTotal: 0,
           total: 11800,
+          lines: const [
+            DocumentLine(
+              id: 'l1',
+              description: 'Printing',
+              quantity: 1,
+              unitPrice: 11800,
+              taxRate: 0,
+              lineTotal: 11800,
+              sortOrder: 0,
+            ),
+          ],
           language: language,
           currency: currency,
           exchangeRate: rate,
@@ -189,7 +201,7 @@ void main() {
         InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
         InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
       ]);
-      expect(state.preservedPlanNote, contains('instalments'));
+      expect(state.preservedPlanNote, isNull);
     });
 
     test('keeps its repeat schedule when saved', () async {
@@ -462,5 +474,192 @@ void main() {
     expect(line.itemId, 'i9');
     expect(line.description, 'Printing');
     expect(line.unitPrice, 5000);
+  });
+
+  group('payment plan', () {
+    const arg = DocumentEditorArgs.create(DocumentType.invoice);
+
+    Future<DocumentEditorController> open({int price = 10000}) async {
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      await container.read(documentEditorControllerProvider(arg).future);
+      final notifier = container.read(documentEditorControllerProvider(arg).notifier);
+      notifier.setIssueDate(DateTime(2026, 9, 1));
+      notifier.setCustomer('c1', 'Acme');
+      notifier.addLine();
+      notifier.setLineDescription(0, 'Printing');
+      notifier.setLineTaxRate(0, 0);
+      notifier.setLineUnitPrice(0, price);
+      return notifier;
+    }
+
+    DocumentEditorState current() => container.read(documentEditorControllerProvider(arg)).requireValue;
+
+    test('two equal parts split the total, the first falling due a month after the issue date', () async {
+      final notifier = await open();
+
+      notifier.startPlan(PlanPreset.twoParts);
+
+      expect(current().plannedInstallments.map((r) => (r.amount, r.dueDate)), [
+        (5000, '2026-10-01'),
+        (5000, '2026-11-01'),
+      ]);
+    });
+
+    test('the first instalment follows a due date the user already chose', () async {
+      final notifier = await open();
+      notifier.setDueDate(DateTime(2026, 9, 20));
+
+      notifier.startPlan(PlanPreset.twoParts);
+
+      expect(current().plannedInstallments.first.dueDate, '2026-09-20');
+    });
+
+    test('a deposit preset takes thirty percent now and the balance later', () async {
+      final notifier = await open();
+
+      notifier.startPlan(PlanPreset.deposit);
+
+      expect(current().plannedInstallments.map((r) => (r.label, r.amount)), [('Deposit', 3000), ('Balance', 7000)]);
+    });
+
+    test('editing an earlier amount moves the balance', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+
+      notifier.setInstallmentAmount(0, 2000);
+
+      expect(current().plannedInstallments.map((r) => r.amount), [2000, 8000]);
+    });
+
+    test('changing a line price moves the balance, so the saved plan always adds up', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.deposit);
+
+      notifier.setLineUnitPrice(0, 20000);
+
+      expect(current().plannedInstallments.map((r) => r.amount), [3000, 17000]);
+      expect(current().toInput().installments!.fold<int>(0, (a, r) => a + r.amount), 20000);
+    });
+
+    test('earlier instalments that reach the total are reported and block saving', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+      expect(current().isSavable, isTrue);
+
+      notifier.setInstallmentAmount(0, 10000);
+
+      expect(
+        current().installmentProblem,
+        'The earlier instalments already add up to the whole total. Lower them so the balance is more than zero.',
+      );
+      expect(current().isSavable, isFalse);
+    });
+
+    test('adding puts a new row before the balance, up to twelve, and removing stops at two', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+
+      notifier.addInstallment();
+      expect(current().installments, hasLength(3));
+      expect(current().installments.last.amount, 5000);
+
+      for (var i = 0; i < 20; i++) {
+        notifier.addInstallment();
+      }
+      expect(current().installments, hasLength(12));
+
+      for (var i = 0; i < 20; i++) {
+        notifier.removeInstallment(0);
+      }
+      expect(current().installments, hasLength(2));
+    });
+
+    test('a name left empty is no name, and a date is kept as a plain date', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+
+      notifier.setInstallmentLabel(0, 'Deposit');
+      notifier.setInstallmentLabel(0, '  ');
+      notifier.setInstallmentDate(1, DateTime(2026, 12, 24));
+
+      expect(current().installments.first.label, isNull);
+      expect(current().installments.last.dueDate, '2026-12-24');
+    });
+
+    test('paying in full again drops the plan from the request', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+      expect(current().toInput().installments, isNotNull);
+
+      notifier.clearPlan();
+
+      expect(current().installments, isEmpty);
+      expect(current().toInput().installments, isNull);
+    });
+
+    test('a draft with a plan keeps its currency, because the amounts are in it', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+
+      expect(current().currencyLocked, isTrue);
+      await notifier.setCurrency(Currency.usd);
+
+      expect(current().currency, Currency.rwf);
+    });
+
+    test('a foreign plan works in cents', () async {
+      when(() => repository.rates()).thenAnswer(
+        (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+      );
+      final notifier = await open(price: 0);
+      await notifier.setCurrency(Currency.usd);
+      notifier.setLineUnitPrice(0, 10000);
+
+      notifier.startPlan(PlanPreset.twoParts);
+
+      expect(current().plannedInstallments.map((r) => r.amount), [5000, 5000]);
+      expect(current().toInput().currency, Currency.usd);
+    });
+
+    test('only an invoice can be paid in instalments', () async {
+      const quote = DocumentEditorArgs.create(DocumentType.quote);
+      container.listen(documentEditorControllerProvider(quote), (_, _) {});
+      await container.read(documentEditorControllerProvider(quote).future);
+      final notifier = container.read(documentEditorControllerProvider(quote).notifier);
+      notifier.addLine();
+      notifier.setLineUnitPrice(0, 10000);
+
+      notifier.startPlan(PlanPreset.twoParts);
+
+      expect(container.read(documentEditorControllerProvider(quote)).requireValue.installments, isEmpty);
+    });
+
+    test('a repeating invoice cannot also be paid in instalments', () async {
+      when(() => repository.get('d1')).thenAnswer((_) async => Document(
+            id: 'd1',
+            type: DocumentType.invoice,
+            status: DocumentStatus.draft,
+            customerId: 'c1',
+            customer: _customer,
+            issueDate: '2026-09-01T00:00:00.000Z',
+            subtotal: 10000,
+            taxTotal: 0,
+            total: 10000,
+            amountPaid: 0,
+            recurrenceInterval: 'MONTHLY',
+            createdAt: '2026-09-01T00:00:00.000Z',
+            updatedAt: '2026-09-01T00:00:00.000Z',
+          ));
+      const repeating = DocumentEditorArgs.edit('d1');
+      container.listen(documentEditorControllerProvider(repeating), (_, _) {});
+      await container.read(documentEditorControllerProvider(repeating).future);
+      final notifier = container.read(documentEditorControllerProvider(repeating).notifier);
+
+      notifier.startPlan(PlanPreset.twoParts);
+
+      final state = container.read(documentEditorControllerProvider(repeating)).requireValue;
+      expect(state.installments, isEmpty);
+      expect(state.canHavePlan, isFalse);
+    });
   });
 }
