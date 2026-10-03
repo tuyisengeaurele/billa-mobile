@@ -18,6 +18,7 @@ const businessSettingsRoutes = [
   '/settings/business/documents',
   '/settings/business/numbering',
   '/settings/business/logo',
+  '/settings/business/activity',
 ];
 
 /// Hosts [screen] at [path]; every other settings route answers with a
