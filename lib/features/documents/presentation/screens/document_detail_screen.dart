@@ -29,6 +29,7 @@ import '../providers/document_duplicate.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
 import '../widgets/attachments_section.dart';
+import '../widgets/document_reminders_switch.dart';
 import '../widgets/document_status_pill.dart';
 import 'record_payment_screen.dart' show paymentMethodLabel;
 
@@ -470,6 +471,14 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                 if (canReactivate) ...[
                   const SizedBox(height: 8),
                   AppButton(label: 'Reactivate', isLoading: _actionInProgress, onPressed: _reactivate),
+                ],
+                if (canRecordPayment) ...[
+                  const SizedBox(height: 16),
+                  DocumentRemindersSwitch(
+                    key: ValueKey('reminders-${document.id}'),
+                    documentId: document.id,
+                    initial: document.remindersEnabled,
+                  ),
                 ],
                 const SizedBox(height: 24),
                 // Files can be added to a finalized document too, since they never change what it says.

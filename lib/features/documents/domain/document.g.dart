@@ -204,6 +204,7 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
           ? DocumentLanguage.en
           : documentLanguageFromJson(json['language'] as String),
       sentAt: json['sentAt'] as String?,
+      remindersEnabled: json['remindersEnabled'] as bool? ?? true,
       firstViewedAt: json['firstViewedAt'] as String?,
       lastViewedAt: json['lastViewedAt'] as String?,
       viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
@@ -259,6 +260,7 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'business': instance.business,
       'language': documentLanguageToJson(instance.language),
       'sentAt': instance.sentAt,
+      'remindersEnabled': instance.remindersEnabled,
       'firstViewedAt': instance.firstViewedAt,
       'lastViewedAt': instance.lastViewedAt,
       'viewCount': instance.viewCount,

@@ -144,6 +144,8 @@ class Document with _$Document {
     @Default(DocumentLanguage.en)
     DocumentLanguage language,
     String? sentAt,
+    // Whether automatic payment reminders may go out for this document; the business setting still applies.
+    @Default(true) bool remindersEnabled,
     // When the customer opened the public page: first, last, and how many times, as the server counts them.
     String? firstViewedAt,
     String? lastViewedAt,

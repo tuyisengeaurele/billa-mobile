@@ -1793,6 +1793,8 @@ mixin _$Document {
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language => throw _privateConstructorUsedError;
   String? get sentAt =>
+      throw _privateConstructorUsedError; // Whether automatic payment reminders may go out for this document; the business setting still applies.
+  bool get remindersEnabled =>
       throw _privateConstructorUsedError; // When the customer opened the public page: first, last, and how many times, as the server counts them.
   String? get firstViewedAt => throw _privateConstructorUsedError;
   String? get lastViewedAt => throw _privateConstructorUsedError;
@@ -1854,6 +1856,7 @@ abstract class $DocumentCopyWith<$Res> {
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
       String? sentAt,
+      bool remindersEnabled,
       String? firstViewedAt,
       String? lastViewedAt,
       int viewCount,
@@ -1918,6 +1921,7 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
+    Object? remindersEnabled = null,
     Object? firstViewedAt = freezed,
     Object? lastViewedAt = freezed,
     Object? viewCount = null,
@@ -2036,6 +2040,10 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
           ? _value.sentAt
           : sentAt // ignore: cast_nullable_to_non_nullable
               as String?,
+      remindersEnabled: null == remindersEnabled
+          ? _value.remindersEnabled
+          : remindersEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
       firstViewedAt: freezed == firstViewedAt
           ? _value.firstViewedAt
           : firstViewedAt // ignore: cast_nullable_to_non_nullable
@@ -2212,6 +2220,7 @@ abstract class _$$DocumentImplCopyWith<$Res>
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
       String? sentAt,
+      bool remindersEnabled,
       String? firstViewedAt,
       String? lastViewedAt,
       int viewCount,
@@ -2280,6 +2289,7 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
+    Object? remindersEnabled = null,
     Object? firstViewedAt = freezed,
     Object? lastViewedAt = freezed,
     Object? viewCount = null,
@@ -2398,6 +2408,10 @@ class __$$DocumentImplCopyWithImpl<$Res>
           ? _value.sentAt
           : sentAt // ignore: cast_nullable_to_non_nullable
               as String?,
+      remindersEnabled: null == remindersEnabled
+          ? _value.remindersEnabled
+          : remindersEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
       firstViewedAt: freezed == firstViewedAt
           ? _value.firstViewedAt
           : firstViewedAt // ignore: cast_nullable_to_non_nullable
@@ -2502,6 +2516,7 @@ class _$DocumentImpl implements _Document {
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       this.language = DocumentLanguage.en,
       this.sentAt,
+      this.remindersEnabled = true,
       this.firstViewedAt,
       this.lastViewedAt,
       this.viewCount = 0,
@@ -2603,6 +2618,10 @@ class _$DocumentImpl implements _Document {
   final DocumentLanguage language;
   @override
   final String? sentAt;
+// Whether automatic payment reminders may go out for this document; the business setting still applies.
+  @override
+  @JsonKey()
+  final bool remindersEnabled;
 // When the customer opened the public page: first, last, and how many times, as the server counts them.
   @override
   final String? firstViewedAt;
@@ -2648,7 +2667,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, attachments: $attachments, business: $business, language: $language, sentAt: $sentAt, firstViewedAt: $firstViewedAt, lastViewedAt: $lastViewedAt, viewCount: $viewCount, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, attachments: $attachments, business: $business, language: $language, sentAt: $sentAt, remindersEnabled: $remindersEnabled, firstViewedAt: $firstViewedAt, lastViewedAt: $lastViewedAt, viewCount: $viewCount, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -2697,6 +2716,8 @@ class _$DocumentImpl implements _Document {
             (identical(other.language, language) ||
                 other.language == language) &&
             (identical(other.sentAt, sentAt) || other.sentAt == sentAt) &&
+            (identical(other.remindersEnabled, remindersEnabled) ||
+                other.remindersEnabled == remindersEnabled) &&
             (identical(other.firstViewedAt, firstViewedAt) ||
                 other.firstViewedAt == firstViewedAt) &&
             (identical(other.lastViewedAt, lastViewedAt) ||
@@ -2759,6 +2780,7 @@ class _$DocumentImpl implements _Document {
         business,
         language,
         sentAt,
+        remindersEnabled,
         firstViewedAt,
         lastViewedAt,
         viewCount,
@@ -2823,6 +2845,7 @@ abstract class _Document implements Document {
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       final DocumentLanguage language,
       final String? sentAt,
+      final bool remindersEnabled,
       final String? firstViewedAt,
       final String? lastViewedAt,
       final int viewCount,
@@ -2899,6 +2922,8 @@ abstract class _Document implements Document {
   DocumentLanguage get language;
   @override
   String? get sentAt;
+  @override // Whether automatic payment reminders may go out for this document; the business setting still applies.
+  bool get remindersEnabled;
   @override // When the customer opened the public page: first, last, and how many times, as the server counts them.
   String? get firstViewedAt;
   @override

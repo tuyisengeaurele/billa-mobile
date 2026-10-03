@@ -171,4 +171,13 @@ class DocumentRepositoryImpl implements DocumentRepository {
   Future<void> deleteAttachment(String documentId, String attachmentId) async {
     await _dio.delete<void>('/documents/$documentId/attachments/$attachmentId');
   }
+
+  @override
+  Future<Document> setReminders(String documentId, {required bool enabled}) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      '/documents/$documentId/reminders',
+      data: {'enabled': enabled},
+    );
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
 }

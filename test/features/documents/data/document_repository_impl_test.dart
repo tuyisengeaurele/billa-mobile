@@ -368,4 +368,15 @@ void main() {
 
     verify(() => dio.delete<void>('/documents/d1/attachments/a1')).called(1);
   });
+
+  test('setReminders turns automatic reminders on or off for one document', () async {
+    final options = RequestOptions(path: '/documents/d1/reminders');
+    when(() => dio.patch<Map<String, dynamic>>('/documents/d1/reminders', data: {'enabled': false})).thenAnswer(
+      (_) async => _response(200, {'document': {..._documentJson(), 'remindersEnabled': false}}, options),
+    );
+
+    final document = await repository.setReminders('d1', enabled: false);
+
+    expect(document.remindersEnabled, isFalse);
+  });
 }

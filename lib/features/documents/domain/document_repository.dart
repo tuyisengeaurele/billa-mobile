@@ -39,4 +39,7 @@ abstract class DocumentRepository {
   Future<DocumentAttachment> uploadAttachment(String documentId, List<int> bytes, String filename);
 
   Future<void> deleteAttachment(String documentId, String attachmentId);
+
+  /// Turns automatic reminders on or off for one document.
+  Future<Document> setReminders(String documentId, {required bool enabled});
 }

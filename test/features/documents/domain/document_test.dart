@@ -245,4 +245,9 @@ void main() {
     expect(withFiles.attachments.single.isImage, isTrue);
     expect(without.attachments, isEmpty);
   });
+
+  test('reminders are on for a document unless the server says they are off', () {
+    expect(Document.fromJson(_documentJson()).remindersEnabled, isTrue);
+    expect(Document.fromJson(_documentJson(extra: {'remindersEnabled': false})).remindersEnabled, isFalse);
+  });
 }
