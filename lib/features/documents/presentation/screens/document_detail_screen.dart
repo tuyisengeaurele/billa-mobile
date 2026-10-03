@@ -19,6 +19,7 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/formatting/currency.dart';
 import '../../../../core/formatting/money.dart';
+import '../../domain/recurrence.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -322,6 +323,14 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                     MoneyText(document.total, currency: document.currency, style: Theme.of(context).textTheme.titleMedium),
                   ],
                 ),
+                if (document.recurrenceInterval != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Repeats ${recurrenceWords(document.recurrenceInterval!)}'
+                    '${document.nextRecurrenceAt == null ? '' : ', next on ${document.nextRecurrenceAt!.split('T').first}'}'
+                    '${document.recurrenceEndDate == null ? '' : ', until ${document.recurrenceEndDate!.split('T').first}'}',
+                  ),
+                ],
                 if (document.schedule.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   _PaymentPlan(document: document),

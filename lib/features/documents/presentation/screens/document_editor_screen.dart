@@ -24,6 +24,7 @@ import '../widgets/credit_limit_warning.dart';
 import '../widgets/currency_section.dart';
 import '../widgets/document_list_tile.dart' show documentTypeLabel;
 import '../widgets/installments_section.dart';
+import '../widgets/repeat_section.dart';
 
 String _formatDisplayDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -134,13 +135,6 @@ class _DocumentEditorForm extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (state.preservedPlanNote case final note?) ...[
-            Card(
-              key: const Key('editor-plan-note'),
-              child: Padding(padding: const EdgeInsets.all(12), child: Text(note)),
-            ),
-            const SizedBox(height: 16),
-          ],
           if (state.autosaveStatus == AutosaveStatus.error) ...[
             ActionErrorBanner(
               retryKey: const Key('editor-save-retry'),
@@ -316,6 +310,8 @@ class _DocumentEditorForm extends ConsumerWidget {
               MoneyText(totals.total, currency: state.currency, style: Theme.of(context).textTheme.titleMedium),
             ],
           ),
+          const SizedBox(height: 16),
+          RepeatSection(args: args, state: state),
           const SizedBox(height: 16),
           InstallmentsSection(args: args, state: state),
         ],

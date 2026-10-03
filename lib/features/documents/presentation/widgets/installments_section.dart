@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/formatting/currency.dart';
 import '../../domain/document_draft_input.dart';
+import '../../domain/document_enums.dart';
 import '../../domain/installment_plan.dart';
 import '../providers/document_editor_controller.dart';
 
@@ -18,6 +19,17 @@ class InstallmentsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (state.type == DocumentType.invoice && state.recurrence != null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text(
+            'A repeating invoice cannot be paid in instalments. Turn off repeating to use a plan.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      );
+    }
     if (!state.canHavePlan) return const SizedBox.shrink();
     final controller = ref.read(documentEditorControllerProvider(args).notifier);
     final textTheme = Theme.of(context).textTheme;

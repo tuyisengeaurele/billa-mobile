@@ -613,4 +613,46 @@ void main() {
     expect(find.byKey(const Key('plan-preset-two')), findsOneWidget);
     expect(find.byKey(const Key('payment-term-30')), findsOneWidget);
   });
+
+  testWidgets('an invoice can be set to repeat, with an optional end date', (tester) async {
+    await openInvoiceWithTotal(tester);
+    expect(find.byKey(const Key('repeat-MONTHLY')), findsOneWidget);
+    expect(find.byKey(const Key('repeat-end')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('repeat-MONTHLY')));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-MONTHLY'))).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-none'))).selected, isFalse);
+    expect(find.byKey(const Key('repeat-end')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('repeat-none')));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-none'))).selected, isTrue);
+    expect(find.byKey(const Key('repeat-end')), findsNothing);
+  });
+
+  testWidgets('a quote cannot repeat', (tester) async {
+    await openInvoiceWithTotal(tester, type: DocumentType.quote);
+
+    expect(find.byKey(const Key('repeat-MONTHLY')), findsNothing);
+  });
+
+  testWidgets('a repeating invoice says it cannot be paid in instalments, and the reverse', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('repeat-MONTHLY')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A repeating invoice cannot be paid in instalments. Turn off repeating to use a plan.'), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-two')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('repeat-none')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A repeating invoice cannot be paid in instalments. Pay in full to repeat it.'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-MONTHLY'))).onSelected, isNull);
+  });
 }

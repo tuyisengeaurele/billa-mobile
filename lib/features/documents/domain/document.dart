@@ -116,6 +116,7 @@ class Document with _$Document {
     @Default(<DocumentInstallment>[]) List<DocumentInstallment> installments,
     String? recurrenceInterval,
     String? recurrenceEndDate,
+    String? nextRecurrenceAt,
     DocumentNextInstallment? nextInstallment,
     @Default(<DocumentScheduleStep>[]) List<DocumentScheduleStep> schedule,
     DocumentBusinessRef? business,

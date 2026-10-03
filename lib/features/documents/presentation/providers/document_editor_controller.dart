@@ -200,12 +200,8 @@ class DocumentEditorState {
       rateProblem(currency, exchangeRate) == null &&
       installmentProblem == null;
 
-  // These are kept but not editable on the phone, so the phone says so instead of hiding them.
-  String? get preservedPlanNote {
-    final interval = recurrence?.interval;
-    if (interval == null) return null;
-    return 'This draft repeats ${_recurrenceWords(interval)}. Change how often on the web.';
-  }
+  /// A repeat schedule is for invoices only, and the server refuses one on an invoice paid in instalments.
+  bool get canRepeat => type == DocumentType.invoice && installments.isEmpty;
 
   DocumentTotals get totals => calculateDocumentTotals(lines.map((line) => line.toInput()).toList());
 
@@ -273,14 +269,6 @@ class DocumentEditorState {
     );
   }
 }
-
-String _recurrenceWords(String interval) => switch (interval) {
-      'WEEKLY' => 'every week',
-      'MONTHLY' => 'every month',
-      'QUARTERLY' => 'every quarter',
-      'ANNUALLY' => 'every year',
-      _ => 'on a schedule',
-    };
 
 String _formatDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -425,6 +413,26 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
           ),
         );
       });
+
+  void setRecurrence(String interval) => _update((s) {
+        if (!s.canRepeat) return s;
+        return s.copyWith(recurrence: RecurrenceInput(interval: interval, endDate: s.recurrence?.endDate));
+      });
+
+  void setRecurrenceEnd(DateTime? date) => _update((s) {
+        final current = s.recurrence;
+        if (current == null) return s;
+        return s.copyWith(
+          recurrence: RecurrenceInput(
+            interval: current.interval,
+            endDate: date == null
+                ? null
+                : '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+          ),
+        );
+      });
+
+  void clearRecurrence() => _update((s) => s.copyWith(recurrence: null));
 
   void clearPlan() => _update((s) => s.copyWith(installments: const []));
 

@@ -159,6 +159,7 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
           const <DocumentInstallment>[],
       recurrenceInterval: json['recurrenceInterval'] as String?,
       recurrenceEndDate: json['recurrenceEndDate'] as String?,
+      nextRecurrenceAt: json['nextRecurrenceAt'] as String?,
       nextInstallment: json['nextInstallment'] == null
           ? null
           : DocumentNextInstallment.fromJson(
@@ -221,6 +222,7 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'installments': instance.installments,
       'recurrenceInterval': instance.recurrenceInterval,
       'recurrenceEndDate': instance.recurrenceEndDate,
+      'nextRecurrenceAt': instance.nextRecurrenceAt,
       'nextInstallment': instance.nextInstallment,
       'schedule': instance.schedule,
       'business': instance.business,

@@ -193,4 +193,15 @@ void main() {
     expect(withoutPlan.schedule, isEmpty);
     expect(Document.fromJson(_documentJson()).schedule, isEmpty);
   });
+
+  test('reads when a repeating invoice next repeats', () {
+    final document = Document.fromJson(_documentJson(extra: {
+      'recurrenceInterval': 'MONTHLY',
+      'recurrenceEndDate': '2027-01-01T00:00:00.000Z',
+      'nextRecurrenceAt': '2026-11-01T00:00:00.000Z',
+    }));
+
+    expect(document.nextRecurrenceAt, '2026-11-01T00:00:00.000Z');
+    expect(Document.fromJson(_documentJson()).nextRecurrenceAt, isNull);
+  });
 }

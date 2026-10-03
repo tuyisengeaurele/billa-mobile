@@ -1535,6 +1535,7 @@ mixin _$Document {
       throw _privateConstructorUsedError;
   String? get recurrenceInterval => throw _privateConstructorUsedError;
   String? get recurrenceEndDate => throw _privateConstructorUsedError;
+  String? get nextRecurrenceAt => throw _privateConstructorUsedError;
   DocumentNextInstallment? get nextInstallment =>
       throw _privateConstructorUsedError;
   List<DocumentScheduleStep> get schedule => throw _privateConstructorUsedError;
@@ -1590,6 +1591,7 @@ abstract class $DocumentCopyWith<$Res> {
       List<DocumentInstallment> installments,
       String? recurrenceInterval,
       String? recurrenceEndDate,
+      String? nextRecurrenceAt,
       DocumentNextInstallment? nextInstallment,
       List<DocumentScheduleStep> schedule,
       DocumentBusinessRef? business,
@@ -1651,6 +1653,7 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? installments = null,
     Object? recurrenceInterval = freezed,
     Object? recurrenceEndDate = freezed,
+    Object? nextRecurrenceAt = freezed,
     Object? nextInstallment = freezed,
     Object? schedule = null,
     Object? business = freezed,
@@ -1742,6 +1745,10 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
       recurrenceEndDate: freezed == recurrenceEndDate
           ? _value.recurrenceEndDate
           : recurrenceEndDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      nextRecurrenceAt: freezed == nextRecurrenceAt
+          ? _value.nextRecurrenceAt
+          : nextRecurrenceAt // ignore: cast_nullable_to_non_nullable
               as String?,
       nextInstallment: freezed == nextInstallment
           ? _value.nextInstallment
@@ -1918,6 +1925,7 @@ abstract class _$$DocumentImplCopyWith<$Res>
       List<DocumentInstallment> installments,
       String? recurrenceInterval,
       String? recurrenceEndDate,
+      String? nextRecurrenceAt,
       DocumentNextInstallment? nextInstallment,
       List<DocumentScheduleStep> schedule,
       DocumentBusinessRef? business,
@@ -1983,6 +1991,7 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? installments = null,
     Object? recurrenceInterval = freezed,
     Object? recurrenceEndDate = freezed,
+    Object? nextRecurrenceAt = freezed,
     Object? nextInstallment = freezed,
     Object? schedule = null,
     Object? business = freezed,
@@ -2074,6 +2083,10 @@ class __$$DocumentImplCopyWithImpl<$Res>
       recurrenceEndDate: freezed == recurrenceEndDate
           ? _value.recurrenceEndDate
           : recurrenceEndDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      nextRecurrenceAt: freezed == nextRecurrenceAt
+          ? _value.nextRecurrenceAt
+          : nextRecurrenceAt // ignore: cast_nullable_to_non_nullable
               as String?,
       nextInstallment: freezed == nextInstallment
           ? _value.nextInstallment
@@ -2177,6 +2190,7 @@ class _$DocumentImpl implements _Document {
           const <DocumentInstallment>[],
       this.recurrenceInterval,
       this.recurrenceEndDate,
+      this.nextRecurrenceAt,
       this.nextInstallment,
       final List<DocumentScheduleStep> schedule =
           const <DocumentScheduleStep>[],
@@ -2254,6 +2268,8 @@ class _$DocumentImpl implements _Document {
   @override
   final String? recurrenceEndDate;
   @override
+  final String? nextRecurrenceAt;
+  @override
   final DocumentNextInstallment? nextInstallment;
   final List<DocumentScheduleStep> _schedule;
   @override
@@ -2308,7 +2324,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextInstallment: $nextInstallment, schedule: $schedule, business: $business, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, business: $business, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -2345,6 +2361,8 @@ class _$DocumentImpl implements _Document {
                 other.recurrenceInterval == recurrenceInterval) &&
             (identical(other.recurrenceEndDate, recurrenceEndDate) ||
                 other.recurrenceEndDate == recurrenceEndDate) &&
+            (identical(other.nextRecurrenceAt, nextRecurrenceAt) ||
+                other.nextRecurrenceAt == nextRecurrenceAt) &&
             (identical(other.nextInstallment, nextInstallment) ||
                 other.nextInstallment == nextInstallment) &&
             const DeepCollectionEquality().equals(other._schedule, _schedule) &&
@@ -2402,6 +2420,7 @@ class _$DocumentImpl implements _Document {
         const DeepCollectionEquality().hash(_installments),
         recurrenceInterval,
         recurrenceEndDate,
+        nextRecurrenceAt,
         nextInstallment,
         const DeepCollectionEquality().hash(_schedule),
         business,
@@ -2459,6 +2478,7 @@ abstract class _Document implements Document {
       final List<DocumentInstallment> installments,
       final String? recurrenceInterval,
       final String? recurrenceEndDate,
+      final String? nextRecurrenceAt,
       final DocumentNextInstallment? nextInstallment,
       final List<DocumentScheduleStep> schedule,
       final DocumentBusinessRef? business,
@@ -2524,6 +2544,8 @@ abstract class _Document implements Document {
   String? get recurrenceInterval;
   @override
   String? get recurrenceEndDate;
+  @override
+  String? get nextRecurrenceAt;
   @override
   DocumentNextInstallment? get nextInstallment;
   @override

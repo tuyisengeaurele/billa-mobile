@@ -654,4 +654,24 @@ void main() {
 
     expect(find.text('Payment plan'), findsNothing);
   });
+
+  testWidgets('a repeating invoice says how often and when it next repeats', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document.copyWith(
+          recurrenceInterval: 'MONTHLY',
+          recurrenceEndDate: '2027-01-01T00:00:00.000Z',
+          nextRecurrenceAt: '2026-11-01T00:00:00.000Z',
+        ));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Repeats every month, next on 2026-11-01, until 2027-01-01'), findsOneWidget);
+  });
+
+  testWidgets('an invoice that does not repeat says nothing about repeating', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Repeats'), findsNothing);
+  });
 }

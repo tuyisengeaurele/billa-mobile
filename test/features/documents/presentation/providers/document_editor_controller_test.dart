@@ -201,7 +201,6 @@ void main() {
         InstallmentInput(label: 'Deposit', amount: 4000, dueDate: '2026-10-01'),
         InstallmentInput(amount: 7800, dueDate: '2026-11-01'),
       ]);
-      expect(state.preservedPlanNote, isNull);
     });
 
     test('keeps its repeat schedule when saved', () async {
@@ -209,7 +208,6 @@ void main() {
 
       expect(state.toInput().recurrence, const RecurrenceInput(interval: 'MONTHLY', endDate: '2027-01-01'));
       expect(state.toInput().installments, isNull);
-      expect(state.preservedPlanNote, 'This draft repeats every month. Change how often on the web.');
     });
 
     test('keeps its language when saved, so a French draft is not turned into an English one', () async {
@@ -239,7 +237,6 @@ void main() {
 
       expect(state.toInput().installments, isNull);
       expect(state.toInput().recurrence, isNull);
-      expect(state.preservedPlanNote, isNull);
     });
 
     test('a foreign draft with no saved rate is not savable until one is typed', () async {
@@ -660,6 +657,88 @@ void main() {
       final state = container.read(documentEditorControllerProvider(repeating)).requireValue;
       expect(state.installments, isEmpty);
       expect(state.canHavePlan, isFalse);
+    });
+  });
+
+  group('repeat schedule', () {
+    const arg = DocumentEditorArgs.create(DocumentType.invoice);
+
+    Future<DocumentEditorController> open() async {
+      container.listen(documentEditorControllerProvider(arg), (_, _) {});
+      await container.read(documentEditorControllerProvider(arg).future);
+      final notifier = container.read(documentEditorControllerProvider(arg).notifier);
+      notifier.setCustomer('c1', 'Acme');
+      notifier.addLine();
+      notifier.setLineDescription(0, 'Printing');
+      notifier.setLineUnitPrice(0, 10000);
+      return notifier;
+    }
+
+    DocumentEditorState current() => container.read(documentEditorControllerProvider(arg)).requireValue;
+
+    test('choosing how often sends it, with no end date until one is chosen', () async {
+      final notifier = await open();
+
+      notifier.setRecurrence('MONTHLY');
+
+      expect(current().toInput().recurrence, const RecurrenceInput(interval: 'MONTHLY'));
+    });
+
+    test('an end date is sent as a plain date, and can be taken away again', () async {
+      final notifier = await open();
+      notifier.setRecurrence('WEEKLY');
+
+      notifier.setRecurrenceEnd(DateTime(2027, 1, 5));
+      expect(current().toInput().recurrence, const RecurrenceInput(interval: 'WEEKLY', endDate: '2027-01-05'));
+
+      notifier.setRecurrenceEnd(null);
+      expect(current().toInput().recurrence, const RecurrenceInput(interval: 'WEEKLY'));
+    });
+
+    test('changing how often keeps the end date', () async {
+      final notifier = await open();
+      notifier.setRecurrence('WEEKLY');
+      notifier.setRecurrenceEnd(DateTime(2027, 1, 5));
+
+      notifier.setRecurrence('QUARTERLY');
+
+      expect(current().toInput().recurrence, const RecurrenceInput(interval: 'QUARTERLY', endDate: '2027-01-05'));
+    });
+
+    test('not repeating sends no schedule', () async {
+      final notifier = await open();
+      notifier.setRecurrence('MONTHLY');
+
+      notifier.clearRecurrence();
+
+      expect(current().recurrence, isNull);
+      expect(current().toInput().recurrence, isNull);
+    });
+
+    test('only an invoice can repeat', () async {
+      const quote = DocumentEditorArgs.create(DocumentType.quote);
+      container.listen(documentEditorControllerProvider(quote), (_, _) {});
+      await container.read(documentEditorControllerProvider(quote).future);
+      final notifier = container.read(documentEditorControllerProvider(quote).notifier);
+
+      notifier.setRecurrence('MONTHLY');
+
+      expect(container.read(documentEditorControllerProvider(quote)).requireValue.recurrence, isNull);
+    });
+
+    test('an invoice with a payment plan cannot repeat, and a repeating one cannot start a plan', () async {
+      final notifier = await open();
+      notifier.startPlan(PlanPreset.twoParts);
+
+      notifier.setRecurrence('MONTHLY');
+      expect(current().recurrence, isNull);
+      expect(current().canRepeat, isFalse);
+
+      notifier.clearPlan();
+      notifier.setRecurrence('MONTHLY');
+      notifier.startPlan(PlanPreset.twoParts);
+      expect(current().installments, isEmpty);
+      expect(current().canHavePlan, isFalse);
     });
   });
 }
