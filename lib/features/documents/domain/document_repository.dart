@@ -21,6 +21,9 @@ abstract class DocumentRepository {
   Future<Document> create(DocumentDraftInput input);
   Future<Document> update(String id, DocumentDraftInput input);
   Future<Document> finalize(String id);
+
+  /// Notes that a finalized document went out on WhatsApp and returns when. Reminders are not recorded.
+  Future<String> markShared(String id);
   Future<Document> convert(String id);
   Future<String> send(String id, {DocumentLanguage? language});
   Future<void> delete(String id);

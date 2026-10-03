@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
 import 'package:billa_mobile/core/network/api_client.dart';
+import 'package:billa_mobile/core/platform/link_launcher.dart';
 import 'package:billa_mobile/features/customers/domain/customer.dart';
 import 'package:billa_mobile/features/customers/domain/customer_repository.dart';
 import 'package:billa_mobile/features/customers/presentation/providers/customer_repository_provider.dart';
@@ -21,6 +22,17 @@ import '../../../../support/tall_screen.dart';
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
 
 class _MockCustomerRepository extends Mock implements CustomerRepository {}
+
+class _FakeLauncher implements LinkLauncher {
+  @override
+  Future<bool> call(String phone) async => true;
+
+  @override
+  Future<bool> sms(String phone, {String? body}) async => true;
+
+  @override
+  Future<bool> whatsapp(String phone, String message) async => true;
+}
 
 Document _document({
   DocumentType type = DocumentType.invoice,
@@ -65,6 +77,7 @@ void main() {
         documentRepositoryProvider.overrideWithValue(documents),
         customerRepositoryProvider.overrideWithValue(customers),
         authControllerProvider.overrideWith(FakeAuthController.new),
+        linkLauncherProvider.overrideWithValue(_FakeLauncher()),
       ],
       child: MaterialApp(
         theme: AppTheme.light,
@@ -172,5 +185,44 @@ void main() {
     );
 
     expect(find.textContaining('of which RWF 1,500 (Deposit) is due now'), findsOneWidget);
+  });
+
+  testWidgets('sharing a quote on WhatsApp records that it went out', (tester) async {
+    when(() => documents.markShared('d1')).thenAnswer((_) async => '2026-02-01T10:00:00.000Z');
+    await start(tester, _document(type: DocumentType.quote, amountPaid: 0));
+
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    verify(() => documents.markShared('d1')).called(1);
+  });
+
+  testWidgets('a payment reminder is not a first share, so it records nothing', (tester) async {
+    await start(tester, _document());
+
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => documents.markShared(any()));
+  });
+
+  testWidgets('texting a quote does not record a WhatsApp share', (tester) async {
+    await start(tester, _document(type: DocumentType.quote, amountPaid: 0));
+
+    await tester.tap(find.byKey(const Key('contact-sms')));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => documents.markShared(any()));
+  });
+
+  testWidgets('failing to record the share stays silent, because WhatsApp is already open', (tester) async {
+    when(() => documents.markShared('d1')).thenAnswer((_) async => throw Exception('server down'));
+    await start(tester, _document(type: DocumentType.quote, amountPaid: 0));
+
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SnackBar), findsNothing);
   });
 }

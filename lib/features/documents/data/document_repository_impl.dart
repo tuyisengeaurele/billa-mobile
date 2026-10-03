@@ -73,6 +73,12 @@ class DocumentRepositoryImpl implements DocumentRepository {
   }
 
   @override
+  Future<String> markShared(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$id/shared', data: {'channel': 'WHATSAPP'});
+    return response.data!['sentAt'] as String;
+  }
+
+  @override
   Future<Document> convert(String id) async {
     final response = await _dio.post<Map<String, dynamic>>('/documents/$id/convert');
     return Document.fromJson(response.data!['document'] as Map<String, dynamic>);

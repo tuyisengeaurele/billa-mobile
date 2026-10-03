@@ -41,6 +41,8 @@ Future<void> startDocumentContact(BuildContext context, WidgetRef ref, {required
       ref,
       title: customer.name,
       phone: customer.phone,
+      // Only a first share is recorded; a reminder to pay is not the document going out.
+      onWhatsAppOpened: isChase ? null : () => ref.read(documentRepositoryProvider).markShared(document.id),
       message: isChase
           ? reminderMessage(
               customer: customer.name,

@@ -320,4 +320,14 @@ void main() {
 
     expect(rates[Currency.usd]!.rate, 1450.5);
   });
+
+  test('markShared tells the server the document went out on WhatsApp and returns when', () async {
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/shared', data: {'channel': 'WHATSAPP'})).thenAnswer(
+      (_) async => _response(200, {'sentAt': '2026-02-01T10:00:00.000Z'}, RequestOptions(path: '/documents/d1/shared')),
+    );
+
+    final sentAt = await repository.markShared('d1');
+
+    expect(sentAt, '2026-02-01T10:00:00.000Z');
+  });
 }
