@@ -158,4 +158,25 @@ void main() {
 
     verify(() => dio.patch<Map<String, dynamic>>('/customers/c1', data: {'name': 'Acme Ltd'})).called(1);
   });
+
+  test('sendStatement asks the server to email the statement and says where it went', () async {
+    when(() => dio.post<Map<String, dynamic>>('/customers/c1/send-statement')).thenAnswer(
+      (_) async => _response(
+        200,
+        {
+          'sentTo': 'ada@example.com',
+          'invoiceCount': 2,
+          'totalOwed': 70000,
+          'totals': [
+            {'currency': 'RWF', 'amount': 70000},
+          ],
+        },
+        RequestOptions(path: '/customers/c1/send-statement'),
+      ),
+    );
+
+    final sentTo = await repository.sendStatement('c1');
+
+    expect(sentTo, 'ada@example.com');
+  });
 }

@@ -172,4 +172,18 @@ void main() {
 
     expect(describeActionError(error), contains('Change the amounts back'));
   });
+
+  test('a statement for a customer who owes nothing says why and not what to fix', () {
+    expect(
+      describeActionError(_error('nothing_owed')),
+      'They owe nothing right now, so there is no statement to send',
+    );
+  });
+
+  test('a sixth attachment says the limit and how to make room', () {
+    expect(
+      describeActionError(_error('too_many_attachments')),
+      'A document can have 5 files. Remove one to add another',
+    );
+  });
 }

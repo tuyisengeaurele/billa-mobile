@@ -19,6 +19,7 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/formatting/currency.dart';
 import '../../../../core/formatting/money.dart';
+import '../../../../core/formatting/relative_time.dart';
 import '../../domain/recurrence.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
@@ -27,6 +28,8 @@ import '../providers/document_contact.dart';
 import '../providers/document_duplicate.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
+import '../widgets/attachments_section.dart';
+import '../widgets/document_reminders_switch.dart';
 import '../widgets/document_status_pill.dart';
 import 'record_payment_screen.dart' show paymentMethodLabel;
 
@@ -283,6 +286,16 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                 const SizedBox(height: 16),
                 Text('Issued ${document.issueDate.split('T').first}'),
                 if (document.dueDate != null) Text('Due ${document.dueDate!.split('T').first}'),
+                // Only a finalized document that went out can have been opened, so a draft says nothing.
+                if (document.status == DocumentStatus.finalized && document.sentAt != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    document.lastViewedAt == null
+                        ? 'Sent, not opened yet'
+                        : 'Opened by the customer ${relativeTime(document.lastViewedAt!)} '
+                            '(${document.viewCount} ${document.viewCount == 1 ? 'view' : 'views'})',
+                  ),
+                ],
                 if (document.notes != null) ...[
                   const SizedBox(height: 16),
                   Text(document.notes!),
@@ -459,6 +472,21 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                   const SizedBox(height: 8),
                   AppButton(label: 'Reactivate', isLoading: _actionInProgress, onPressed: _reactivate),
                 ],
+                if (canRecordPayment) ...[
+                  const SizedBox(height: 16),
+                  DocumentRemindersSwitch(
+                    key: ValueKey('reminders-${document.id}'),
+                    documentId: document.id,
+                    initial: document.remindersEnabled,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                // Files can be added to a finalized document too, since they never change what it says.
+                AttachmentsSection(
+                  key: ValueKey('attachments-${document.id}'),
+                  documentId: document.id,
+                  initial: document.attachments,
+                ),
               ],
             ),
           ),

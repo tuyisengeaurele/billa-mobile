@@ -47,6 +47,7 @@ const _document = Document(
   total: 10000,
   amountPaid: 6000,
   publicToken: 'tok',
+  sentAt: '2026-01-02T00:00:00.000Z',
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 );

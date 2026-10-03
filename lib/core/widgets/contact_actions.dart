@@ -13,6 +13,7 @@ Future<void> showContactActions(
   required String title,
   required String? phone,
   required String message,
+  Future<void> Function()? onWhatsAppOpened,
 }) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
   final launcher = ref.read(linkLauncherProvider);
@@ -25,7 +26,17 @@ Future<void> showContactActions(
       message: message,
       call: () => launcher.call(phone!),
       sms: () => launcher.sms(phone!, body: message),
-      whatsapp: () => launcher.whatsapp(phone!, message),
+      whatsapp: () async {
+        final opened = await launcher.whatsapp(phone!, message);
+        if (opened && onWhatsAppOpened != null) {
+          try {
+            await onWhatsAppOpened();
+          } catch (_) {
+            // WhatsApp is already open, so failing to note the share must neither undo it nor interrupt it.
+          }
+        }
+        return opened;
+      },
     ),
   );
   if (action == null) return;

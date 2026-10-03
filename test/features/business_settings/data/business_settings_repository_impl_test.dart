@@ -67,6 +67,7 @@ void main() {
       'requireApprovalToFinalize': true,
       'remindersEnabled': false,
       'reminderCadenceDays': 14,
+      'dueSoonReminderDays': 5,
     };
     when(() => dio.patch<Map<String, dynamic>>('/business', data: expected))
         .thenAnswer((_) async => _ok(_business(), '/business'));
@@ -76,6 +77,7 @@ void main() {
       requireApprovalToFinalize: true,
       remindersEnabled: false,
       reminderCadenceDays: 14,
+      dueSoonReminderDays: 5,
     );
 
     verify(() => dio.patch<Map<String, dynamic>>('/business', data: expected)).called(1);

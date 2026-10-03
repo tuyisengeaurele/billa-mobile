@@ -32,6 +32,7 @@ void main() {
       ('bs-documents', '/settings/business/documents'),
       ('bs-numbering', '/settings/business/numbering'),
       ('bs-logo', '/settings/business/logo'),
+      ('bs-activity', '/settings/business/activity'),
     ]) {
       await tester.pumpWidget(buildApp());
       await tester.pumpAndSettle();

@@ -73,6 +73,12 @@ class DocumentRepositoryImpl implements DocumentRepository {
   }
 
   @override
+  Future<String> markShared(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$id/shared', data: {'channel': 'WHATSAPP'});
+    return response.data!['sentAt'] as String;
+  }
+
+  @override
   Future<Document> convert(String id) async {
     final response = await _dio.post<Map<String, dynamic>>('/documents/$id/convert');
     return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
@@ -150,5 +156,28 @@ class DocumentRepositoryImpl implements DocumentRepository {
       data: FormData.fromMap({'receipt': MultipartFile.fromBytes(bytes, filename: filename)}),
     );
     return response.data!['url'] as String;
+  }
+
+  @override
+  Future<DocumentAttachment> uploadAttachment(String documentId, List<int> bytes, String filename) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/documents/$documentId/attachments',
+      data: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: filename)}),
+    );
+    return DocumentAttachment.fromJson(response.data!['attachment'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deleteAttachment(String documentId, String attachmentId) async {
+    await _dio.delete<void>('/documents/$documentId/attachments/$attachmentId');
+  }
+
+  @override
+  Future<Document> setReminders(String documentId, {required bool enabled}) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      '/documents/$documentId/reminders',
+      data: {'enabled': enabled},
+    );
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
   }
 }

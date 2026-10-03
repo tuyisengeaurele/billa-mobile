@@ -154,4 +154,46 @@ void main() {
     expect(find.text('RWF 4,000'), findsNWidgets(2));
     expect(find.text('RWF 254,050'), findsNothing);
   });
+
+  OutstandingInvoice invoice({int? amountDue, String? label, int owed = 7000}) => OutstandingInvoice(
+        id: 'd1',
+        number: 'INV-0001',
+        customerName: 'Acme',
+        total: 10000,
+        amountOwed: owed,
+        amountDue: amountDue,
+        nextInstallmentLabel: label,
+        daysOverdue: 0,
+        agingBucket: 'current',
+      );
+
+  testWidgets('an invoice paid in instalments says what is due now and for which instalment', (tester) async {
+    when(() => repository.list()).thenAnswer((_) async => [invoice(amountDue: 3000, label: 'Deposit')]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('RWF 3,000 due now · Deposit'), findsOneWidget);
+  });
+
+  testWidgets('says what is due now without a label when the plan has none', (tester) async {
+    when(() => repository.list()).thenAnswer((_) async => [invoice(amountDue: 3000)]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('RWF 3,000 due now'), findsOneWidget);
+  });
+
+  testWidgets('adds nothing when there is no plan or the whole balance is due', (tester) async {
+    when(() => repository.list()).thenAnswer((_) async => [invoice()]);
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    expect(find.textContaining('due now'), findsNothing);
+
+    when(() => repository.list()).thenAnswer((_) async => [invoice(amountDue: 7000, label: 'Balance')]);
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    expect(find.textContaining('due now'), findsNothing);
+  });
 }

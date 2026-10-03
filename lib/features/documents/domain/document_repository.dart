@@ -21,6 +21,9 @@ abstract class DocumentRepository {
   Future<Document> create(DocumentDraftInput input);
   Future<Document> update(String id, DocumentDraftInput input);
   Future<Document> finalize(String id);
+
+  /// Notes that a finalized document went out on WhatsApp and returns when. Reminders are not recorded.
+  Future<String> markShared(String id);
   Future<Document> convert(String id);
   Future<String> send(String id, {DocumentLanguage? language});
   Future<void> delete(String id);
@@ -31,4 +34,12 @@ abstract class DocumentRepository {
   Future<Document> writeOff(String documentId, String reason);
   Future<Document> reactivate(String documentId);
   Future<String> uploadPaymentReceipt(List<int> bytes, String filename);
+
+  /// Attaches a photo to a document, a draft or a finalized one, and returns the stored file.
+  Future<DocumentAttachment> uploadAttachment(String documentId, List<int> bytes, String filename);
+
+  Future<void> deleteAttachment(String documentId, String attachmentId);
+
+  /// Turns automatic reminders on or off for one document.
+  Future<Document> setReminders(String documentId, {required bool enabled});
 }

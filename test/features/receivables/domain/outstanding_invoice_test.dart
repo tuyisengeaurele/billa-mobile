@@ -69,4 +69,23 @@ void main() {
     expect(invoice.currency, Currency.rwf);
     expect(invoice.amountOwedRwf, 0);
   });
+
+  test('reads what is due now and which instalment it is, and copes without them', () {
+    final base = {
+      'id': 'd1',
+      'customerName': 'Acme',
+      'total': 10000,
+      'amountOwed': 7000,
+      'daysOverdue': 0,
+      'agingBucket': 'current',
+    };
+
+    final onPlan = OutstandingInvoice.fromJson({...base, 'amountDue': 3000, 'nextInstallmentLabel': 'Deposit'});
+    final off = OutstandingInvoice.fromJson(base);
+
+    expect(onPlan.amountDue, 3000);
+    expect(onPlan.nextInstallmentLabel, 'Deposit');
+    expect(off.amountDue, isNull);
+    expect(off.nextInstallmentLabel, isNull);
+  });
 }

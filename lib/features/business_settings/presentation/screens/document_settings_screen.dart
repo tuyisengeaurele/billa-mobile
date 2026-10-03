@@ -33,6 +33,7 @@ class _DocumentSettingsFormState extends ConsumerState<_DocumentSettingsForm> {
   late DocumentTemplate _template = widget.initial.defaultTemplate;
   late bool _requireApproval = widget.initial.requireApprovalToFinalize;
   late bool _reminders = widget.initial.remindersEnabled;
+  late int _dueSoonDays = widget.initial.dueSoonReminderDays;
   late final _cadence = TextEditingController(text: '${widget.initial.reminderCadenceDays}');
   bool _actionInProgress = false;
   String? _actionError;
@@ -70,6 +71,7 @@ class _DocumentSettingsFormState extends ConsumerState<_DocumentSettingsForm> {
               requireApprovalToFinalize: _requireApproval,
               remindersEnabled: _reminders,
               reminderCadenceDays: _cadenceDays!,
+              dueSoonReminderDays: _dueSoonDays,
             );
         ref.invalidate(businessSettingsProvider);
         if (mounted) {
@@ -107,6 +109,23 @@ class _DocumentSettingsFormState extends ConsumerState<_DocumentSettingsForm> {
           value: _reminders,
           onChanged: (value) => setState(() => _reminders = value),
         ),
+        if (_reminders) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<int>(
+            key: const Key('ds-due-soon'),
+            initialValue: _dueSoonDays,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Remind before the due date',
+              helperText: 'A heads-up to customers whose invoice is about to fall due',
+            ),
+            items: [
+              for (final days in _dueSoonChoices(_dueSoonDays))
+                DropdownMenuItem(value: days, child: Text(_dueSoonLabel(days))),
+            ],
+            onChanged: (days) => setState(() => _dueSoonDays = days ?? _dueSoonDays),
+          ),
+        ],
         const SizedBox(height: 8),
         TextField(
           key: const Key('ds-cadence'),
@@ -136,3 +155,15 @@ class _DocumentSettingsFormState extends ConsumerState<_DocumentSettingsForm> {
     );
   }
 }
+
+const _usualDueSoonDays = [0, 1, 2, 3, 5, 7];
+
+// A value set on the web, such as 4 or 10, must stay visible, so it joins the list instead of being replaced.
+List<int> _dueSoonChoices(int current) =>
+    _usualDueSoonDays.contains(current) ? _usualDueSoonDays : ([..._usualDueSoonDays, current]..sort());
+
+String _dueSoonLabel(int days) => switch (days) {
+      0 => "Don't send",
+      1 => '1 day before',
+      _ => '$days days before',
+    };

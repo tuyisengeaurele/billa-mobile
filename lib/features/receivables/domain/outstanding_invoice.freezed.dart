@@ -28,7 +28,10 @@ mixin _$OutstandingInvoice {
   @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
   Currency get currency => throw _privateConstructorUsedError;
   int get amountOwedRwf => throw _privateConstructorUsedError;
-  String? get dueDate => throw _privateConstructorUsedError;
+  String? get dueDate =>
+      throw _privateConstructorUsedError; // What is payable today when the invoice is on an instalment plan, and which instalment that is.
+  int? get amountDue => throw _privateConstructorUsedError;
+  String? get nextInstallmentLabel => throw _privateConstructorUsedError;
   int get daysOverdue => throw _privateConstructorUsedError;
   String get agingBucket => throw _privateConstructorUsedError;
 
@@ -54,6 +57,8 @@ abstract class $OutstandingInvoiceCopyWith<$Res> {
       Currency currency,
       int amountOwedRwf,
       String? dueDate,
+      int? amountDue,
+      String? nextInstallmentLabel,
       int daysOverdue,
       String agingBucket});
 }
@@ -79,6 +84,8 @@ class _$OutstandingInvoiceCopyWithImpl<$Res, $Val extends OutstandingInvoice>
     Object? currency = null,
     Object? amountOwedRwf = null,
     Object? dueDate = freezed,
+    Object? amountDue = freezed,
+    Object? nextInstallmentLabel = freezed,
     Object? daysOverdue = null,
     Object? agingBucket = null,
   }) {
@@ -115,6 +122,14 @@ class _$OutstandingInvoiceCopyWithImpl<$Res, $Val extends OutstandingInvoice>
           ? _value.dueDate
           : dueDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      amountDue: freezed == amountDue
+          ? _value.amountDue
+          : amountDue // ignore: cast_nullable_to_non_nullable
+              as int?,
+      nextInstallmentLabel: freezed == nextInstallmentLabel
+          ? _value.nextInstallmentLabel
+          : nextInstallmentLabel // ignore: cast_nullable_to_non_nullable
+              as String?,
       daysOverdue: null == daysOverdue
           ? _value.daysOverdue
           : daysOverdue // ignore: cast_nullable_to_non_nullable
@@ -145,6 +160,8 @@ abstract class _$$OutstandingInvoiceImplCopyWith<$Res>
       Currency currency,
       int amountOwedRwf,
       String? dueDate,
+      int? amountDue,
+      String? nextInstallmentLabel,
       int daysOverdue,
       String agingBucket});
 }
@@ -168,6 +185,8 @@ class __$$OutstandingInvoiceImplCopyWithImpl<$Res>
     Object? currency = null,
     Object? amountOwedRwf = null,
     Object? dueDate = freezed,
+    Object? amountDue = freezed,
+    Object? nextInstallmentLabel = freezed,
     Object? daysOverdue = null,
     Object? agingBucket = null,
   }) {
@@ -204,6 +223,14 @@ class __$$OutstandingInvoiceImplCopyWithImpl<$Res>
           ? _value.dueDate
           : dueDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      amountDue: freezed == amountDue
+          ? _value.amountDue
+          : amountDue // ignore: cast_nullable_to_non_nullable
+              as int?,
+      nextInstallmentLabel: freezed == nextInstallmentLabel
+          ? _value.nextInstallmentLabel
+          : nextInstallmentLabel // ignore: cast_nullable_to_non_nullable
+              as String?,
       daysOverdue: null == daysOverdue
           ? _value.daysOverdue
           : daysOverdue // ignore: cast_nullable_to_non_nullable
@@ -229,6 +256,8 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
       this.currency = Currency.rwf,
       this.amountOwedRwf = 0,
       this.dueDate,
+      this.amountDue,
+      this.nextInstallmentLabel,
       required this.daysOverdue,
       required this.agingBucket});
 
@@ -253,6 +282,11 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
   final int amountOwedRwf;
   @override
   final String? dueDate;
+// What is payable today when the invoice is on an instalment plan, and which instalment that is.
+  @override
+  final int? amountDue;
+  @override
+  final String? nextInstallmentLabel;
   @override
   final int daysOverdue;
   @override
@@ -260,7 +294,7 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
 
   @override
   String toString() {
-    return 'OutstandingInvoice(id: $id, number: $number, customerName: $customerName, total: $total, amountOwed: $amountOwed, currency: $currency, amountOwedRwf: $amountOwedRwf, dueDate: $dueDate, daysOverdue: $daysOverdue, agingBucket: $agingBucket)';
+    return 'OutstandingInvoice(id: $id, number: $number, customerName: $customerName, total: $total, amountOwed: $amountOwed, currency: $currency, amountOwedRwf: $amountOwedRwf, dueDate: $dueDate, amountDue: $amountDue, nextInstallmentLabel: $nextInstallmentLabel, daysOverdue: $daysOverdue, agingBucket: $agingBucket)';
   }
 
   @override
@@ -280,6 +314,10 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
             (identical(other.amountOwedRwf, amountOwedRwf) ||
                 other.amountOwedRwf == amountOwedRwf) &&
             (identical(other.dueDate, dueDate) || other.dueDate == dueDate) &&
+            (identical(other.amountDue, amountDue) ||
+                other.amountDue == amountDue) &&
+            (identical(other.nextInstallmentLabel, nextInstallmentLabel) ||
+                other.nextInstallmentLabel == nextInstallmentLabel) &&
             (identical(other.daysOverdue, daysOverdue) ||
                 other.daysOverdue == daysOverdue) &&
             (identical(other.agingBucket, agingBucket) ||
@@ -288,8 +326,20 @@ class _$OutstandingInvoiceImpl implements _OutstandingInvoice {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, number, customerName, total,
-      amountOwed, currency, amountOwedRwf, dueDate, daysOverdue, agingBucket);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      number,
+      customerName,
+      total,
+      amountOwed,
+      currency,
+      amountOwedRwf,
+      dueDate,
+      amountDue,
+      nextInstallmentLabel,
+      daysOverdue,
+      agingBucket);
 
   @JsonKey(ignore: true)
   @override
@@ -317,6 +367,8 @@ abstract class _OutstandingInvoice implements OutstandingInvoice {
       final Currency currency,
       final int amountOwedRwf,
       final String? dueDate,
+      final int? amountDue,
+      final String? nextInstallmentLabel,
       required final int daysOverdue,
       required final String agingBucket}) = _$OutstandingInvoiceImpl;
 
@@ -340,6 +392,10 @@ abstract class _OutstandingInvoice implements OutstandingInvoice {
   int get amountOwedRwf;
   @override
   String? get dueDate;
+  @override // What is payable today when the invoice is on an instalment plan, and which instalment that is.
+  int? get amountDue;
+  @override
+  String? get nextInstallmentLabel;
   @override
   int get daysOverdue;
   @override

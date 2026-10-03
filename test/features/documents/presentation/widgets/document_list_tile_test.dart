@@ -123,4 +123,85 @@ void main() {
     expect(find.text('USD 1,250.50'), findsOneWidget);
     expect(find.textContaining('RWF'), findsNothing);
   });
+
+  Widget tileFor(Document document) => MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(body: DocumentListTile(document: document, onTap: () {})),
+      );
+
+  testWidgets('an unpaid invoice the customer has opened says so', (tester) async {
+    await tester.pumpWidget(tileFor(_document.copyWith(sentAt: '2026-01-02T00:00:00.000Z', lastViewedAt: '2026-01-03T00:00:00.000Z', viewCount: 2)));
+
+    expect(find.text('Opened'), findsOneWidget);
+  });
+
+  testWidgets('a paid invoice no longer needs the opened mark', (tester) async {
+    await tester.pumpWidget(tileFor(_document.copyWith(
+      lastViewedAt: '2026-01-03T00:00:00.000Z',
+      viewCount: 2,
+      paymentStatus: PaymentStatus.paid,
+    )));
+
+    expect(find.text('Opened'), findsNothing);
+  });
+
+  testWidgets('a document nobody has opened has no opened mark', (tester) async {
+    await tester.pumpWidget(tileFor(_document));
+
+    expect(find.text('Opened'), findsNothing);
+  });
+
+  testWidgets('a draft can be deleted with a swipe, a finalized document cannot', (tester) async {
+    var deleted = 0;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: DocumentListTile(
+          document: _document.copyWith(status: DocumentStatus.draft, number: null),
+          onTap: () {},
+          onDelete: () => deleted++,
+        ),
+      ),
+    ));
+
+    await tester.drag(find.text('Draft Invoice'), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-swipe-delete-d1')));
+    await tester.pumpAndSettle();
+    expect(deleted, 1);
+
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: DocumentListTile(document: _document, onTap: () {}, onContact: () {})),
+    ));
+    await tester.drag(find.text('INV-0001'), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('document-swipe-delete-d1')), findsNothing);
+  });
+
+  testWidgets('the status and opened chips wrap on a narrow phone with large text instead of overflowing', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: MediaQuery(
+        data: const MediaQueryData(size: Size(320, 640), textScaler: TextScaler.linear(1.6)),
+        child: Scaffold(
+          body: DocumentListTile(
+            document: _document.copyWith(
+              paymentStatus: PaymentStatus.partiallyPaid,
+              lastViewedAt: '2026-01-03T00:00:00.000Z',
+              amountPaid: 100,
+            ),
+            onTap: () {},
+          ),
+        ),
+      ),
+    ));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Opened'), findsOneWidget);
+  });
 }

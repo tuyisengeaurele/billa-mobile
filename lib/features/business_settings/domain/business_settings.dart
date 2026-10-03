@@ -25,7 +25,11 @@ class BusinessSettings with _$BusinessSettings {
     @Default([]) List<String> accentColors,
     @Default(true) bool remindersEnabled,
     @Default(7) int reminderCadenceDays,
+    // How many days before the due date a customer gets a heads-up; 0 turns the heads-up off.
+    @Default(3) int dueSoonReminderDays,
     @Default(false) bool requireApprovalToFinalize,
+    // Whether customers can pay on the public page, which decides how a statement is worded.
+    @Default(false) bool momoEnabled,
     @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
     @Default(DocumentTemplate.minimal)
     DocumentTemplate defaultTemplate,

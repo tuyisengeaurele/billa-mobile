@@ -87,4 +87,12 @@ void main() {
 
     expect(find.text('Retry'), findsOneWidget);
   });
+
+  testWidgets('offers a switch for a customer opening a document', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('notification-DOCUMENT_VIEWED')), findsOneWidget);
+    expect(find.text('Document opened'), findsOneWidget);
+  });
 }

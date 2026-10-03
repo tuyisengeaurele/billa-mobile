@@ -79,4 +79,12 @@ void main() {
     expect(trial.isPaid, isFalse);
     expect(paid.isPaid, isTrue);
   });
+
+  test('reads how many days before the due date customers are reminded, three when the server says nothing', () {
+    final given = BusinessSettings.fromJson({'id': 'b1', 'name': 'Acme', 'dueSoonReminderDays': 5});
+    final absent = BusinessSettings.fromJson({'id': 'b1', 'name': 'Acme'});
+
+    expect(given.dueSoonReminderDays, 5);
+    expect(absent.dueSoonReminderDays, 3);
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/money_text.dart';
 import '../../../../core/widgets/swipe_row.dart';
 import '../../domain/document.dart';
@@ -24,12 +25,22 @@ IconData documentTypeIcon(DocumentType type) => switch (type) {
     };
 
 class DocumentListTile extends StatelessWidget {
-  const DocumentListTile({super.key, required this.document, required this.onTap, this.onDuplicate, this.onContact});
+  const DocumentListTile({
+    super.key,
+    required this.document,
+    required this.onTap,
+    this.onDuplicate,
+    this.onContact,
+    this.onDelete,
+  });
 
   final Document document;
   final VoidCallback onTap;
   final VoidCallback? onDuplicate;
   final VoidCallback? onContact;
+
+  /// Only a draft can be deleted, so the list passes this for drafts alone.
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +55,30 @@ class DocumentListTile extends StatelessWidget {
         children: [
           Text('${documentTypeLabel(document.type)} · ${document.customer.name}'),
           const SizedBox(height: 4),
-          DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
+              // Once it is paid the customer opening it again no longer matters.
+              if (document.lastViewedAt != null && document.paymentStatus != PaymentStatus.paid)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).extension<AppColors>()!.neutral100,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text('Opened', style: Theme.of(context).textTheme.labelSmall),
+                ),
+            ],
+          ),
         ],
       ),
       trailing: MoneyText(document.total, currency: document.currency),
     );
 
-    if (onDuplicate == null && onContact == null) return tile;
+    if (onDuplicate == null && onContact == null && onDelete == null) return tile;
     return SwipeRow(
       startActions: [
         if (onDuplicate != null)
@@ -68,6 +96,13 @@ class DocumentListTile extends StatelessWidget {
             label: 'Contact',
             icon: Icons.chat_outlined,
             onPressed: onContact!,
+          ),
+        if (onDelete != null)
+          SwipeAction(
+            key: Key('document-swipe-delete-${document.id}'),
+            label: 'Delete',
+            icon: Icons.delete_outline,
+            onPressed: onDelete!,
           ),
       ],
       child: tile,
