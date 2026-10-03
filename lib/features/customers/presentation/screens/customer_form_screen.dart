@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +24,8 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
   late final _addressController = TextEditingController(text: widget.existing?.address ?? '');
   late final _phoneController = TextEditingController(text: widget.existing?.phone ?? '');
   late final _emailController = TextEditingController(text: widget.existing?.email ?? '');
+  late final _creditLimitController =
+      TextEditingController(text: widget.existing?.creditLimit?.toString() ?? '');
   String? _errorMessage;
   String? _saveError;
   String? _pickError;
@@ -56,6 +59,12 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       setState(() => _errorMessage = 'Enter a customer name');
       return;
     }
+    final limitText = _creditLimitController.text.trim();
+    final creditLimit = limitText.isEmpty ? null : int.tryParse(limitText);
+    if (limitText.isNotEmpty && (creditLimit == null || creditLimit <= 0)) {
+      setState(() => _errorMessage = 'Enter a limit greater than zero, or leave it empty');
+      return;
+    }
     setState(() {
       _errorMessage = null;
       _saveError = null;
@@ -70,6 +79,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
           address: _orNull(_addressController),
           phone: _orNull(_phoneController),
           email: _orNull(_emailController),
+          creditLimit: creditLimit,
         );
       } else {
         await repository.update(
@@ -79,6 +89,8 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
           address: _orNull(_addressController),
           phone: _orNull(_phoneController),
           email: _orNull(_emailController),
+          creditLimit: creditLimit,
+          clearCreditLimit: creditLimit == null && widget.existing?.creditLimit != null,
         );
       }
       if (mounted) context.pop();
@@ -121,6 +133,18 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
               TextField(key: const Key('customer-form-phone'), controller: _phoneController, keyboardType: TextInputType.phone, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.telephoneNumber], decoration: const InputDecoration(labelText: 'Phone (optional)')),
               const SizedBox(height: 12),
               TextField(key: const Key('customer-form-email'), controller: _emailController, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.done, autofillHints: const [AutofillHints.email], decoration: const InputDecoration(labelText: 'Email (optional)')),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('customer-form-credit-limit'),
+                controller: _creditLimitController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Credit limit in RWF (optional)',
+                  helperText: 'You are warned when an invoice would take them past it',
+                ),
+              ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 8),
                 Text(_errorMessage!),

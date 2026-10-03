@@ -53,12 +53,14 @@ class CustomerRepositoryImpl implements CustomerRepository {
     String? address,
     String? phone,
     String? email,
+    int? creditLimit,
   }) async {
     final data = <String, dynamic>{'name': name};
     if (tin != null) data['tin'] = tin;
     if (address != null) data['address'] = address;
     if (phone != null) data['phone'] = phone;
     if (email != null) data['email'] = email;
+    if (creditLimit != null) data['creditLimit'] = creditLimit;
 
     final response = await _dio.post<Map<String, dynamic>>('/customers', data: data);
     return Customer.fromJson(response.data!['customer'] as Map<String, dynamic>);
@@ -73,6 +75,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
     String? phone,
     String? email,
     bool? isActive,
+    int? creditLimit,
+    bool clearCreditLimit = false,
   }) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
@@ -81,6 +85,12 @@ class CustomerRepositoryImpl implements CustomerRepository {
     if (phone != null) data['phone'] = phone;
     if (email != null) data['email'] = email;
     if (isActive != null) data['isActive'] = isActive;
+    // An explicit null removes the limit; leaving the key out would keep it.
+    if (clearCreditLimit) {
+      data['creditLimit'] = null;
+    } else if (creditLimit != null) {
+      data['creditLimit'] = creditLimit;
+    }
 
     final response = await _dio.patch<Map<String, dynamic>>('/customers/$id', data: data);
     return Customer.fromJson(response.data!['customer'] as Map<String, dynamic>);

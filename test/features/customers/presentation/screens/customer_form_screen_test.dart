@@ -10,6 +10,7 @@ import 'package:billa_mobile/features/customers/domain/customer.dart';
 import 'package:billa_mobile/features/customers/domain/customer_repository.dart';
 import 'package:billa_mobile/features/customers/presentation/providers/customer_repository_provider.dart';
 import 'package:billa_mobile/features/customers/presentation/screens/customer_form_screen.dart';
+import '../../../../support/tall_screen.dart';
 
 class _MockCustomerRepository extends Mock implements CustomerRepository {}
 
@@ -49,7 +50,8 @@ void main() {
   }
 
   testWidgets('create sends only the filled-in fields', (tester) async {
-    when(() => repository.create(name: 'Acme', tin: null, address: null, phone: null, email: null)).thenAnswer(
+    useTallScreen(tester);
+    when(() => repository.create(name: 'Acme', tin: null, address: null, phone: null, email: null, creditLimit: null)).thenAnswer(
       (_) async => const Customer(id: 'c1', name: 'Acme', isActive: true, createdAt: '2026-01-01T00:00:00.000Z'),
     );
 
@@ -58,12 +60,13 @@ void main() {
     await tester.tap(find.byKey(const Key('customer-form-save')));
     await tester.pumpAndSettle();
 
-    verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: null, email: null)).called(1);
+    verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: null, email: null, creditLimit: null)).called(1);
   });
 
   testWidgets('edit pre-fills the existing customer and calls update with its id', (tester) async {
+    useTallScreen(tester);
     const existing = Customer(id: 'c1', name: 'Acme', phone: '0788000000', isActive: true, createdAt: '2026-01-01T00:00:00.000Z');
-    when(() => repository.update('c1', name: 'Acme Ltd', tin: null, address: null, phone: '0788000000', email: null)).thenAnswer(
+    when(() => repository.update('c1', name: 'Acme Ltd', tin: null, address: null, phone: '0788000000', email: null, creditLimit: null, clearCreditLimit: false)).thenAnswer(
       (_) async => existing,
     );
 
@@ -74,12 +77,13 @@ void main() {
     await tester.tap(find.byKey(const Key('customer-form-save')));
     await tester.pumpAndSettle();
 
-    verify(() => repository.update('c1', name: 'Acme Ltd', tin: null, address: null, phone: '0788000000', email: null)).called(1);
+    verify(() => repository.update('c1', name: 'Acme Ltd', tin: null, address: null, phone: '0788000000', email: null, creditLimit: null, clearCreditLimit: false)).called(1);
   });
 
   testWidgets('a failed save keeps what was typed, says why, and Retry saves it', (tester) async {
+    useTallScreen(tester);
     var failing = true;
-    when(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null)).thenAnswer((_) async {
+    when(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null, creditLimit: null)).thenAnswer((_) async {
       if (failing) throw DioException(requestOptions: RequestOptions(path: '/customers'), type: DioExceptionType.connectionError);
       return const Customer(id: 'c1', name: 'Acme', isActive: true, createdAt: '2026-01-01T00:00:00.000Z');
     });
@@ -98,10 +102,11 @@ void main() {
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
 
-    verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null)).called(2);
+    verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null, creditLimit: null)).called(2);
   });
 
   testWidgets('From contacts fills the name and number of the chosen person', (tester) async {
+    useTallScreen(tester);
     picker = _FakePicker(const PickedContact(name: 'Ada Lovelace', phone: '0788 123 456'));
 
     await tester.pumpWidget(buildApp(const CustomerFormScreen()));
@@ -113,6 +118,7 @@ void main() {
   });
 
   testWidgets('choosing a contact keeps a name that was already typed and fills the number', (tester) async {
+    useTallScreen(tester);
     picker = _FakePicker(const PickedContact(name: 'Ada Lovelace', phone: '0788123456'));
 
     await tester.pumpWidget(buildApp(const CustomerFormScreen()));
@@ -126,6 +132,7 @@ void main() {
   });
 
   testWidgets('backing out of the picker changes nothing', (tester) async {
+    useTallScreen(tester);
     picker = _FakePicker(null);
 
     await tester.pumpWidget(buildApp(const CustomerFormScreen()));
@@ -137,6 +144,7 @@ void main() {
   });
 
   testWidgets('a phone with no contacts app says so', (tester) async {
+    useTallScreen(tester);
     picker = _FakePicker(null, error: const ContactPickerUnavailable());
 
     await tester.pumpWidget(buildApp(const CustomerFormScreen()));
@@ -144,5 +152,76 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("This phone has no contacts app. Type the details instead"), findsOneWidget);
+  });
+
+  testWidgets('a credit limit typed on a new customer is sent as a whole number', (tester) async {
+    useTallScreen(tester);
+    when(() => repository.create(name: 'Acme', tin: null, address: null, phone: null, email: null, creditLimit: 500000))
+        .thenAnswer(
+      (_) async => const Customer(id: 'c1', name: 'Acme', isActive: true, createdAt: '2026-01-01T00:00:00.000Z'),
+    );
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.enterText(find.byKey(const Key('customer-form-name')), 'Acme');
+    await tester.enterText(find.byKey(const Key('customer-form-credit-limit')), '500000');
+    await tester.tap(find.byKey(const Key('customer-form-save')));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: null, email: null, creditLimit: 500000))
+        .called(1);
+  });
+
+  testWidgets('editing shows the current limit, and emptying the box removes it', (tester) async {
+    useTallScreen(tester);
+    const existing = Customer(
+      id: 'c1',
+      name: 'Acme',
+      creditLimit: 500000,
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.update('c1',
+        name: 'Acme',
+        tin: null,
+        address: null,
+        phone: null,
+        email: null,
+        creditLimit: null,
+        clearCreditLimit: true)).thenAnswer((_) async => existing);
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen(existing: existing)));
+    expect(find.text('500000'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('customer-form-credit-limit')), '');
+    await tester.tap(find.byKey(const Key('customer-form-save')));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.update('c1',
+        name: 'Acme',
+        tin: null,
+        address: null,
+        phone: null,
+        email: null,
+        creditLimit: null,
+        clearCreditLimit: true)).called(1);
+  });
+
+  testWidgets('a limit of zero is refused with what to do instead', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.enterText(find.byKey(const Key('customer-form-name')), 'Acme');
+    await tester.enterText(find.byKey(const Key('customer-form-credit-limit')), '0');
+    await tester.tap(find.byKey(const Key('customer-form-save')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a limit greater than zero, or leave it empty'), findsOneWidget);
+    verifyNever(() => repository.create(
+          name: any(named: 'name'),
+          tin: any(named: 'tin'),
+          address: any(named: 'address'),
+          phone: any(named: 'phone'),
+          email: any(named: 'email'),
+          creditLimit: any(named: 'creditLimit'),
+        ));
   });
 }
