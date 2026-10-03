@@ -55,6 +55,7 @@ String describeActionError(Object error) {
     'invalid_code' => "That code isn't right. Try again",
     'not_enabled' => "Two-factor sign-in isn't turned on",
     'has_admin_history' => "This account can't be deleted because it has administrator history",
+    'too_many_attachments' => 'A document can have 5 files. Remove one to add another',
     'upload_failed' => 'The upload failed. Try again',
     'invalid_file_type' => 'Choose a PNG, JPG, or WebP image',
     'no_file' => 'Choose an image first',

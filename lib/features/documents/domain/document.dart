@@ -60,6 +60,25 @@ class DocumentScheduleStep with _$DocumentScheduleStep {
   factory DocumentScheduleStep.fromJson(Map<String, dynamic> json) => _$DocumentScheduleStepFromJson(json);
 }
 
+/// A file kept with a document, such as a purchase order or proof of delivery. It is never printed on the PDF.
+@freezed
+class DocumentAttachment with _$DocumentAttachment {
+  const DocumentAttachment._();
+
+  const factory DocumentAttachment({
+    required String id,
+    required String fileName,
+    required String url,
+    required String contentType,
+    required int sizeBytes,
+    required String createdAt,
+  }) = _DocumentAttachment;
+
+  factory DocumentAttachment.fromJson(Map<String, dynamic> json) => _$DocumentAttachmentFromJson(json);
+
+  bool get isImage => contentType.startsWith('image/');
+}
+
 @freezed
 class DocumentBusinessRef with _$DocumentBusinessRef {
   const factory DocumentBusinessRef({@Default(false) bool momoEnabled}) = _DocumentBusinessRef;
@@ -119,6 +138,7 @@ class Document with _$Document {
     String? nextRecurrenceAt,
     DocumentNextInstallment? nextInstallment,
     @Default(<DocumentScheduleStep>[]) List<DocumentScheduleStep> schedule,
+    @Default(<DocumentAttachment>[]) List<DocumentAttachment> attachments,
     DocumentBusinessRef? business,
     @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
     @Default(DocumentLanguage.en)

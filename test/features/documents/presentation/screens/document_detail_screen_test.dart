@@ -729,4 +729,28 @@ void main() {
 
     expect(find.text('Sent, not opened yet'), findsNothing);
   });
+
+  testWidgets('shows the attachments section with the files already on the document', (tester) async {
+    when(() => repository.get('d1')).thenAnswer(
+      (_) async => _document.copyWith(attachments: const [
+        DocumentAttachment(
+          id: 'a1',
+          fileName: 'po.png',
+          url: '/uploads/b1/po.png',
+          contentType: 'image/png',
+          sizeBytes: 2048,
+          createdAt: '2026-01-02T00:00:00.000Z',
+        ),
+      ]),
+    );
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Attachments'), findsOneWidget);
+    expect(find.text('po.png'), findsOneWidget);
+  });
 }

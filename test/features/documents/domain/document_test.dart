@@ -224,4 +224,25 @@ void main() {
     expect(document.lastViewedAt, isNull);
     expect(document.viewCount, 0);
   });
+
+  test('reads the files attached to a document, and none when the server sends none', () {
+    final withFiles = Document.fromJson(_documentJson(extra: {
+      'attachments': [
+        {
+          'id': 'a1',
+          'fileName': 'po.png',
+          'url': '/uploads/b1/po.png',
+          'contentType': 'image/png',
+          'sizeBytes': 2048,
+          'createdAt': '2026-01-02T00:00:00.000Z',
+        },
+      ],
+    }));
+    final without = Document.fromJson(_documentJson());
+
+    expect(withFiles.attachments.single.fileName, 'po.png');
+    expect(withFiles.attachments.single.sizeBytes, 2048);
+    expect(withFiles.attachments.single.isImage, isTrue);
+    expect(without.attachments, isEmpty);
+  });
 }

@@ -179,4 +179,11 @@ void main() {
       'They owe nothing right now, so there is no statement to send',
     );
   });
+
+  test('a sixth attachment says the limit and how to make room', () {
+    expect(
+      describeActionError(_error('too_many_attachments')),
+      'A document can have 5 files. Remove one to add another',
+    );
+  });
 }

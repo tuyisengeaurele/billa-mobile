@@ -78,6 +78,28 @@ Map<String, dynamic> _$$DocumentScheduleStepImplToJson(
       'number': instance.number,
     };
 
+_$DocumentAttachmentImpl _$$DocumentAttachmentImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DocumentAttachmentImpl(
+      id: json['id'] as String,
+      fileName: json['fileName'] as String,
+      url: json['url'] as String,
+      contentType: json['contentType'] as String,
+      sizeBytes: (json['sizeBytes'] as num).toInt(),
+      createdAt: json['createdAt'] as String,
+    );
+
+Map<String, dynamic> _$$DocumentAttachmentImplToJson(
+        _$DocumentAttachmentImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'fileName': instance.fileName,
+      'url': instance.url,
+      'contentType': instance.contentType,
+      'sizeBytes': instance.sizeBytes,
+      'createdAt': instance.createdAt,
+    };
+
 _$DocumentBusinessRefImpl _$$DocumentBusinessRefImplFromJson(
         Map<String, dynamic> json) =>
     _$DocumentBusinessRefImpl(
@@ -169,6 +191,11 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
                   DocumentScheduleStep.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <DocumentScheduleStep>[],
+      attachments: (json['attachments'] as List<dynamic>?)
+              ?.map(
+                  (e) => DocumentAttachment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <DocumentAttachment>[],
       business: json['business'] == null
           ? null
           : DocumentBusinessRef.fromJson(
@@ -228,6 +255,7 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'nextRecurrenceAt': instance.nextRecurrenceAt,
       'nextInstallment': instance.nextInstallment,
       'schedule': instance.schedule,
+      'attachments': instance.attachments,
       'business': instance.business,
       'language': documentLanguageToJson(instance.language),
       'sentAt': instance.sentAt,

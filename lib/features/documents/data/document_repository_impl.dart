@@ -157,4 +157,18 @@ class DocumentRepositoryImpl implements DocumentRepository {
     );
     return response.data!['url'] as String;
   }
+
+  @override
+  Future<DocumentAttachment> uploadAttachment(String documentId, List<int> bytes, String filename) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/documents/$documentId/attachments',
+      data: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: filename)}),
+    );
+    return DocumentAttachment.fromJson(response.data!['attachment'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deleteAttachment(String documentId, String attachmentId) async {
+    await _dio.delete<void>('/documents/$documentId/attachments/$attachmentId');
+  }
 }

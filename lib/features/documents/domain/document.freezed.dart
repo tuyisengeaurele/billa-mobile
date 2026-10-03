@@ -841,6 +841,254 @@ abstract class _DocumentScheduleStep implements DocumentScheduleStep {
       get copyWith => throw _privateConstructorUsedError;
 }
 
+DocumentAttachment _$DocumentAttachmentFromJson(Map<String, dynamic> json) {
+  return _DocumentAttachment.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DocumentAttachment {
+  String get id => throw _privateConstructorUsedError;
+  String get fileName => throw _privateConstructorUsedError;
+  String get url => throw _privateConstructorUsedError;
+  String get contentType => throw _privateConstructorUsedError;
+  int get sizeBytes => throw _privateConstructorUsedError;
+  String get createdAt => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DocumentAttachmentCopyWith<DocumentAttachment> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DocumentAttachmentCopyWith<$Res> {
+  factory $DocumentAttachmentCopyWith(
+          DocumentAttachment value, $Res Function(DocumentAttachment) then) =
+      _$DocumentAttachmentCopyWithImpl<$Res, DocumentAttachment>;
+  @useResult
+  $Res call(
+      {String id,
+      String fileName,
+      String url,
+      String contentType,
+      int sizeBytes,
+      String createdAt});
+}
+
+/// @nodoc
+class _$DocumentAttachmentCopyWithImpl<$Res, $Val extends DocumentAttachment>
+    implements $DocumentAttachmentCopyWith<$Res> {
+  _$DocumentAttachmentCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? fileName = null,
+    Object? url = null,
+    Object? contentType = null,
+    Object? sizeBytes = null,
+    Object? createdAt = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      fileName: null == fileName
+          ? _value.fileName
+          : fileName // ignore: cast_nullable_to_non_nullable
+              as String,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      contentType: null == contentType
+          ? _value.contentType
+          : contentType // ignore: cast_nullable_to_non_nullable
+              as String,
+      sizeBytes: null == sizeBytes
+          ? _value.sizeBytes
+          : sizeBytes // ignore: cast_nullable_to_non_nullable
+              as int,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DocumentAttachmentImplCopyWith<$Res>
+    implements $DocumentAttachmentCopyWith<$Res> {
+  factory _$$DocumentAttachmentImplCopyWith(_$DocumentAttachmentImpl value,
+          $Res Function(_$DocumentAttachmentImpl) then) =
+      __$$DocumentAttachmentImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String id,
+      String fileName,
+      String url,
+      String contentType,
+      int sizeBytes,
+      String createdAt});
+}
+
+/// @nodoc
+class __$$DocumentAttachmentImplCopyWithImpl<$Res>
+    extends _$DocumentAttachmentCopyWithImpl<$Res, _$DocumentAttachmentImpl>
+    implements _$$DocumentAttachmentImplCopyWith<$Res> {
+  __$$DocumentAttachmentImplCopyWithImpl(_$DocumentAttachmentImpl _value,
+      $Res Function(_$DocumentAttachmentImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? fileName = null,
+    Object? url = null,
+    Object? contentType = null,
+    Object? sizeBytes = null,
+    Object? createdAt = null,
+  }) {
+    return _then(_$DocumentAttachmentImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      fileName: null == fileName
+          ? _value.fileName
+          : fileName // ignore: cast_nullable_to_non_nullable
+              as String,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      contentType: null == contentType
+          ? _value.contentType
+          : contentType // ignore: cast_nullable_to_non_nullable
+              as String,
+      sizeBytes: null == sizeBytes
+          ? _value.sizeBytes
+          : sizeBytes // ignore: cast_nullable_to_non_nullable
+              as int,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DocumentAttachmentImpl extends _DocumentAttachment {
+  const _$DocumentAttachmentImpl(
+      {required this.id,
+      required this.fileName,
+      required this.url,
+      required this.contentType,
+      required this.sizeBytes,
+      required this.createdAt})
+      : super._();
+
+  factory _$DocumentAttachmentImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DocumentAttachmentImplFromJson(json);
+
+  @override
+  final String id;
+  @override
+  final String fileName;
+  @override
+  final String url;
+  @override
+  final String contentType;
+  @override
+  final int sizeBytes;
+  @override
+  final String createdAt;
+
+  @override
+  String toString() {
+    return 'DocumentAttachment(id: $id, fileName: $fileName, url: $url, contentType: $contentType, sizeBytes: $sizeBytes, createdAt: $createdAt)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocumentAttachmentImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.fileName, fileName) ||
+                other.fileName == fileName) &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.contentType, contentType) ||
+                other.contentType == contentType) &&
+            (identical(other.sizeBytes, sizeBytes) ||
+                other.sizeBytes == sizeBytes) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, id, fileName, url, contentType, sizeBytes, createdAt);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocumentAttachmentImplCopyWith<_$DocumentAttachmentImpl> get copyWith =>
+      __$$DocumentAttachmentImplCopyWithImpl<_$DocumentAttachmentImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DocumentAttachmentImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DocumentAttachment extends DocumentAttachment {
+  const factory _DocumentAttachment(
+      {required final String id,
+      required final String fileName,
+      required final String url,
+      required final String contentType,
+      required final int sizeBytes,
+      required final String createdAt}) = _$DocumentAttachmentImpl;
+  const _DocumentAttachment._() : super._();
+
+  factory _DocumentAttachment.fromJson(Map<String, dynamic> json) =
+      _$DocumentAttachmentImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  String get fileName;
+  @override
+  String get url;
+  @override
+  String get contentType;
+  @override
+  int get sizeBytes;
+  @override
+  String get createdAt;
+  @override
+  @JsonKey(ignore: true)
+  _$$DocumentAttachmentImplCopyWith<_$DocumentAttachmentImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 DocumentBusinessRef _$DocumentBusinessRefFromJson(Map<String, dynamic> json) {
   return _DocumentBusinessRef.fromJson(json);
 }
@@ -1539,6 +1787,8 @@ mixin _$Document {
   DocumentNextInstallment? get nextInstallment =>
       throw _privateConstructorUsedError;
   List<DocumentScheduleStep> get schedule => throw _privateConstructorUsedError;
+  List<DocumentAttachment> get attachments =>
+      throw _privateConstructorUsedError;
   DocumentBusinessRef? get business => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language => throw _privateConstructorUsedError;
@@ -1598,6 +1848,7 @@ abstract class $DocumentCopyWith<$Res> {
       String? nextRecurrenceAt,
       DocumentNextInstallment? nextInstallment,
       List<DocumentScheduleStep> schedule,
+      List<DocumentAttachment> attachments,
       DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -1663,6 +1914,7 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? nextRecurrenceAt = freezed,
     Object? nextInstallment = freezed,
     Object? schedule = null,
+    Object? attachments = null,
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
@@ -1768,6 +2020,10 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
           ? _value.schedule
           : schedule // ignore: cast_nullable_to_non_nullable
               as List<DocumentScheduleStep>,
+      attachments: null == attachments
+          ? _value.attachments
+          : attachments // ignore: cast_nullable_to_non_nullable
+              as List<DocumentAttachment>,
       business: freezed == business
           ? _value.business
           : business // ignore: cast_nullable_to_non_nullable
@@ -1950,6 +2206,7 @@ abstract class _$$DocumentImplCopyWith<$Res>
       String? nextRecurrenceAt,
       DocumentNextInstallment? nextInstallment,
       List<DocumentScheduleStep> schedule,
+      List<DocumentAttachment> attachments,
       DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -2019,6 +2276,7 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? nextRecurrenceAt = freezed,
     Object? nextInstallment = freezed,
     Object? schedule = null,
+    Object? attachments = null,
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
@@ -2124,6 +2382,10 @@ class __$$DocumentImplCopyWithImpl<$Res>
           ? _value._schedule
           : schedule // ignore: cast_nullable_to_non_nullable
               as List<DocumentScheduleStep>,
+      attachments: null == attachments
+          ? _value._attachments
+          : attachments // ignore: cast_nullable_to_non_nullable
+              as List<DocumentAttachment>,
       business: freezed == business
           ? _value.business
           : business // ignore: cast_nullable_to_non_nullable
@@ -2234,6 +2496,7 @@ class _$DocumentImpl implements _Document {
       this.nextInstallment,
       final List<DocumentScheduleStep> schedule =
           const <DocumentScheduleStep>[],
+      final List<DocumentAttachment> attachments = const <DocumentAttachment>[],
       this.business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -2258,6 +2521,7 @@ class _$DocumentImpl implements _Document {
       this.referencedDocument})
       : _installments = installments,
         _schedule = schedule,
+        _attachments = attachments,
         _lines = lines;
 
   factory _$DocumentImpl.fromJson(Map<String, dynamic> json) =>
@@ -2323,6 +2587,15 @@ class _$DocumentImpl implements _Document {
     return EqualUnmodifiableListView(_schedule);
   }
 
+  final List<DocumentAttachment> _attachments;
+  @override
+  @JsonKey()
+  List<DocumentAttachment> get attachments {
+    if (_attachments is EqualUnmodifiableListView) return _attachments;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_attachments);
+  }
+
   @override
   final DocumentBusinessRef? business;
   @override
@@ -2375,7 +2648,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, business: $business, language: $language, sentAt: $sentAt, firstViewedAt: $firstViewedAt, lastViewedAt: $lastViewedAt, viewCount: $viewCount, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, attachments: $attachments, business: $business, language: $language, sentAt: $sentAt, firstViewedAt: $firstViewedAt, lastViewedAt: $lastViewedAt, viewCount: $viewCount, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -2417,6 +2690,8 @@ class _$DocumentImpl implements _Document {
             (identical(other.nextInstallment, nextInstallment) ||
                 other.nextInstallment == nextInstallment) &&
             const DeepCollectionEquality().equals(other._schedule, _schedule) &&
+            const DeepCollectionEquality()
+                .equals(other._attachments, _attachments) &&
             (identical(other.business, business) ||
                 other.business == business) &&
             (identical(other.language, language) ||
@@ -2480,6 +2755,7 @@ class _$DocumentImpl implements _Document {
         nextRecurrenceAt,
         nextInstallment,
         const DeepCollectionEquality().hash(_schedule),
+        const DeepCollectionEquality().hash(_attachments),
         business,
         language,
         sentAt,
@@ -2541,6 +2817,7 @@ abstract class _Document implements Document {
       final String? nextRecurrenceAt,
       final DocumentNextInstallment? nextInstallment,
       final List<DocumentScheduleStep> schedule,
+      final List<DocumentAttachment> attachments,
       final DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -2613,6 +2890,8 @@ abstract class _Document implements Document {
   DocumentNextInstallment? get nextInstallment;
   @override
   List<DocumentScheduleStep> get schedule;
+  @override
+  List<DocumentAttachment> get attachments;
   @override
   DocumentBusinessRef? get business;
   @override

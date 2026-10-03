@@ -34,4 +34,9 @@ abstract class DocumentRepository {
   Future<Document> writeOff(String documentId, String reason);
   Future<Document> reactivate(String documentId);
   Future<String> uploadPaymentReceipt(List<int> bytes, String filename);
+
+  /// Attaches a photo to a document, a draft or a finalized one, and returns the stored file.
+  Future<DocumentAttachment> uploadAttachment(String documentId, List<int> bytes, String filename);
+
+  Future<void> deleteAttachment(String documentId, String attachmentId);
 }
