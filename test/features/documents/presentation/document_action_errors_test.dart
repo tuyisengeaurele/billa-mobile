@@ -25,6 +25,18 @@ void main() {
     expect(describeDocumentActionError(_error('customer_has_no_email')), 'This customer has no email on file');
     expect(describeDocumentActionError(_error('pdf_render_failed')), "Couldn't generate the PDF");
     expect(describeDocumentActionError(_error('email_send_failed')), "Couldn't send the email");
+    expect(describeDocumentActionError(_error('not_an_invoice')), 'Only invoices support this action');
+    expect(
+      describeDocumentActionError(_error('amount_exceeds_owed')),
+      "That's more than what's owed on this invoice",
+    );
+    expect(describeDocumentActionError(_error('already_voided')), 'This payment was already voided');
+    expect(describeDocumentActionError(_error('already_paid')), 'This invoice is already fully paid');
+    expect(describeDocumentActionError(_error('not_written_off')), "This invoice hasn't been written off");
+    expect(
+      describeDocumentActionError(_error('subscription_required')),
+      'Subscription required to record payments',
+    );
   });
 
   test('falls back to a generic message for an unknown code', () {

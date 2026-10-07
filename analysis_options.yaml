@@ -30,6 +30,14 @@ linter:
   rules:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    #
+    # The suggested fix (`'key': ?value`) uses null-aware map entry syntax
+    # that build_runner's pinned analyzer (6.4.1, held back by the same
+    # riverpod/freezed version constraints from Phase 1) can't parse yet,
+    # even though the Flutter SDK's own newer analyzer accepts it fine —
+    # the `if (value != null) 'key': value` form stays required until that
+    # pin moves.
+    use_null_aware_elements: false
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

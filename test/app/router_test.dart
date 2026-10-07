@@ -17,12 +17,15 @@ import 'package:billa_mobile/features/documents/presentation/providers/document_
 import 'package:billa_mobile/features/items/domain/item_repository.dart';
 import 'package:billa_mobile/features/items/presentation/providers/item_repository_provider.dart';
 import 'package:billa_mobile/features/onboarding/domain/business.dart';
+import 'package:billa_mobile/features/receivables/domain/receivables_repository.dart';
+import 'package:billa_mobile/features/receivables/presentation/providers/receivables_repository_provider.dart';
 
 const _user = AuthUser(id: 'u1', email: 'a@b.com', totpEnabled: false, isAdmin: false);
 
 class _MockCustomerRepository extends Mock implements CustomerRepository {}
 class _MockItemRepository extends Mock implements ItemRepository {}
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
+class _MockReceivablesRepository extends Mock implements ReceivablesRepository {}
 
 Future<GoRouter> _pumpRouter(WidgetTester tester, ProviderContainer container) async {
   final router = container.read(appRouterProvider);
@@ -155,6 +158,23 @@ void main() {
 
     expect(find.text('New Invoice'), findsOneWidget);
     expect(find.text('Choose a customer'), findsOneWidget);
+  });
+
+  testWidgets('home screen navigates to receivables', (tester) async {
+    final receivablesRepository = _MockReceivablesRepository();
+    when(() => receivablesRepository.list()).thenAnswer((_) async => []);
+    const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+    final container = ProviderContainer(overrides: [
+      authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+      receivablesRepositoryProvider.overrideWithValue(receivablesRepository),
+    ]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-nav-receivables')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nothing outstanding — all invoices are paid up'), findsOneWidget);
   });
 }
 

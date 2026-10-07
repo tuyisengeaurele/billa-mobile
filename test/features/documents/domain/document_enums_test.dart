@@ -43,4 +43,12 @@ void main() {
     expect(documentLanguageToJson(DocumentLanguage.en), 'EN');
     expect(documentLanguageToJson(DocumentLanguage.fr), 'FR');
   });
+
+  test('PaymentMethod round-trips every value', () {
+    for (final method in PaymentMethod.values) {
+      expect(paymentMethodFromJson(paymentMethodToJson(method)), method);
+    }
+    expect(paymentMethodToJson(PaymentMethod.bankTransfer), 'BANK_TRANSFER');
+    expect(paymentMethodToJson(PaymentMethod.mobileMoney), 'MOBILE_MONEY');
+  });
 }
