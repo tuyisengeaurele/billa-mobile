@@ -46,6 +46,7 @@ Widget accountApp({
         '/settings/security',
         '/settings/notifications',
         '/settings/appearance',
+        '/settings/privacy',
         '/settings/security/two-factor',
         '/settings/security/sessions',
         '/settings/business',

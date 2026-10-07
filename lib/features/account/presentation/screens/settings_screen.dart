@@ -125,6 +125,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () => context.push('/settings/security'),
           ),
           _Row(
+            rowKey: const Key('settings-privacy'),
+            icon: Icons.visibility_off_outlined,
+            title: 'Privacy and lock',
+            onTap: () => context.push('/settings/privacy'),
+          ),
+          _Row(
             rowKey: const Key('settings-notifications'),
             icon: Icons.notifications_none,
             title: 'Notifications',

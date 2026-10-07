@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import 'package:billa_mobile/core/privacy/privacy_mode.dart';
+import 'package:billa_mobile/core/privacy/privacy_settings.dart';
 import 'package:billa_mobile/features/auth/presentation/providers/auth_controller.dart';
 import 'package:billa_mobile/features/businesses/presentation/providers/my_businesses_provider.dart';
 import 'package:billa_mobile/features/dashboard/domain/dashboard_repository.dart';
@@ -404,5 +406,21 @@ void main() {
     await pumpHome(tester);
 
     expect(find.byKey(const Key('home-continue-draft')), findsNothing);
+  });
+
+  testWidgets('the eye turns privacy mode on, then reveals and hides amounts for the session', (tester) async {
+    await pumpHome(tester);
+    final container = ProviderScope.containerOf(tester.element(find.byType(HomeScreen)));
+    expect(container.read(privacySettingsProvider).hideAmounts, isFalse);
+
+    await tester.tap(find.byKey(const Key('home-privacy-toggle')));
+    await tester.pump();
+    expect(container.read(privacySettingsProvider).hideAmounts, isTrue);
+    expect(container.read(amountsHiddenProvider), isTrue);
+
+    await tester.tap(find.byKey(const Key('home-privacy-toggle')));
+    await tester.pump();
+    expect(container.read(amountsHiddenProvider), isFalse);
+    expect(container.read(privacySettingsProvider).hideAmounts, isTrue);
   });
 }
