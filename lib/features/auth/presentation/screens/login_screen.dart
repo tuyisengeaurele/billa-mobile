@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/error/app_exception.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/google_sign_in_button.dart';
@@ -80,7 +81,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _codeController.clear();
       setState(() {
         _errorMessage = describeActionError(e);
-        if (expired) _challengeId = null;
+        // The code was right and the challenge is spent, so another code cannot help.
+        if (expired || e is AdminOnlyAccountException) _challengeId = null;
       });
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

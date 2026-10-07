@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "1080574285488-scs7liad9t8v2dsuke6hkpl77kmraicj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "rw.billa.mobile",
+            "certificate_hash": "940f44c1e4803b4f8851e7ddc90ac1ac3b3d21b3"
+          }
+        },
+        {
           "client_id": "1080574285488-6tl19tnhq5k5jb5n0eli9nq00k3msskb.apps.googleusercontent.com",
           "client_type": 3
         }

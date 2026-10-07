@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../core/error/app_exception.dart';
 import '../domain/auth_repository.dart';
 import '../domain/auth_status.dart';
 import '../domain/auth_user.dart';
@@ -9,13 +10,26 @@ class AuthRepositoryImpl implements AuthRepository {
 
   final Dio _dio;
 
-  AuthStatus _statusFromSessionResponse(Map<String, dynamic> data) {
+  // An admin-only account has no business, and the app is built around one.
+  // By the time this reply arrives the server has already set the session
+  // cookies, so they are ended here or the next launch would restore a
+  // session the app cannot show.
+  Future<AuthStatus> _statusFromSessionResponse(Map<String, dynamic> data) async {
     if (data['twoFactorRequired'] == true) {
       return AuthStatus.twoFactorRequired(data['challengeId'] as String);
     }
+    final business = data['business'];
+    if (business == null) {
+      try {
+        await _dio.post<void>('/auth/logout');
+      } catch (_) {
+        // Refusing the sign-in matters more than ending the cookies cleanly.
+      }
+      throw const AdminOnlyAccountException();
+    }
     return AuthStatus.authenticated(
       AuthUser.fromJson(data['user'] as Map<String, dynamic>),
-      Business.fromJson(data['business'] as Map<String, dynamic>),
+      Business.fromJson(business as Map<String, dynamic>),
     );
   }
 
@@ -25,7 +39,7 @@ class AuthRepositoryImpl implements AuthRepository {
       '/auth/session',
       data: businessName == null ? {'idToken': idToken} : {'idToken': idToken, 'businessName': businessName},
     );
-    return _statusFromSessionResponse(response.data!);
+    return await _statusFromSessionResponse(response.data!);
   }
 
   @override
@@ -49,7 +63,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   Future<AuthStatus> _fetchMe() async {
     final response = await _dio.get<Map<String, dynamic>>('/auth/me');
-    return _statusFromSessionResponse(response.data!);
+    try {
+      return await _statusFromSessionResponse(response.data!);
+    } on AdminOnlyAccountException {
+      return const AuthStatus.unauthenticated();
+    }
   }
 
   @override
@@ -69,7 +87,7 @@ class AuthRepositoryImpl implements AuthRepository {
       '/auth/2fa/challenge',
       data: {'challengeId': challengeId, 'code': code},
     );
-    return _statusFromSessionResponse(response.data!);
+    return await _statusFromSessionResponse(response.data!);
   }
 
   @override

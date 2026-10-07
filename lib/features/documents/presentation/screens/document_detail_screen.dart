@@ -19,6 +19,7 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../providers/document_contact.dart';
 import '../providers/document_duplicate.dart';
 import '../providers/document_list_controller.dart';
@@ -171,9 +172,20 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   Future<void> _writeOff() async {
     final reason = await _promptText('Write off this invoice?', 'Reason', 'Write off');
     if (reason == null) return;
+    // Captured now because the undo outlives this screen.
+    final repository = ref.read(documentRepositoryProvider);
     await _runAction(() async {
-      await ref.read(documentRepositoryProvider).writeOff(widget.documentId, reason);
+      final written = await repository.writeOff(widget.documentId, reason);
       _reload();
+      if (!mounted) return;
+      showUndoSnackBar(
+        context,
+        message: '${written.number ?? 'Invoice'} written off',
+        onUndo: () async {
+          await repository.reactivate(widget.documentId);
+          if (mounted) _reload();
+        },
+      );
     });
   }
 

@@ -5,6 +5,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.primary500,
     required this.primary100,
     required this.primary700,
+    required this.accent,
     required this.secondary,
     required this.secondaryDeep,
     required this.neutral50,
@@ -31,6 +32,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color primary500;
   final Color primary100;
   final Color primary700;
+
+  /// The brand colour for things drawn on the page rather than filled: selected
+  /// icons, focus rings, links. The filled pink is too dark to read on dark surfaces.
+  final Color accent;
   final Color secondary;
   final Color secondaryDeep;
   final Color neutral50;
@@ -57,6 +62,7 @@ class AppColors extends ThemeExtension<AppColors> {
     primary500: Color(0xFFC2185B),
     primary100: Color(0xFFF6D7E4),
     primary700: Color(0xFF8F1144),
+    accent: Color(0xFFC2185B),
     secondary: Color(0xFFE0F2FE),
     secondaryDeep: Color(0xFF0369A1),
     neutral50: Color(0xFFFAFAFA),
@@ -64,7 +70,7 @@ class AppColors extends ThemeExtension<AppColors> {
     neutral200: Color(0xFFE4E4E7),
     neutral300: Color(0xFFD4D4D8),
     neutral400: Color(0xFFA1A1AA),
-    neutral500: Color(0xFF71717A),
+    neutral500: Color(0xFF6B6B74),
     neutral600: Color(0xFF52525B),
     neutral700: Color(0xFF3F3F46),
     neutral800: Color(0xFF27272A),
@@ -86,6 +92,7 @@ class AppColors extends ThemeExtension<AppColors> {
     primary500: Color(0xFFC2185B),
     primary100: Color(0xFF3D1428),
     primary700: Color(0xFFF472B6),
+    accent: Color(0xFFF472B6),
     secondary: Color(0xFFE0F2FE),
     secondaryDeep: Color(0xFF7DD3FC),
     neutral50: Color(0xFF232326),
@@ -114,6 +121,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? primary500,
     Color? primary100,
     Color? primary700,
+    Color? accent,
     Color? secondary,
     Color? secondaryDeep,
     Color? neutral50,
@@ -140,6 +148,7 @@ class AppColors extends ThemeExtension<AppColors> {
       primary500: primary500 ?? this.primary500,
       primary100: primary100 ?? this.primary100,
       primary700: primary700 ?? this.primary700,
+      accent: accent ?? this.accent,
       secondary: secondary ?? this.secondary,
       secondaryDeep: secondaryDeep ?? this.secondaryDeep,
       neutral50: neutral50 ?? this.neutral50,
@@ -171,6 +180,7 @@ class AppColors extends ThemeExtension<AppColors> {
       primary500: Color.lerp(primary500, other.primary500, t)!,
       primary100: Color.lerp(primary100, other.primary100, t)!,
       primary700: Color.lerp(primary700, other.primary700, t)!,
+      accent: Color.lerp(accent, other.accent, t)!,
       secondary: Color.lerp(secondary, other.secondary, t)!,
       secondaryDeep: Color.lerp(secondaryDeep, other.secondaryDeep, t)!,
       neutral50: Color.lerp(neutral50, other.neutral50, t)!,

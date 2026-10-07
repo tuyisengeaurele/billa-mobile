@@ -31,4 +31,33 @@ void main() {
 
     expect(roundTripped, input);
   });
+
+  test('leaves out every optional field that was not filled in, because the server rejects null for them', () {
+    const input = PaymentInput(amount: 5000, method: PaymentMethod.cash, paidOn: '2026-01-05');
+
+    final json = input.toJson();
+
+    for (final key in ['notes', 'referenceNumber', 'payerName', 'receiptImageUrl']) {
+      expect(json.containsKey(key), isFalse, reason: key);
+    }
+  });
+
+  test('sends the optional fields that were filled in', () {
+    const input = PaymentInput(
+      amount: 5000,
+      method: PaymentMethod.cash,
+      paidOn: '2026-01-05',
+      notes: 'Part payment',
+      referenceNumber: 'TXN1',
+      payerName: 'Jane',
+      receiptImageUrl: '/uploads/x.png',
+    );
+
+    final json = input.toJson();
+
+    expect(json['notes'], 'Part payment');
+    expect(json['referenceNumber'], 'TXN1');
+    expect(json['payerName'], 'Jane');
+    expect(json['receiptImageUrl'], '/uploads/x.png');
+  });
 }

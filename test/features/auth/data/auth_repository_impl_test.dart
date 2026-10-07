@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:billa_mobile/core/error/app_exception.dart';
 import 'package:billa_mobile/features/auth/data/auth_repository_impl.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
 
@@ -68,6 +69,57 @@ void main() {
     final options = RequestOptions(path: path);
     return DioException(requestOptions: options, response: Response(statusCode: 401, requestOptions: options));
   }
+
+  const adminOnlyJson = {
+    'user': {'id': 'u1', 'email': 'a@b.com', 'totpEnabled': true, 'isAdmin': true},
+    'business': null,
+  };
+
+  void expectLoggedOut() => verify(() => dio.post<void>('/auth/logout')).called(1);
+
+  void stubLogout() {
+    when(() => dio.post<void>('/auth/logout')).thenAnswer(
+      (_) async => Response(statusCode: 200, requestOptions: RequestOptions(path: '/auth/logout')),
+    );
+  }
+
+  test('a correct code for an account with no business is refused and the new session is ended', () async {
+    stubLogout();
+    when(() => dio.post<Map<String, dynamic>>('/auth/2fa/challenge', data: {'challengeId': 'c1', 'code': '123456'}))
+        .thenAnswer((_) async => _response(200, adminOnlyJson, RequestOptions(path: '/auth/2fa/challenge')));
+
+    await expectLater(
+      repository.submitTwoFactorChallenge(challengeId: 'c1', code: '123456'),
+      throwsA(isA<AdminOnlyAccountException>()),
+    );
+    expectLoggedOut();
+  });
+
+  test('exchangeSession refuses an account with no business and ends the new session', () async {
+    stubLogout();
+    when(() => dio.post<Map<String, dynamic>>('/auth/session', data: {'idToken': 'tok'}))
+        .thenAnswer((_) async => _response(200, adminOnlyJson, RequestOptions(path: '/auth/session')));
+
+    await expectLater(repository.exchangeSession(idToken: 'tok'), throwsA(isA<AdminOnlyAccountException>()));
+    expectLoggedOut();
+  });
+
+  test('me() treats a saved session with no business as signed out', () async {
+    stubLogout();
+    when(() => dio.get<Map<String, dynamic>>('/auth/me'))
+        .thenAnswer((_) async => _response(200, adminOnlyJson, RequestOptions(path: '/auth/me')));
+
+    expect(await repository.me(), const AuthStatus.unauthenticated());
+    expectLoggedOut();
+  });
+
+  test('an account with no business is still refused when the logout request fails', () async {
+    when(() => dio.post<void>('/auth/logout')).thenAnswer((_) async => throw unauthorised('/auth/logout'));
+    when(() => dio.post<Map<String, dynamic>>('/auth/session', data: {'idToken': 'tok'}))
+        .thenAnswer((_) async => _response(200, adminOnlyJson, RequestOptions(path: '/auth/session')));
+
+    await expectLater(repository.exchangeSession(idToken: 'tok'), throwsA(isA<AdminOnlyAccountException>()));
+  });
 
   const meJson = {
     'user': {'id': 'u1', 'email': 'a@b.com', 'totpEnabled': false, 'isAdmin': false},

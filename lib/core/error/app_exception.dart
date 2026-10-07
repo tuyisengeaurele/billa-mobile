@@ -25,3 +25,9 @@ class ApiException extends AppException {
 class UnknownException extends AppException {
   const UnknownException([super.message = 'Something went wrong']);
 }
+
+class AdminOnlyAccountException extends AppException {
+  const AdminOnlyAccountException([
+    super.message = 'This account has no business, so it signs in on the web. Use a business account here',
+  ]);
+}

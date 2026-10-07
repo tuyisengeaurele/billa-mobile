@@ -70,7 +70,7 @@ void main() {
     await tester.tap(find.byKey(const Key('notification-PAYMENT_RECEIVED')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Something went wrong. Try again'), findsOneWidget);
+    expect(find.textContaining('Something went wrong. Try again'), findsOneWidget);
     expect(switchValue(tester, NotificationType.paymentReceived), isTrue);
 
     await tester.tap(find.text('Retry'));
