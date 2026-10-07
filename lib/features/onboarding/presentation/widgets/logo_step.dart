@@ -1,12 +1,14 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/errors/action_errors.dart';
+import '../../../../core/media/image_picker_provider.dart';
+import '../../../../core/widgets/action_error_banner.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../data/logo_pipeline_service.dart';
 import '../../domain/logo_pipeline_step.dart';
 
-class LogoStep extends StatefulWidget {
+class LogoStep extends ConsumerStatefulWidget {
   const LogoStep({super.key, required this.service, required this.onDone, required this.onSkip});
 
   final LogoPipelineService service;
@@ -14,27 +16,56 @@ class LogoStep extends StatefulWidget {
   final VoidCallback onSkip;
 
   @override
-  State<LogoStep> createState() => _LogoStepState();
+  ConsumerState<LogoStep> createState() => _LogoStepState();
 }
 
-class _LogoStepState extends State<LogoStep> {
+class _LogoStepState extends ConsumerState<LogoStep> {
   LogoPipelineStage? _stage;
   bool _isConfirming = false;
+  String? _error;
+  // Kept so Retry repeats the exact action that failed on the same image,
+  // instead of sending the user back to the picker.
+  Future<void> Function()? _lastAction;
 
   Future<void> _pickAndRun() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final picked = await ref.read(imagePickerProvider)();
     if (picked == null) return;
-    final bytes = await File(picked.path).readAsBytes();
-    setState(() => _stage = null);
-    widget.service.run(bytes, picked.name).listen((stage) {
-      setState(() => _stage = stage);
-    });
+    await _runAction(() => _runPipeline(picked));
   }
 
-  Future<void> _confirm() async {
-    setState(() => _isConfirming = true);
-    await widget.service.confirm();
-    await widget.onDone();
+  Future<void> _runPipeline(PickedImage picked) async {
+    setState(() => _stage = null);
+    await for (final stage in widget.service.run(picked.bytes, picked.name)) {
+      if (!mounted) return;
+      setState(() => _stage = stage);
+    }
+  }
+
+  Future<void> _confirm() => _runAction(() async {
+        setState(() => _isConfirming = true);
+        try {
+          await widget.service.confirm();
+          await widget.onDone();
+        } finally {
+          if (mounted) setState(() => _isConfirming = false);
+        }
+      });
+
+  // Any failure clears the stage: a stalled progress row would offer no way
+  // forward, while the banner carries the reason and a working Retry.
+  Future<void> _runAction(Future<void> Function() action) async {
+    _lastAction = action;
+    setState(() => _error = null);
+    try {
+      await action();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = describeActionError(e);
+          if (_stage != LogoPipelineStage.done) _stage = null;
+        });
+      }
+    }
   }
 
   String _stageLabel(LogoPipelineStage stage) => switch (stage) {
@@ -74,6 +105,13 @@ class _LogoStepState extends State<LogoStep> {
           ),
           const SizedBox(height: 16),
           AppButton(label: 'Confirm', onPressed: _confirm, isLoading: _isConfirming),
+        ],
+        if (_error != null) ...[
+          const SizedBox(height: 16),
+          ActionErrorBanner(
+            message: _error!,
+            onRetry: _lastAction == null || _isConfirming ? null : () => _runAction(_lastAction!),
+          ),
         ],
         const SizedBox(height: 16),
         TextButton(key: const Key('onboarding-logo-skip'), onPressed: widget.onSkip, child: const Text('Skip this step')),
