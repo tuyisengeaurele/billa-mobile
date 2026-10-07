@@ -81,6 +81,16 @@ void main() {
     verify(() => dio.patch<Map<String, dynamic>>('/business', data: expected)).called(1);
   });
 
+  test('setDefaultTemplate sends only the template, in uppercase', () async {
+    when(() => dio.patch<Map<String, dynamic>>('/business', data: {'defaultTemplate': 'PREMIUM'}))
+        .thenAnswer((_) async => _ok(_business({'defaultTemplate': 'PREMIUM'}), '/business'));
+
+    final settings = await repository.setDefaultTemplate(DocumentTemplate.premium);
+
+    expect(settings.defaultTemplate, DocumentTemplate.premium);
+    verify(() => dio.patch<Map<String, dynamic>>('/business', data: {'defaultTemplate': 'PREMIUM'})).called(1);
+  });
+
   test('uploadSignature posts multipart data and returns the url', () async {
     when(() => dio.post<Map<String, dynamic>>('/business/signature', data: any(named: 'data')))
         .thenAnswer((_) async => _ok({'url': '/uploads/sig.png'}, '/business/signature'));

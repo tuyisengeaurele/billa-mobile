@@ -30,6 +30,8 @@ abstract class BusinessSettingsRepository {
     required int reminderCadenceDays,
   });
 
+  Future<BusinessSettings> setDefaultTemplate(DocumentTemplate template);
+
   Future<String> uploadSignature(List<int> bytes, String filename);
   Future<BusinessSettings> setSignature(String? url);
 
