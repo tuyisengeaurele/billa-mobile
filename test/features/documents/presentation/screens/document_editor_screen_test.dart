@@ -1,5 +1,6 @@
 import 'package:billa_mobile/features/documents/domain/exchange_rates.dart';
 import 'package:billa_mobile/core/formatting/currency.dart';
+import 'package:billa_mobile/core/privacy/privacy_scope.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -294,5 +295,21 @@ void main() {
       find.descendant(of: find.byKey(const ValueKey('line-discount-value-0')), matching: find.byType(TextField)),
     );
     expect(box.controller!.text, '0');
+  });
+
+  testWidgets('amounts stay readable while a document is being written, even with privacy mode on', (tester) async {
+    useTallScreen(tester);
+
+    await tester.pumpWidget(
+      PrivacyScope(hidden: true, child: buildApp(DocumentEditorScreen.create(type: DocumentType.invoice))),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '5000');
+    await tester.pumpAndSettle();
+
+    expect(find.text('RWF 5,900'), findsOneWidget);
+    expect(find.textContaining('•'), findsNothing);
   });
 }

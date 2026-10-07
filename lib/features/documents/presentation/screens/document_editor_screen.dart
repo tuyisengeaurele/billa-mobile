@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/formatting/currency.dart';
+import '../../../../core/privacy/privacy_scope.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../items/domain/item.dart';
 import '../../../items/presentation/providers/recent_items_provider.dart';
@@ -51,29 +52,34 @@ class _DocumentEditorScreenState extends ConsumerState<DocumentEditorScreen> {
     final async = ref.watch(documentEditorControllerProvider(widget.args));
     final type = widget.args.type ?? async.value?.type;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.args.documentId == null
-              ? 'New ${type != null ? documentTypeLabel(type) : ''}'
-              : 'Edit document'),
-          actions: [
-            if (async.value != null) _AutosaveIndicator(state: async.value!, args: widget.args),
-          ],
+    // Privacy mode is for glancing at a phone in public; typing prices and reading the totals of a document
+    // being written would make it unusable, so the editor always shows its amounts.
+    return PrivacyScope(
+      hidden: false,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.args.documentId == null
+                ? 'New ${type != null ? documentTypeLabel(type) : ''}'
+                : 'Edit document'),
+            actions: [
+              if (async.value != null) _AutosaveIndicator(state: async.value!, args: widget.args),
+            ],
+          ),
+          body: switch (async) {
+            AsyncData(value: final state) => _DocumentEditorForm(args: widget.args, state: state),
+            AsyncError() => ErrorState(
+                message: "Couldn't load this document",
+                onRetry: () => ref.invalidate(documentEditorControllerProvider(widget.args)),
+              ),
+            _ => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(children: [LoadingSkeleton(height: 24), SizedBox(height: 12), LoadingSkeleton(height: 200)]),
+              ),
+          },
         ),
-        body: switch (async) {
-          AsyncData(value: final state) => _DocumentEditorForm(args: widget.args, state: state),
-          AsyncError() => ErrorState(
-              message: "Couldn't load this document",
-              onRetry: () => ref.invalidate(documentEditorControllerProvider(widget.args)),
-            ),
-          _ => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(children: [LoadingSkeleton(height: 24), SizedBox(height: 12), LoadingSkeleton(height: 200)]),
-            ),
-        },
       ),
     );
   }
