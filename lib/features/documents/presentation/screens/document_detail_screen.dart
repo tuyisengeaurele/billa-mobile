@@ -19,6 +19,7 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/formatting/currency.dart';
 import '../../../../core/formatting/money.dart';
+import '../../domain/recurrence.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -322,6 +323,18 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                     MoneyText(document.total, currency: document.currency, style: Theme.of(context).textTheme.titleMedium),
                   ],
                 ),
+                if (document.recurrenceInterval != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Repeats ${recurrenceWords(document.recurrenceInterval!)}'
+                    '${document.nextRecurrenceAt == null ? '' : ', next on ${document.nextRecurrenceAt!.split('T').first}'}'
+                    '${document.recurrenceEndDate == null ? '' : ', until ${document.recurrenceEndDate!.split('T').first}'}',
+                  ),
+                ],
+                if (document.schedule.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  _PaymentPlan(document: document),
+                ],
                 if (document.convertedFrom != null) ...[
                   const SizedBox(height: 24),
                   TextButton(
@@ -451,6 +464,62 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+String _stepName(String? label, int? number) {
+  final name = label?.trim();
+  if (name != null && name.isNotEmpty) return name;
+  return number == null ? 'The next instalment' : 'Instalment $number';
+}
+
+String _stepStatus(String status) => switch (status) {
+      'PAID' => 'Paid',
+      'PARTIALLY_PAID' => 'Partly paid',
+      'OVERDUE' => 'Overdue',
+      _ => 'Due',
+    };
+
+/// The instalments of an invoice with what has been paid against each, worked out by the server from the
+/// payments recorded, so it can never disagree with them.
+class _PaymentPlan extends StatelessWidget {
+  const _PaymentPlan({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final next = document.nextInstallment;
+    return Column(
+      key: const Key('payment-plan'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Payment plan', style: textTheme.titleMedium),
+        if (next != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Next: ${_stepName(next.label, next.number)}, '
+              '${formatMoney(next.remaining, currency: document.currency)} due ${next.dueDate.split('T').first}.',
+            ),
+          ),
+        for (final step in document.schedule)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(_stepName(step.label, step.number)),
+            subtitle: Text('Due ${step.dueDate.split('T').first}'),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                MoneyText(step.amount, currency: document.currency),
+                Text(_stepStatus(step.status), style: textTheme.labelMedium),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

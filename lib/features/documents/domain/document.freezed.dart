@@ -384,6 +384,7 @@ mixin _$DocumentNextInstallment {
   String? get label => throw _privateConstructorUsedError;
   int get remaining => throw _privateConstructorUsedError;
   String get dueDate => throw _privateConstructorUsedError;
+  int? get number => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -397,7 +398,7 @@ abstract class $DocumentNextInstallmentCopyWith<$Res> {
           $Res Function(DocumentNextInstallment) then) =
       _$DocumentNextInstallmentCopyWithImpl<$Res, DocumentNextInstallment>;
   @useResult
-  $Res call({String? label, int remaining, String dueDate});
+  $Res call({String? label, int remaining, String dueDate, int? number});
 }
 
 /// @nodoc
@@ -417,6 +418,7 @@ class _$DocumentNextInstallmentCopyWithImpl<$Res,
     Object? label = freezed,
     Object? remaining = null,
     Object? dueDate = null,
+    Object? number = freezed,
   }) {
     return _then(_value.copyWith(
       label: freezed == label
@@ -431,6 +433,10 @@ class _$DocumentNextInstallmentCopyWithImpl<$Res,
           ? _value.dueDate
           : dueDate // ignore: cast_nullable_to_non_nullable
               as String,
+      number: freezed == number
+          ? _value.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -444,7 +450,7 @@ abstract class _$$DocumentNextInstallmentImplCopyWith<$Res>
       __$$DocumentNextInstallmentImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? label, int remaining, String dueDate});
+  $Res call({String? label, int remaining, String dueDate, int? number});
 }
 
 /// @nodoc
@@ -463,6 +469,7 @@ class __$$DocumentNextInstallmentImplCopyWithImpl<$Res>
     Object? label = freezed,
     Object? remaining = null,
     Object? dueDate = null,
+    Object? number = freezed,
   }) {
     return _then(_$DocumentNextInstallmentImpl(
       label: freezed == label
@@ -477,6 +484,10 @@ class __$$DocumentNextInstallmentImplCopyWithImpl<$Res>
           ? _value.dueDate
           : dueDate // ignore: cast_nullable_to_non_nullable
               as String,
+      number: freezed == number
+          ? _value.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -485,7 +496,10 @@ class __$$DocumentNextInstallmentImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$DocumentNextInstallmentImpl implements _DocumentNextInstallment {
   const _$DocumentNextInstallmentImpl(
-      {this.label, required this.remaining, required this.dueDate});
+      {this.label,
+      required this.remaining,
+      required this.dueDate,
+      this.number});
 
   factory _$DocumentNextInstallmentImpl.fromJson(Map<String, dynamic> json) =>
       _$$DocumentNextInstallmentImplFromJson(json);
@@ -496,10 +510,12 @@ class _$DocumentNextInstallmentImpl implements _DocumentNextInstallment {
   final int remaining;
   @override
   final String dueDate;
+  @override
+  final int? number;
 
   @override
   String toString() {
-    return 'DocumentNextInstallment(label: $label, remaining: $remaining, dueDate: $dueDate)';
+    return 'DocumentNextInstallment(label: $label, remaining: $remaining, dueDate: $dueDate, number: $number)';
   }
 
   @override
@@ -510,12 +526,14 @@ class _$DocumentNextInstallmentImpl implements _DocumentNextInstallment {
             (identical(other.label, label) || other.label == label) &&
             (identical(other.remaining, remaining) ||
                 other.remaining == remaining) &&
-            (identical(other.dueDate, dueDate) || other.dueDate == dueDate));
+            (identical(other.dueDate, dueDate) || other.dueDate == dueDate) &&
+            (identical(other.number, number) || other.number == number));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, label, remaining, dueDate);
+  int get hashCode =>
+      Object.hash(runtimeType, label, remaining, dueDate, number);
 
   @JsonKey(ignore: true)
   @override
@@ -536,7 +554,8 @@ abstract class _DocumentNextInstallment implements DocumentNextInstallment {
   const factory _DocumentNextInstallment(
       {final String? label,
       required final int remaining,
-      required final String dueDate}) = _$DocumentNextInstallmentImpl;
+      required final String dueDate,
+      final int? number}) = _$DocumentNextInstallmentImpl;
 
   factory _DocumentNextInstallment.fromJson(Map<String, dynamic> json) =
       _$DocumentNextInstallmentImpl.fromJson;
@@ -548,8 +567,277 @@ abstract class _DocumentNextInstallment implements DocumentNextInstallment {
   @override
   String get dueDate;
   @override
+  int? get number;
+  @override
   @JsonKey(ignore: true)
   _$$DocumentNextInstallmentImplCopyWith<_$DocumentNextInstallmentImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+DocumentScheduleStep _$DocumentScheduleStepFromJson(Map<String, dynamic> json) {
+  return _DocumentScheduleStep.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DocumentScheduleStep {
+  String? get label => throw _privateConstructorUsedError;
+  int get amount => throw _privateConstructorUsedError;
+  String get dueDate => throw _privateConstructorUsedError;
+  int get paid => throw _privateConstructorUsedError;
+  int get remaining =>
+      throw _privateConstructorUsedError; // PAID, PARTIALLY_PAID, OVERDUE or UNPAID, as the server works it out.
+  String get status => throw _privateConstructorUsedError;
+  int get number => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DocumentScheduleStepCopyWith<DocumentScheduleStep> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DocumentScheduleStepCopyWith<$Res> {
+  factory $DocumentScheduleStepCopyWith(DocumentScheduleStep value,
+          $Res Function(DocumentScheduleStep) then) =
+      _$DocumentScheduleStepCopyWithImpl<$Res, DocumentScheduleStep>;
+  @useResult
+  $Res call(
+      {String? label,
+      int amount,
+      String dueDate,
+      int paid,
+      int remaining,
+      String status,
+      int number});
+}
+
+/// @nodoc
+class _$DocumentScheduleStepCopyWithImpl<$Res,
+        $Val extends DocumentScheduleStep>
+    implements $DocumentScheduleStepCopyWith<$Res> {
+  _$DocumentScheduleStepCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? amount = null,
+    Object? dueDate = null,
+    Object? paid = null,
+    Object? remaining = null,
+    Object? status = null,
+    Object? number = null,
+  }) {
+    return _then(_value.copyWith(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+      paid: null == paid
+          ? _value.paid
+          : paid // ignore: cast_nullable_to_non_nullable
+              as int,
+      remaining: null == remaining
+          ? _value.remaining
+          : remaining // ignore: cast_nullable_to_non_nullable
+              as int,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
+      number: null == number
+          ? _value.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DocumentScheduleStepImplCopyWith<$Res>
+    implements $DocumentScheduleStepCopyWith<$Res> {
+  factory _$$DocumentScheduleStepImplCopyWith(_$DocumentScheduleStepImpl value,
+          $Res Function(_$DocumentScheduleStepImpl) then) =
+      __$$DocumentScheduleStepImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String? label,
+      int amount,
+      String dueDate,
+      int paid,
+      int remaining,
+      String status,
+      int number});
+}
+
+/// @nodoc
+class __$$DocumentScheduleStepImplCopyWithImpl<$Res>
+    extends _$DocumentScheduleStepCopyWithImpl<$Res, _$DocumentScheduleStepImpl>
+    implements _$$DocumentScheduleStepImplCopyWith<$Res> {
+  __$$DocumentScheduleStepImplCopyWithImpl(_$DocumentScheduleStepImpl _value,
+      $Res Function(_$DocumentScheduleStepImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? amount = null,
+    Object? dueDate = null,
+    Object? paid = null,
+    Object? remaining = null,
+    Object? status = null,
+    Object? number = null,
+  }) {
+    return _then(_$DocumentScheduleStepImpl(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+      paid: null == paid
+          ? _value.paid
+          : paid // ignore: cast_nullable_to_non_nullable
+              as int,
+      remaining: null == remaining
+          ? _value.remaining
+          : remaining // ignore: cast_nullable_to_non_nullable
+              as int,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as String,
+      number: null == number
+          ? _value.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DocumentScheduleStepImpl implements _DocumentScheduleStep {
+  const _$DocumentScheduleStepImpl(
+      {this.label,
+      required this.amount,
+      required this.dueDate,
+      required this.paid,
+      required this.remaining,
+      required this.status,
+      required this.number});
+
+  factory _$DocumentScheduleStepImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DocumentScheduleStepImplFromJson(json);
+
+  @override
+  final String? label;
+  @override
+  final int amount;
+  @override
+  final String dueDate;
+  @override
+  final int paid;
+  @override
+  final int remaining;
+// PAID, PARTIALLY_PAID, OVERDUE or UNPAID, as the server works it out.
+  @override
+  final String status;
+  @override
+  final int number;
+
+  @override
+  String toString() {
+    return 'DocumentScheduleStep(label: $label, amount: $amount, dueDate: $dueDate, paid: $paid, remaining: $remaining, status: $status, number: $number)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocumentScheduleStepImpl &&
+            (identical(other.label, label) || other.label == label) &&
+            (identical(other.amount, amount) || other.amount == amount) &&
+            (identical(other.dueDate, dueDate) || other.dueDate == dueDate) &&
+            (identical(other.paid, paid) || other.paid == paid) &&
+            (identical(other.remaining, remaining) ||
+                other.remaining == remaining) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.number, number) || other.number == number));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, label, amount, dueDate, paid, remaining, status, number);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocumentScheduleStepImplCopyWith<_$DocumentScheduleStepImpl>
+      get copyWith =>
+          __$$DocumentScheduleStepImplCopyWithImpl<_$DocumentScheduleStepImpl>(
+              this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DocumentScheduleStepImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DocumentScheduleStep implements DocumentScheduleStep {
+  const factory _DocumentScheduleStep(
+      {final String? label,
+      required final int amount,
+      required final String dueDate,
+      required final int paid,
+      required final int remaining,
+      required final String status,
+      required final int number}) = _$DocumentScheduleStepImpl;
+
+  factory _DocumentScheduleStep.fromJson(Map<String, dynamic> json) =
+      _$DocumentScheduleStepImpl.fromJson;
+
+  @override
+  String? get label;
+  @override
+  int get amount;
+  @override
+  String get dueDate;
+  @override
+  int get paid;
+  @override
+  int get remaining;
+  @override // PAID, PARTIALLY_PAID, OVERDUE or UNPAID, as the server works it out.
+  String get status;
+  @override
+  int get number;
+  @override
+  @JsonKey(ignore: true)
+  _$$DocumentScheduleStepImplCopyWith<_$DocumentScheduleStepImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -1247,8 +1535,10 @@ mixin _$Document {
       throw _privateConstructorUsedError;
   String? get recurrenceInterval => throw _privateConstructorUsedError;
   String? get recurrenceEndDate => throw _privateConstructorUsedError;
+  String? get nextRecurrenceAt => throw _privateConstructorUsedError;
   DocumentNextInstallment? get nextInstallment =>
       throw _privateConstructorUsedError;
+  List<DocumentScheduleStep> get schedule => throw _privateConstructorUsedError;
   DocumentBusinessRef? get business => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language => throw _privateConstructorUsedError;
@@ -1301,7 +1591,9 @@ abstract class $DocumentCopyWith<$Res> {
       List<DocumentInstallment> installments,
       String? recurrenceInterval,
       String? recurrenceEndDate,
+      String? nextRecurrenceAt,
       DocumentNextInstallment? nextInstallment,
+      List<DocumentScheduleStep> schedule,
       DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -1361,7 +1653,9 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? installments = null,
     Object? recurrenceInterval = freezed,
     Object? recurrenceEndDate = freezed,
+    Object? nextRecurrenceAt = freezed,
     Object? nextInstallment = freezed,
+    Object? schedule = null,
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
@@ -1452,10 +1746,18 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
           ? _value.recurrenceEndDate
           : recurrenceEndDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      nextRecurrenceAt: freezed == nextRecurrenceAt
+          ? _value.nextRecurrenceAt
+          : nextRecurrenceAt // ignore: cast_nullable_to_non_nullable
+              as String?,
       nextInstallment: freezed == nextInstallment
           ? _value.nextInstallment
           : nextInstallment // ignore: cast_nullable_to_non_nullable
               as DocumentNextInstallment?,
+      schedule: null == schedule
+          ? _value.schedule
+          : schedule // ignore: cast_nullable_to_non_nullable
+              as List<DocumentScheduleStep>,
       business: freezed == business
           ? _value.business
           : business // ignore: cast_nullable_to_non_nullable
@@ -1623,7 +1925,9 @@ abstract class _$$DocumentImplCopyWith<$Res>
       List<DocumentInstallment> installments,
       String? recurrenceInterval,
       String? recurrenceEndDate,
+      String? nextRecurrenceAt,
       DocumentNextInstallment? nextInstallment,
+      List<DocumentScheduleStep> schedule,
       DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -1687,7 +1991,9 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? installments = null,
     Object? recurrenceInterval = freezed,
     Object? recurrenceEndDate = freezed,
+    Object? nextRecurrenceAt = freezed,
     Object? nextInstallment = freezed,
+    Object? schedule = null,
     Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
@@ -1778,10 +2084,18 @@ class __$$DocumentImplCopyWithImpl<$Res>
           ? _value.recurrenceEndDate
           : recurrenceEndDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      nextRecurrenceAt: freezed == nextRecurrenceAt
+          ? _value.nextRecurrenceAt
+          : nextRecurrenceAt // ignore: cast_nullable_to_non_nullable
+              as String?,
       nextInstallment: freezed == nextInstallment
           ? _value.nextInstallment
           : nextInstallment // ignore: cast_nullable_to_non_nullable
               as DocumentNextInstallment?,
+      schedule: null == schedule
+          ? _value._schedule
+          : schedule // ignore: cast_nullable_to_non_nullable
+              as List<DocumentScheduleStep>,
       business: freezed == business
           ? _value.business
           : business // ignore: cast_nullable_to_non_nullable
@@ -1876,7 +2190,10 @@ class _$DocumentImpl implements _Document {
           const <DocumentInstallment>[],
       this.recurrenceInterval,
       this.recurrenceEndDate,
+      this.nextRecurrenceAt,
       this.nextInstallment,
+      final List<DocumentScheduleStep> schedule =
+          const <DocumentScheduleStep>[],
       this.business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -1897,6 +2214,7 @@ class _$DocumentImpl implements _Document {
       this.convertedTo,
       this.referencedDocument})
       : _installments = installments,
+        _schedule = schedule,
         _lines = lines;
 
   factory _$DocumentImpl.fromJson(Map<String, dynamic> json) =>
@@ -1950,7 +2268,18 @@ class _$DocumentImpl implements _Document {
   @override
   final String? recurrenceEndDate;
   @override
+  final String? nextRecurrenceAt;
+  @override
   final DocumentNextInstallment? nextInstallment;
+  final List<DocumentScheduleStep> _schedule;
+  @override
+  @JsonKey()
+  List<DocumentScheduleStep> get schedule {
+    if (_schedule is EqualUnmodifiableListView) return _schedule;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_schedule);
+  }
+
   @override
   final DocumentBusinessRef? business;
   @override
@@ -1995,7 +2324,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextInstallment: $nextInstallment, business: $business, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextRecurrenceAt: $nextRecurrenceAt, nextInstallment: $nextInstallment, schedule: $schedule, business: $business, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -2032,8 +2361,11 @@ class _$DocumentImpl implements _Document {
                 other.recurrenceInterval == recurrenceInterval) &&
             (identical(other.recurrenceEndDate, recurrenceEndDate) ||
                 other.recurrenceEndDate == recurrenceEndDate) &&
+            (identical(other.nextRecurrenceAt, nextRecurrenceAt) ||
+                other.nextRecurrenceAt == nextRecurrenceAt) &&
             (identical(other.nextInstallment, nextInstallment) ||
                 other.nextInstallment == nextInstallment) &&
+            const DeepCollectionEquality().equals(other._schedule, _schedule) &&
             (identical(other.business, business) ||
                 other.business == business) &&
             (identical(other.language, language) ||
@@ -2088,7 +2420,9 @@ class _$DocumentImpl implements _Document {
         const DeepCollectionEquality().hash(_installments),
         recurrenceInterval,
         recurrenceEndDate,
+        nextRecurrenceAt,
         nextInstallment,
+        const DeepCollectionEquality().hash(_schedule),
         business,
         language,
         sentAt,
@@ -2144,7 +2478,9 @@ abstract class _Document implements Document {
       final List<DocumentInstallment> installments,
       final String? recurrenceInterval,
       final String? recurrenceEndDate,
+      final String? nextRecurrenceAt,
       final DocumentNextInstallment? nextInstallment,
+      final List<DocumentScheduleStep> schedule,
       final DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
@@ -2209,7 +2545,11 @@ abstract class _Document implements Document {
   @override
   String? get recurrenceEndDate;
   @override
+  String? get nextRecurrenceAt;
+  @override
   DocumentNextInstallment? get nextInstallment;
+  @override
+  List<DocumentScheduleStep> get schedule;
   @override
   DocumentBusinessRef? get business;
   @override

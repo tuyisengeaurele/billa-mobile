@@ -37,10 +37,27 @@ class DocumentInstallment with _$DocumentInstallment {
 /// The step of a payment plan the customer should pay next, as the server works it out from what is paid.
 @freezed
 class DocumentNextInstallment with _$DocumentNextInstallment {
-  const factory DocumentNextInstallment({String? label, required int remaining, required String dueDate}) =
+  const factory DocumentNextInstallment({String? label, required int remaining, required String dueDate, int? number}) =
       _DocumentNextInstallment;
 
   factory DocumentNextInstallment.fromJson(Map<String, dynamic> json) => _$DocumentNextInstallmentFromJson(json);
+}
+
+/// One step of a payment plan with how much of it the payments recorded so far have covered.
+@freezed
+class DocumentScheduleStep with _$DocumentScheduleStep {
+  const factory DocumentScheduleStep({
+    String? label,
+    required int amount,
+    required String dueDate,
+    required int paid,
+    required int remaining,
+    // PAID, PARTIALLY_PAID, OVERDUE or UNPAID, as the server works it out.
+    required String status,
+    required int number,
+  }) = _DocumentScheduleStep;
+
+  factory DocumentScheduleStep.fromJson(Map<String, dynamic> json) => _$DocumentScheduleStepFromJson(json);
 }
 
 @freezed
@@ -99,7 +116,9 @@ class Document with _$Document {
     @Default(<DocumentInstallment>[]) List<DocumentInstallment> installments,
     String? recurrenceInterval,
     String? recurrenceEndDate,
+    String? nextRecurrenceAt,
     DocumentNextInstallment? nextInstallment,
+    @Default(<DocumentScheduleStep>[]) List<DocumentScheduleStep> schedule,
     DocumentBusinessRef? business,
     @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
     @Default(DocumentLanguage.en)

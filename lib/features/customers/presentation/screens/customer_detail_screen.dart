@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/money_text.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/contact_actions.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -107,6 +108,29 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 if (customer.phone != null) Text(customer.phone!),
                 if (customer.email != null) Text(customer.email!),
                 if (customer.address != null) Text(customer.address!),
+                if (customer.creditLimit != null || customer.outstandingTotals.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  if (customer.creditLimit != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [const Text('Credit limit'), MoneyText(customer.creditLimit!)],
+                    ),
+                  if (customer.outstandingTotals.isNotEmpty)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Owes'),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            for (final total in customer.outstandingTotals)
+                              MoneyText(total.amount, currency: total.currency),
+                          ],
+                        ),
+                      ],
+                    ),
+                ],
                 const SizedBox(height: 24),
                 Text('Payment history', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),

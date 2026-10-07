@@ -227,7 +227,7 @@ void main() {
     });
   });
 
-  testWidgets('a draft with a payment plan says the plan is kept and where to change it', (tester) async {
+  testWidgets('a draft with a payment plan no longer says the plan can only be changed on the web', (tester) async {
     when(() => documentRepository.get('d1')).thenAnswer((_) async => _savedDocument().copyWith(
           installments: const [
             DocumentInstallment(amount: 4000, dueDate: '2026-10-01T00:00:00.000Z'),
@@ -238,7 +238,7 @@ void main() {
     await tester.pumpWidget(buildApp(DocumentEditorScreen.edit(documentId: 'd1')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('paid in instalments set up on the web'), findsOneWidget);
+    expect(find.textContaining('set up on the web'), findsNothing);
   });
 
   testWidgets('choosing USD shows the bank rate, and a price is typed in dollars and cents', (tester) async {
@@ -311,5 +311,348 @@ void main() {
 
     expect(find.text('RWF 5,900'), findsOneWidget);
     expect(find.textContaining('•'), findsNothing);
+  });
+
+  testWidgets('picking a payment term fills the due date and marks the term', (tester) async {
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('payment-term-14')));
+    await tester.pumpAndSettle();
+
+    final due = DateTime.now().add(const Duration(days: 14));
+    final expected =
+        '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}';
+    expect(find.text('Due $expected'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('payment-term-14'))).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('payment-term-30'))).selected, isFalse);
+  });
+
+  testWidgets('an invoice that would pass the customer credit limit says so, a quote does not', (tester) async {
+    when(() => customerRepository.get('c1')).thenAnswer(
+      (_) async => const Customer(
+        id: 'c1',
+        name: 'Acme',
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        creditLimit: 100,
+        outstandingBalance: 0,
+      ),
+    );
+    when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Acme'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '5000');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Acme already owes RWF 0. With this invoice they would owe RWF 5,900, which is over their RWF 100 limit.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a quote is not held to the credit limit', (tester) async {
+    when(() => customerRepository.get('c1')).thenAnswer(
+      (_) async => const Customer(
+        id: 'c1',
+        name: 'Acme',
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        creditLimit: 100,
+      ),
+    );
+    when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+    useTallScreen(tester);
+
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.quote)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Acme'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '5000');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('over their'), findsNothing);
+  });
+
+  Future<void> typeLine(WidgetTester tester, {required String description, required String price}) async {
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(ItemSearchField), description);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), price);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('a line with no text cannot be saved as an item, and a line picked from the catalog needs no saving',
+      (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('line-save-item-0')), findsNothing);
+
+    await tester.enterText(find.byType(ItemSearchField), 'Printing');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('line-save-item-0')), findsOneWidget);
+  });
+
+  testWidgets('saving a typed line adds it to the catalog at the same RWF price and links the line', (tester) async {
+    when(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0))
+        .thenAnswer((_) async => const Item(
+              id: 'i7',
+              description: 'Banner',
+              unitPrice: 5000,
+              unit: 'unit',
+              taxRate: 18,
+              isActive: true,
+            ));
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '5000');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+
+    verify(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0)).called(1);
+    expect(find.byKey(const Key('line-save-item-0')), findsNothing);
+    expect(find.text('Saved to your items'), findsOneWidget);
+  });
+
+  testWidgets('a dollar line is saved to the catalog in francs at the draft rate', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer(
+      (_) async => const ExchangeRates({Currency.usd: RateQuote(rate: 1400, source: 'BNR', date: '2026-09-29')}),
+    );
+    when(() => itemRepository.create(description: 'Banner', unitPrice: 14000, unit: 'unit', taxRate: 18.0))
+        .thenAnswer((_) async => const Item(
+              id: 'i7',
+              description: 'Banner',
+              unitPrice: 14000,
+              unit: 'unit',
+              taxRate: 18,
+              isActive: true,
+            ));
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '10');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+
+    verify(() => itemRepository.create(description: 'Banner', unitPrice: 14000, unit: 'unit', taxRate: 18.0)).called(1);
+  });
+
+  testWidgets('a dollar line with no rate explains why it cannot be saved as an item yet', (tester) async {
+    when(() => documentRepository.rates()).thenAnswer((_) async => const ExchangeRates({}));
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-editor-currency')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('USD (US dollar)').last);
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '10');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter the exchange rate first, so the price can be saved in RWF'), findsOneWidget);
+    verifyNever(() => itemRepository.create(
+          description: any(named: 'description'),
+          unitPrice: any(named: 'unitPrice'),
+          unit: any(named: 'unit'),
+          taxRate: any(named: 'taxRate'),
+        ));
+  });
+
+  testWidgets('a failed save keeps the line, says why, and Retry saves it', (tester) async {
+    var failing = true;
+    when(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0))
+        .thenAnswer((_) async {
+      if (failing) {
+        throw DioException(requestOptions: RequestOptions(path: '/items'), type: DioExceptionType.connectionError);
+      }
+      return const Item(id: 'i7', description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18, isActive: true);
+    });
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: DocumentType.invoice)));
+    await tester.pumpAndSettle();
+    await typeLine(tester, description: 'Banner', price: '5000');
+
+    await tester.tap(find.byKey(const Key('line-save-item-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.byKey(const Key('line-save-item-0')), findsOneWidget);
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Saved to your items'), findsOneWidget);
+    verify(() => itemRepository.create(description: 'Banner', unitPrice: 5000, unit: 'unit', taxRate: 18.0)).called(2);
+  });
+
+  Future<void> openInvoiceWithTotal(WidgetTester tester, {DocumentType type = DocumentType.invoice}) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(DocumentEditorScreen.create(type: type)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add line'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('line-unit-price-0')), '10000');
+    await tester.pumpAndSettle();
+  }
+
+  TextField field(WidgetTester tester, String key) => tester.widget<TextField>(find.byKey(Key(key)));
+
+  testWidgets('an invoice offers a payment plan, a quote does not', (tester) async {
+    await openInvoiceWithTotal(tester);
+    expect(find.text('Payment plan'), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-two')), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-three')), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-deposit')), findsOneWidget);
+
+    await openInvoiceWithTotal(tester, type: DocumentType.quote);
+    expect(find.text('Payment plan'), findsNothing);
+  });
+
+  testWidgets('choosing two parts shows two instalments, the last one being the balance', (tester) async {
+    await openInvoiceWithTotal(tester);
+
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('installment-row-0')), findsOneWidget);
+    expect(find.byKey(const Key('installment-row-1')), findsOneWidget);
+    expect(field(tester, 'installment-amount-0').controller!.text, '5900');
+    expect(field(tester, 'installment-amount-1').controller!.text, '5900');
+    expect(field(tester, 'installment-amount-1').readOnly, isTrue);
+    expect(find.text('Balance'), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-two')), findsNothing);
+  });
+
+  testWidgets('changing an earlier amount moves the balance', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('installment-amount-0')), '2000');
+    await tester.pumpAndSettle();
+
+    expect(field(tester, 'installment-amount-1').controller!.text, '9800');
+  });
+
+  testWidgets('instalments that add up to the whole total say what to do', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('installment-amount-0')), '20000');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('The earlier instalments already add up to the whole total. Lower them so the balance is more than zero.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a row can be added before the balance and removed again, never below two', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(find.byKey(const Key('installment-remove-0'))).onPressed, isNull);
+
+    await tester.tap(find.byKey(const Key('installment-add')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('installment-row-2')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('installment-remove-0')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('installment-row-2')), findsNothing);
+  });
+
+  testWidgets('a name can be given to an instalment', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('installment-label-0')), 'First half');
+    await tester.pumpAndSettle();
+
+    expect(field(tester, 'installment-label-0').controller!.text, 'First half');
+  });
+
+  testWidgets('paying in full again removes the plan and brings back the due date and terms', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('payment-term-30')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('plan-clear')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('plan-preset-two')), findsOneWidget);
+    expect(find.byKey(const Key('payment-term-30')), findsOneWidget);
+  });
+
+  testWidgets('an invoice can be set to repeat, with an optional end date', (tester) async {
+    await openInvoiceWithTotal(tester);
+    expect(find.byKey(const Key('repeat-MONTHLY')), findsOneWidget);
+    expect(find.byKey(const Key('repeat-end')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('repeat-MONTHLY')));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-MONTHLY'))).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-none'))).selected, isFalse);
+    expect(find.byKey(const Key('repeat-end')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('repeat-none')));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-none'))).selected, isTrue);
+    expect(find.byKey(const Key('repeat-end')), findsNothing);
+  });
+
+  testWidgets('a quote cannot repeat', (tester) async {
+    await openInvoiceWithTotal(tester, type: DocumentType.quote);
+
+    expect(find.byKey(const Key('repeat-MONTHLY')), findsNothing);
+  });
+
+  testWidgets('a repeating invoice says it cannot be paid in instalments, and the reverse', (tester) async {
+    await openInvoiceWithTotal(tester);
+    await tester.tap(find.byKey(const Key('repeat-MONTHLY')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A repeating invoice cannot be paid in instalments. Turn off repeating to use a plan.'), findsOneWidget);
+    expect(find.byKey(const Key('plan-preset-two')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('repeat-none')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('plan-preset-two')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A repeating invoice cannot be paid in instalments. Pay in full to repeat it.'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('repeat-MONTHLY'))).onSelected, isNull);
   });
 }

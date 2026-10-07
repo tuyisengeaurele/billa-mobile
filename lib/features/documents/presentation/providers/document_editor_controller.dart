@@ -7,6 +7,8 @@ import '../../domain/document_draft_input.dart';
 import '../../domain/document_enums.dart';
 import '../../domain/document_totals.dart';
 import '../../domain/exchange_rates.dart';
+import '../../domain/installment_plan.dart';
+import '../../domain/payment_terms.dart';
 import 'document_repository_provider.dart';
 
 enum AutosaveStatus { idle, saving, saved, error }
@@ -157,7 +159,7 @@ class DocumentEditorState {
 
   String? get currencyLockNote => installments.isEmpty
       ? null
-      : "This draft's payment plan is in ${currency.code}. Change the currency on the web.";
+      : "This draft's payment plan is in ${currency.code}. Pay in full instead to change the currency.";
 
   final List<DocumentLineDraft> lines;
   final AutosaveStatus autosaveStatus;
@@ -178,22 +180,28 @@ class DocumentEditorState {
       (line.discountValue == null || line.discountValue! >= 0) &&
       (line.discountType != DiscountType.percent || (line.discountValue ?? 0) <= 100));
 
+  /// The preset the due date equals, or null for a custom date.
+  int? get paymentTermDays => matchPaymentTerm(issueDate, dueDate);
+
+  /// A plan is for invoices only, and the server refuses one on an invoice that repeats.
+  bool get canHavePlan => type == DocumentType.invoice && recurrence == null;
+
+  /// The plan as it will be saved: the last row is always what is left of the total.
+  List<InstallmentInput> get plannedInstallments => withBalance(installments, totals.total);
+
+  String? get installmentProblem =>
+      installments.isEmpty ? null : installmentPlanProblem(totals.total, plannedInstallments);
+
   // A foreign draft with no rate would be refused by the server.
   bool get isSavable =>
       customerId != null &&
       (!referencedDocumentRequired || referencedDocument != null) &&
       _linesValid &&
-      rateProblem(currency, exchangeRate) == null;
+      rateProblem(currency, exchangeRate) == null &&
+      installmentProblem == null;
 
-  // These are kept but not editable on the phone, so the phone says so instead of hiding them.
-  String? get preservedPlanNote {
-    if (installments.isNotEmpty) {
-      return 'This draft is paid in instalments set up on the web. Keep the total the same, or change the plan there.';
-    }
-    final interval = recurrence?.interval;
-    if (interval == null) return null;
-    return 'This draft repeats ${_recurrenceWords(interval)}. Change how often on the web.';
-  }
+  /// A repeat schedule is for invoices only, and the server refuses one on an invoice paid in instalments.
+  bool get canRepeat => type == DocumentType.invoice && installments.isEmpty;
 
   DocumentTotals get totals => calculateDocumentTotals(lines.map((line) => line.toInput()).toList());
 
@@ -209,7 +217,7 @@ class DocumentEditorState {
         currency: currency,
         exchangeRate: currency == Currency.rwf ? null : exchangeRate,
         // The server refuses an empty plan, so no plan is sent as no field at all.
-        installments: installments.isEmpty ? null : installments,
+        installments: installments.isEmpty ? null : plannedInstallments,
         recurrence: recurrence,
         lines: lines.map((line) => line.toInput()).toList(),
       );
@@ -228,6 +236,8 @@ class DocumentEditorState {
     Object? exchangeRate = _unset,
     Object? rateHint = _unset,
     bool? repriceNote,
+    List<InstallmentInput>? installments,
+    Object? recurrence = _unset,
     List<DocumentLineDraft>? lines,
     AutosaveStatus? autosaveStatus,
     Object? autosaveError = _unset,
@@ -249,8 +259,8 @@ class DocumentEditorState {
       language: language ?? this.language,
       currency: currency ?? this.currency,
       exchangeRate: identical(exchangeRate, _unset) ? this.exchangeRate : exchangeRate as double?,
-      installments: installments,
-      recurrence: recurrence,
+      installments: installments ?? this.installments,
+      recurrence: identical(recurrence, _unset) ? this.recurrence : recurrence as RecurrenceInput?,
       rateHint: identical(rateHint, _unset) ? this.rateHint : rateHint as String?,
       repriceNote: repriceNote ?? this.repriceNote,
       lines: lines ?? this.lines,
@@ -259,14 +269,6 @@ class DocumentEditorState {
     );
   }
 }
-
-String _recurrenceWords(String interval) => switch (interval) {
-      'WEEKLY' => 'every week',
-      'MONTHLY' => 'every month',
-      'QUARTERLY' => 'every quarter',
-      'ANNUALLY' => 'every year',
-      _ => 'on a schedule',
-    };
 
 String _formatDate(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -305,7 +307,13 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
         : s.copyWith(customerId: customerId, customerName: customerName, referencedDocument: null));
   }
 
-  void setIssueDate(DateTime date) => _update((s) => s.copyWith(issueDate: date));
+  // A due date picked from a term keeps its term when the issue date moves, as "Net 30" would; a date the
+  // user chose by hand is theirs and stays put.
+  void setIssueDate(DateTime date) => _update((s) {
+        final term = s.paymentTermDays;
+        return s.copyWith(issueDate: date, dueDate: term == null ? _unset : addDays(date, term));
+      });
+  void setPaymentTerm(int days) => _update((s) => s.copyWith(dueDate: addDays(s.issueDate, days)));
   void setDueDate(DateTime? date) => _update((s) => s.copyWith(dueDate: date));
   void setNotes(String value) => _update((s) => s.copyWith(notes: value));
   void setCustomerReference(String value) => _update((s) => s.copyWith(customerReference: value));
@@ -392,6 +400,84 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
 
   void setExchangeRate(double? rate) => _update((s) => s.copyWith(exchangeRate: rate, rateHint: null));
 
+  // A plan starts from a preset so the phone needs no table of dates and amounts; every row can be edited after.
+  // The first date follows a due date the user already chose, otherwise it is a month after the issue date.
+  void startPlan(PlanPreset preset) => _update((s) {
+        if (!s.canHavePlan) return s;
+        return s.copyWith(
+          installments: buildPreset(
+            preset,
+            total: s.totals.total,
+            issueDate: s.issueDate,
+            firstDue: s.dueDate ?? addMonths(s.issueDate, 1),
+          ),
+        );
+      });
+
+  void setRecurrence(String interval) => _update((s) {
+        if (!s.canRepeat) return s;
+        return s.copyWith(recurrence: RecurrenceInput(interval: interval, endDate: s.recurrence?.endDate));
+      });
+
+  void setRecurrenceEnd(DateTime? date) => _update((s) {
+        final current = s.recurrence;
+        if (current == null) return s;
+        return s.copyWith(
+          recurrence: RecurrenceInput(
+            interval: current.interval,
+            endDate: date == null
+                ? null
+                : '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+          ),
+        );
+      });
+
+  void clearRecurrence() => _update((s) => s.copyWith(recurrence: null));
+
+  void clearPlan() => _update((s) => s.copyWith(installments: const []));
+
+  void _updateInstallment(int index, InstallmentInput Function(InstallmentInput) change) => _update((s) {
+        if (index < 0 || index >= s.installments.length) return s;
+        return s.copyWith(
+          installments: [for (var i = 0; i < s.installments.length; i++) i == index ? change(s.installments[i]) : s.installments[i]],
+        );
+      });
+
+  void setInstallmentLabel(int index, String text) {
+    final label = text.trim();
+    _updateInstallment(
+      index,
+      (row) => InstallmentInput(label: label.isEmpty ? null : label, amount: row.amount, dueDate: row.dueDate),
+    );
+  }
+
+  void setInstallmentAmount(int index, int amount) =>
+      _updateInstallment(index, (row) => InstallmentInput(label: row.label, amount: amount, dueDate: row.dueDate));
+
+  void setInstallmentDate(int index, DateTime date) => _updateInstallment(
+        index,
+        (row) => InstallmentInput(
+          label: row.label,
+          amount: row.amount,
+          dueDate: '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+        ),
+      );
+
+  // A new row goes before the balance and starts at nothing, the way the web adds one.
+  void addInstallment() => _update((s) {
+        if (s.installments.isEmpty || s.installments.length >= maxInstallments) return s;
+        final rows = s.installments;
+        final last = rows.last;
+        return s.copyWith(
+          installments: [...rows.take(rows.length - 1), InstallmentInput(amount: 0, dueDate: last.dueDate), last],
+        );
+      });
+
+  void removeInstallment(int index) => _update((s) {
+        if (s.installments.length <= 2 || index < 0 || index >= s.installments.length) return s;
+        return s.copyWith(installments: [for (var i = 0; i < s.installments.length; i++) if (i != index) s.installments[i]]);
+      });
+
   void addLine() {
     final localId = _nextLocalId++;
     _update((s) => s.copyWith(lines: [...s.lines, DocumentLineDraft(localId: localId)]));
@@ -448,6 +534,9 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
       (line) => _cloneLine(line, itemId: itemId, description: description, unitPrice: price, taxRate: taxRate),
     );
   }
+
+  // Saving a typed line to the catalog links it afterwards, without touching the text or the price.
+  void linkLineItem(int localId, String itemId) => _updateLine(localId, (line) => _cloneLine(line, itemId: itemId));
 
   void setLineQuantity(int localId, double quantity) =>
       _updateLine(localId, (line) => _cloneLine(line, quantity: quantity));

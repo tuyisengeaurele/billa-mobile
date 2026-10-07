@@ -14,6 +14,175 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
+OutstandingTotal _$OutstandingTotalFromJson(Map<String, dynamic> json) {
+  return _OutstandingTotal.fromJson(json);
+}
+
+/// @nodoc
+mixin _$OutstandingTotal {
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency => throw _privateConstructorUsedError;
+  int get amount => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $OutstandingTotalCopyWith<OutstandingTotal> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $OutstandingTotalCopyWith<$Res> {
+  factory $OutstandingTotalCopyWith(
+          OutstandingTotal value, $Res Function(OutstandingTotal) then) =
+      _$OutstandingTotalCopyWithImpl<$Res, OutstandingTotal>;
+  @useResult
+  $Res call(
+      {@JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      int amount});
+}
+
+/// @nodoc
+class _$OutstandingTotalCopyWithImpl<$Res, $Val extends OutstandingTotal>
+    implements $OutstandingTotalCopyWith<$Res> {
+  _$OutstandingTotalCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? currency = null,
+    Object? amount = null,
+  }) {
+    return _then(_value.copyWith(
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$OutstandingTotalImplCopyWith<$Res>
+    implements $OutstandingTotalCopyWith<$Res> {
+  factory _$$OutstandingTotalImplCopyWith(_$OutstandingTotalImpl value,
+          $Res Function(_$OutstandingTotalImpl) then) =
+      __$$OutstandingTotalImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      int amount});
+}
+
+/// @nodoc
+class __$$OutstandingTotalImplCopyWithImpl<$Res>
+    extends _$OutstandingTotalCopyWithImpl<$Res, _$OutstandingTotalImpl>
+    implements _$$OutstandingTotalImplCopyWith<$Res> {
+  __$$OutstandingTotalImplCopyWithImpl(_$OutstandingTotalImpl _value,
+      $Res Function(_$OutstandingTotalImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? currency = null,
+    Object? amount = null,
+  }) {
+    return _then(_$OutstandingTotalImpl(
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$OutstandingTotalImpl implements _OutstandingTotal {
+  const _$OutstandingTotalImpl(
+      {@JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      required this.currency,
+      required this.amount});
+
+  factory _$OutstandingTotalImpl.fromJson(Map<String, dynamic> json) =>
+      _$$OutstandingTotalImplFromJson(json);
+
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  final Currency currency;
+  @override
+  final int amount;
+
+  @override
+  String toString() {
+    return 'OutstandingTotal(currency: $currency, amount: $amount)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$OutstandingTotalImpl &&
+            (identical(other.currency, currency) ||
+                other.currency == currency) &&
+            (identical(other.amount, amount) || other.amount == amount));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, currency, amount);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$OutstandingTotalImplCopyWith<_$OutstandingTotalImpl> get copyWith =>
+      __$$OutstandingTotalImplCopyWithImpl<_$OutstandingTotalImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$OutstandingTotalImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _OutstandingTotal implements OutstandingTotal {
+  const factory _OutstandingTotal(
+      {@JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      required final Currency currency,
+      required final int amount}) = _$OutstandingTotalImpl;
+
+  factory _OutstandingTotal.fromJson(Map<String, dynamic> json) =
+      _$OutstandingTotalImpl.fromJson;
+
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency;
+  @override
+  int get amount;
+  @override
+  @JsonKey(ignore: true)
+  _$$OutstandingTotalImplCopyWith<_$OutstandingTotalImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 Customer _$CustomerFromJson(Map<String, dynamic> json) {
   return _Customer.fromJson(json);
 }
@@ -27,7 +196,14 @@ mixin _$Customer {
   String? get phone => throw _privateConstructorUsedError;
   String? get email => throw _privateConstructorUsedError;
   bool get isActive => throw _privateConstructorUsedError;
-  String get createdAt => throw _privateConstructorUsedError;
+  String get createdAt =>
+      throw _privateConstructorUsedError; // Whole RWF; only a warning on new invoices, never a block.
+  int? get creditLimit => throw _privateConstructorUsedError;
+  String? get portalToken =>
+      throw _privateConstructorUsedError; // Only the single-customer response carries these two.
+  int get outstandingBalance => throw _privateConstructorUsedError;
+  List<OutstandingTotal> get outstandingTotals =>
+      throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -48,7 +224,11 @@ abstract class $CustomerCopyWith<$Res> {
       String? phone,
       String? email,
       bool isActive,
-      String createdAt});
+      String createdAt,
+      int? creditLimit,
+      String? portalToken,
+      int outstandingBalance,
+      List<OutstandingTotal> outstandingTotals});
 }
 
 /// @nodoc
@@ -72,6 +252,10 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
     Object? email = freezed,
     Object? isActive = null,
     Object? createdAt = null,
+    Object? creditLimit = freezed,
+    Object? portalToken = freezed,
+    Object? outstandingBalance = null,
+    Object? outstandingTotals = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -106,6 +290,22 @@ class _$CustomerCopyWithImpl<$Res, $Val extends Customer>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as String,
+      creditLimit: freezed == creditLimit
+          ? _value.creditLimit
+          : creditLimit // ignore: cast_nullable_to_non_nullable
+              as int?,
+      portalToken: freezed == portalToken
+          ? _value.portalToken
+          : portalToken // ignore: cast_nullable_to_non_nullable
+              as String?,
+      outstandingBalance: null == outstandingBalance
+          ? _value.outstandingBalance
+          : outstandingBalance // ignore: cast_nullable_to_non_nullable
+              as int,
+      outstandingTotals: null == outstandingTotals
+          ? _value.outstandingTotals
+          : outstandingTotals // ignore: cast_nullable_to_non_nullable
+              as List<OutstandingTotal>,
     ) as $Val);
   }
 }
@@ -126,7 +326,11 @@ abstract class _$$CustomerImplCopyWith<$Res>
       String? phone,
       String? email,
       bool isActive,
-      String createdAt});
+      String createdAt,
+      int? creditLimit,
+      String? portalToken,
+      int outstandingBalance,
+      List<OutstandingTotal> outstandingTotals});
 }
 
 /// @nodoc
@@ -148,6 +352,10 @@ class __$$CustomerImplCopyWithImpl<$Res>
     Object? email = freezed,
     Object? isActive = null,
     Object? createdAt = null,
+    Object? creditLimit = freezed,
+    Object? portalToken = freezed,
+    Object? outstandingBalance = null,
+    Object? outstandingTotals = null,
   }) {
     return _then(_$CustomerImpl(
       id: null == id
@@ -182,6 +390,22 @@ class __$$CustomerImplCopyWithImpl<$Res>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as String,
+      creditLimit: freezed == creditLimit
+          ? _value.creditLimit
+          : creditLimit // ignore: cast_nullable_to_non_nullable
+              as int?,
+      portalToken: freezed == portalToken
+          ? _value.portalToken
+          : portalToken // ignore: cast_nullable_to_non_nullable
+              as String?,
+      outstandingBalance: null == outstandingBalance
+          ? _value.outstandingBalance
+          : outstandingBalance // ignore: cast_nullable_to_non_nullable
+              as int,
+      outstandingTotals: null == outstandingTotals
+          ? _value._outstandingTotals
+          : outstandingTotals // ignore: cast_nullable_to_non_nullable
+              as List<OutstandingTotal>,
     ));
   }
 }
@@ -197,7 +421,13 @@ class _$CustomerImpl implements _Customer {
       this.phone,
       this.email,
       required this.isActive,
-      required this.createdAt});
+      required this.createdAt,
+      this.creditLimit,
+      this.portalToken,
+      this.outstandingBalance = 0,
+      final List<OutstandingTotal> outstandingTotals =
+          const <OutstandingTotal>[]})
+      : _outstandingTotals = outstandingTotals;
 
   factory _$CustomerImpl.fromJson(Map<String, dynamic> json) =>
       _$$CustomerImplFromJson(json);
@@ -218,10 +448,28 @@ class _$CustomerImpl implements _Customer {
   final bool isActive;
   @override
   final String createdAt;
+// Whole RWF; only a warning on new invoices, never a block.
+  @override
+  final int? creditLimit;
+  @override
+  final String? portalToken;
+// Only the single-customer response carries these two.
+  @override
+  @JsonKey()
+  final int outstandingBalance;
+  final List<OutstandingTotal> _outstandingTotals;
+  @override
+  @JsonKey()
+  List<OutstandingTotal> get outstandingTotals {
+    if (_outstandingTotals is EqualUnmodifiableListView)
+      return _outstandingTotals;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_outstandingTotals);
+  }
 
   @override
   String toString() {
-    return 'Customer(id: $id, name: $name, tin: $tin, address: $address, phone: $phone, email: $email, isActive: $isActive, createdAt: $createdAt)';
+    return 'Customer(id: $id, name: $name, tin: $tin, address: $address, phone: $phone, email: $email, isActive: $isActive, createdAt: $createdAt, creditLimit: $creditLimit, portalToken: $portalToken, outstandingBalance: $outstandingBalance, outstandingTotals: $outstandingTotals)';
   }
 
   @override
@@ -238,13 +486,33 @@ class _$CustomerImpl implements _Customer {
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.creditLimit, creditLimit) ||
+                other.creditLimit == creditLimit) &&
+            (identical(other.portalToken, portalToken) ||
+                other.portalToken == portalToken) &&
+            (identical(other.outstandingBalance, outstandingBalance) ||
+                other.outstandingBalance == outstandingBalance) &&
+            const DeepCollectionEquality()
+                .equals(other._outstandingTotals, _outstandingTotals));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType, id, name, tin, address, phone, email, isActive, createdAt);
+      runtimeType,
+      id,
+      name,
+      tin,
+      address,
+      phone,
+      email,
+      isActive,
+      createdAt,
+      creditLimit,
+      portalToken,
+      outstandingBalance,
+      const DeepCollectionEquality().hash(_outstandingTotals));
 
   @JsonKey(ignore: true)
   @override
@@ -269,7 +537,11 @@ abstract class _Customer implements Customer {
       final String? phone,
       final String? email,
       required final bool isActive,
-      required final String createdAt}) = _$CustomerImpl;
+      required final String createdAt,
+      final int? creditLimit,
+      final String? portalToken,
+      final int outstandingBalance,
+      final List<OutstandingTotal> outstandingTotals}) = _$CustomerImpl;
 
   factory _Customer.fromJson(Map<String, dynamic> json) =
       _$CustomerImpl.fromJson;
@@ -290,6 +562,14 @@ abstract class _Customer implements Customer {
   bool get isActive;
   @override
   String get createdAt;
+  @override // Whole RWF; only a warning on new invoices, never a block.
+  int? get creditLimit;
+  @override
+  String? get portalToken;
+  @override // Only the single-customer response carries these two.
+  int get outstandingBalance;
+  @override
+  List<OutstandingTotal> get outstandingTotals;
   @override
   @JsonKey(ignore: true)
   _$$CustomerImplCopyWith<_$CustomerImpl> get copyWith =>

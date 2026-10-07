@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,5 +121,39 @@ void main() {
 
     expect(find.text('Check your connection and try again'), findsOneWidget);
     expect(find.text('Deactivate customer'), findsOneWidget);
+  });
+
+  testWidgets('shows the credit limit and what the customer owes, one currency at a time', (tester) async {
+    when(() => repository.get('c1')).thenAnswer(
+      (_) async => const Customer(
+        id: 'c1',
+        name: 'Acme',
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        creditLimit: 500000,
+        outstandingBalance: 120000,
+        outstandingTotals: [
+          OutstandingTotal(currency: Currency.rwf, amount: 70000),
+          OutstandingTotal(currency: Currency.usd, amount: 50000),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Credit limit'), findsOneWidget);
+    expect(find.text('RWF 500,000'), findsOneWidget);
+    expect(find.text('Owes'), findsOneWidget);
+    expect(find.text('RWF 70,000'), findsOneWidget);
+    expect(find.text('USD 500.00'), findsOneWidget);
+  });
+
+  testWidgets('says nothing about credit for a customer with no limit and no balance', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Credit limit'), findsNothing);
+    expect(find.text('Owes'), findsNothing);
   });
 }

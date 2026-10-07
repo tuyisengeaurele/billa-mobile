@@ -156,4 +156,52 @@ void main() {
     expect(document.recurrenceInterval, 'MONTHLY');
     expect(document.recurrenceEndDate, '2027-01-01T00:00:00.000Z');
   });
+
+  test('reads the schedule the server works out from the payments, and none when there is no plan', () {
+    final withPlan = Document.fromJson(_documentJson(extra: {
+      'schedule': [
+        {
+          'label': 'Deposit',
+          'amount': 4000,
+          'dueDate': '2026-10-01',
+          'paid': 4000,
+          'remaining': 0,
+          'status': 'PAID',
+          'isOverdue': false,
+          'number': 1,
+          'count': 2,
+        },
+        {
+          'label': null,
+          'amount': 7800,
+          'dueDate': '2026-11-01',
+          'paid': 0,
+          'remaining': 7800,
+          'status': 'UNPAID',
+          'isOverdue': false,
+          'number': 2,
+          'count': 2,
+        },
+      ],
+    }));
+    final withoutPlan = Document.fromJson(_documentJson(extra: {'schedule': null}));
+
+    expect(withPlan.schedule.map((s) => (s.label, s.amount, s.status, s.number)), [
+      ('Deposit', 4000, 'PAID', 1),
+      (null, 7800, 'UNPAID', 2),
+    ]);
+    expect(withoutPlan.schedule, isEmpty);
+    expect(Document.fromJson(_documentJson()).schedule, isEmpty);
+  });
+
+  test('reads when a repeating invoice next repeats', () {
+    final document = Document.fromJson(_documentJson(extra: {
+      'recurrenceInterval': 'MONTHLY',
+      'recurrenceEndDate': '2027-01-01T00:00:00.000Z',
+      'nextRecurrenceAt': '2026-11-01T00:00:00.000Z',
+    }));
+
+    expect(document.nextRecurrenceAt, '2026-11-01T00:00:00.000Z');
+    expect(Document.fromJson(_documentJson()).nextRecurrenceAt, isNull);
+  });
 }
