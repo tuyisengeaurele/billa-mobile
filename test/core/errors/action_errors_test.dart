@@ -59,6 +59,8 @@ void main() {
     expect(describeActionError(_error('upload_failed')), 'The upload failed — try again');
     expect(describeActionError(_error('invalid_file_type')), 'Choose a PNG, JPG, or WebP image');
     expect(describeActionError(_error('no_file')), 'Choose an image first');
+    expect(describeActionError(_error('not_owner')), 'Only the business owner can change this');
+    expect(describeActionError(_error('forbidden')), "You don't have permission to use that file");
   });
 
   test('falls back to a generic message for an unknown code', () {
