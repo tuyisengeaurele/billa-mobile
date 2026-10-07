@@ -8,6 +8,7 @@ import 'app/theme/theme_preference_store.dart';
 import 'core/network/api_client.dart';
 import 'core/network/api_client_provider.dart';
 import 'core/platform/glass_support.dart';
+import 'core/storage/secure_storage.dart';
 import 'features/auth/data/session_snapshot_store.dart';
 import 'firebase_options.dart';
 
@@ -17,6 +18,7 @@ void main() async {
   final apiClient = await ApiClient.create();
   final preferences = await SharedPreferences.getInstance();
   final glassBlur = await detectGlassBlurSupport();
+  final sessionSnapshot = await SecureSessionSnapshotStore.load(SecureStorage(), preferences);
 
   runApp(ProviderScope(
     overrides: [
@@ -24,7 +26,7 @@ void main() async {
       themePreferenceStoreProvider.overrideWithValue(SharedPreferencesThemePreferenceStore(preferences)),
       glassBlurEnabledProvider.overrideWithValue(glassBlur),
       splashDurationProvider.overrideWithValue(const Duration(seconds: 2)),
-      sessionSnapshotStoreProvider.overrideWithValue(SharedPreferencesSessionSnapshotStore(preferences)),
+      sessionSnapshotStoreProvider.overrideWithValue(sessionSnapshot),
     ],
     child: const App(),
   ));

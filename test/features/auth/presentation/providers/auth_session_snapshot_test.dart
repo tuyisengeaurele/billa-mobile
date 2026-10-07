@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:billa_mobile/core/storage/secure_storage.dart';
 import 'package:billa_mobile/features/auth/data/session_snapshot_store.dart';
 import 'package:billa_mobile/features/auth/domain/auth_repository.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
@@ -123,19 +124,59 @@ void main() {
     expect(store.read(), isNull);
   });
 
-  test('the stored snapshot survives a round trip and an unreadable one is ignored', () async {
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-    final shared = SharedPreferencesSessionSnapshotStore(preferences);
+  group('secure snapshot store', () {
+    late _FakeSecureStorage secure;
+    late SharedPreferences preferences;
 
-    await shared.write(_signedIn);
-    expect(shared.read(), _signedIn);
+    setUp(() async {
+      secure = _FakeSecureStorage();
+      SharedPreferences.setMockInitialValues({});
+      preferences = await SharedPreferences.getInstance();
+    });
 
-    await preferences.setString('session_snapshot', 'not json');
-    expect(shared.read(), isNull);
+    test('a written snapshot is restored by the next load', () async {
+      final first = await SecureSessionSnapshotStore.load(secure, preferences);
+      await first.write(_signedIn);
 
-    await shared.write(_signedIn);
-    await shared.clear();
-    expect(shared.read(), isNull);
+      final second = await SecureSessionSnapshotStore.load(secure, preferences);
+
+      expect(second.read(), _signedIn);
+    });
+
+    test('clear forgets it in memory and in storage', () async {
+      final store = await SecureSessionSnapshotStore.load(secure, preferences);
+      await store.write(_signedIn);
+      await store.clear();
+
+      expect(store.read(), isNull);
+      expect((await SecureSessionSnapshotStore.load(secure, preferences)).read(), isNull);
+    });
+
+    test('an unreadable stored value is ignored', () async {
+      await secure.write('session_snapshot', 'not json');
+
+      expect((await SecureSessionSnapshotStore.load(secure, preferences)).read(), isNull);
+    });
+
+    test('the old plain preference copy is removed', () async {
+      await preferences.setString('session_snapshot', '{"user":{},"business":{}}');
+
+      await SecureSessionSnapshotStore.load(secure, preferences);
+
+      expect(preferences.containsKey('session_snapshot'), isFalse);
+    });
   });
+}
+
+class _FakeSecureStorage extends SecureStorage {
+  final values = <String, String>{};
+
+  @override
+  Future<String?> read(String key) async => values[key];
+
+  @override
+  Future<void> write(String key, String value) async => values[key] = value;
+
+  @override
+  Future<void> delete(String key) async => values.remove(key);
 }
