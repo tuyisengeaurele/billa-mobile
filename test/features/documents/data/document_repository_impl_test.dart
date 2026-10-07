@@ -279,4 +279,31 @@ void main() {
 
     expect(url, '/uploads/b1/receipt.png');
   });
+
+  test('send with a language posts it in the body', () async {
+    final options = RequestOptions(path: '/documents/d1/send');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/send', data: {'language': 'FR'})).thenAnswer(
+      (_) async => _response(200, {'sentAt': '2026-01-02T00:00:00.000Z'}, options),
+    );
+
+    final sentAt = await repository.send('d1', language: DocumentLanguage.fr);
+
+    expect(sentAt, '2026-01-02T00:00:00.000Z');
+    verify(() => dio.post<Map<String, dynamic>>('/documents/d1/send', data: {'language': 'FR'})).called(1);
+  });
+
+  test('fetchPdfBytes with a language asks for it in the query string', () async {
+    final options = RequestOptions(path: '/documents/d1/pdf');
+    when(
+      () => dio.get<List<int>>(
+        '/documents/d1/pdf',
+        queryParameters: {'language': 'FR'},
+        options: any(named: 'options'),
+      ),
+    ).thenAnswer((_) async => Response(statusCode: 200, data: [9, 9], requestOptions: options));
+
+    final bytes = await repository.fetchPdfBytes('d1', language: DocumentLanguage.fr);
+
+    expect(bytes, [9, 9]);
+  });
 }

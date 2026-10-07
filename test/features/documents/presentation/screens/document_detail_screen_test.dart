@@ -229,31 +229,80 @@ void main() {
 
   testWidgets('Send confirms and reloads on success when the customer has an email', (tester) async {
     when(() => repository.get('d1')).thenAnswer((_) async => _document);
-    when(() => repository.send('d1')).thenAnswer((_) async => '2026-01-02T00:00:00.000Z');
+    when(() => repository.send('d1', language: DocumentLanguage.en)).thenAnswer((_) async => '2026-01-02T00:00:00.000Z');
 
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('document-send')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('language-en')));
+    await tester.pumpAndSettle();
+    expect(find.text('The PDF will be in English.'), findsOneWidget);
     await tester.tap(find.text('Send').last);
     await tester.pumpAndSettle();
 
-    verify(() => repository.send('d1')).called(1);
+    verify(() => repository.send('d1', language: DocumentLanguage.en)).called(1);
     verify(() => repository.get('d1')).called(2);
   });
 
   testWidgets('Share PDF fetches the document bytes', (tester) async {
     when(() => repository.get('d1')).thenAnswer((_) async => _document);
-    when(() => repository.fetchPdfBytes('d1')).thenAnswer((_) async => [1, 2, 3]);
+    when(() => repository.fetchPdfBytes('d1', language: DocumentLanguage.en)).thenAnswer((_) async => [1, 2, 3]);
 
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('document-share-pdf')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('language-en')));
+    await tester.pumpAndSettle();
 
-    verify(() => repository.fetchPdfBytes('d1')).called(1);
+    verify(() => repository.fetchPdfBytes('d1', language: DocumentLanguage.en)).called(1);
+  });
+
+  testWidgets('the language picker opens on the document language and shares in the one chosen', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document.copyWith(language: DocumentLanguage.fr));
+    when(() => repository.fetchPdfBytes('d1', language: DocumentLanguage.en)).thenAnswer((_) async => [1, 2, 3]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-share-pdf')));
+    await tester.pumpAndSettle();
+
+    expect(find.descendant(of: find.byKey(const Key('language-fr')), matching: find.byIcon(Icons.check)), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('language-en')), matching: find.byIcon(Icons.check)), findsNothing);
+
+    await tester.tap(find.byKey(const Key('language-en')));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.fetchPdfBytes('d1', language: DocumentLanguage.en)).called(1);
+  });
+
+  testWidgets('dismissing the language picker shares nothing', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-share-pdf')));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => repository.fetchPdfBytes(any(), language: any(named: 'language')));
+  });
+
+  testWidgets('dismissing the language picker before sending sends nothing', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-send')));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => repository.send(any(), language: any(named: 'language')));
   });
 
   testWidgets('the overflow Delete action appears only for drafts, confirms, and pops back to the list', (tester) async {

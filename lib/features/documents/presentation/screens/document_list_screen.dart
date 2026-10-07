@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../domain/document_enums.dart';
@@ -158,7 +159,10 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: switch (state) {
+            child: FadeSwitcher(
+              child: KeyedSubtree(
+                key: ValueKey(asyncViewKind(state, isEmpty: (data) => data.items.isEmpty)),
+                child: switch (state) {
               AsyncData(value: final data) when data.items.isEmpty => const EmptyState(
                   icon: Icons.description_outlined,
                   message: 'No documents yet',
@@ -189,6 +193,8 @@ class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
                   child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
                 ),
             },
+              ),
+            ),
           ),
         ],
       ),

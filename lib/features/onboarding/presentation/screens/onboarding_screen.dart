@@ -6,6 +6,7 @@ import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../business_settings/presentation/providers/business_settings_repository_provider.dart';
 import '../providers/business_repository_provider.dart';
 import '../providers/logo_pipeline_provider.dart';
+import '../../../../core/widgets/step_switcher.dart';
 import '../widgets/details_step.dart';
 import '../widgets/logo_step.dart';
 import '../widgets/numbering_step.dart';
@@ -50,6 +51,47 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await ref.read(authControllerProvider.future);
   }
 
+  Widget _currentStep() {
+    return switch (_step) {
+      0 => DetailsStep(
+          onSaved: (name, tin, industry, phone, email, address, rraEbmNumber) => _guard(() async {
+            await ref.read(businessRepositoryProvider).updateProfile(
+                  name: name,
+                  tin: tin,
+                  industry: industry,
+                  phone: phone,
+                  email: email,
+                  address: address,
+                  rraEbmNumber: rraEbmNumber,
+                );
+            setState(() => _step = 1);
+          }),
+          onSkip: () => setState(() => _step = 1),
+        ),
+      1 => LogoStep(
+          service: ref.watch(logoPipelineServiceProvider),
+          onDone: () async => setState(() => _step = 2),
+          onSkip: () => setState(() => _step = 2),
+        ),
+      2 => TemplateStep(
+          onSaved: (template) => _guard(() async {
+            await ref.read(businessSettingsRepositoryProvider).setDefaultTemplate(template);
+            setState(() => _step = 3);
+          }),
+          onSkip: () => setState(() => _step = 3),
+        ),
+      // The last step is what completes onboarding: finishing or skipping it
+      // is the only way out besides "Skip onboarding".
+      _ => NumberingStep(
+          onSaved: (sequences) async {
+            await ref.read(businessSettingsRepositoryProvider).saveSequences(sequences);
+            await _completeAndRefresh();
+          },
+          onSkip: () => _guard(_completeAndRefresh),
+        ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,46 +117,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-              if (_step == 0)
-                DetailsStep(
-                  onSaved: (name, tin, industry, phone, email, address, rraEbmNumber) => _guard(() async {
-                    await ref.read(businessRepositoryProvider).updateProfile(
-                          name: name,
-                          tin: tin,
-                          industry: industry,
-                          phone: phone,
-                          email: email,
-                          address: address,
-                          rraEbmNumber: rraEbmNumber,
-                        );
-                    setState(() => _step = 1);
-                  }),
-                  onSkip: () => setState(() => _step = 1),
-                )
-              else if (_step == 1)
-                LogoStep(
-                  service: ref.watch(logoPipelineServiceProvider),
-                  onDone: () async => setState(() => _step = 2),
-                  onSkip: () => setState(() => _step = 2),
-                )
-              else if (_step == 2)
-                TemplateStep(
-                  onSaved: (template) => _guard(() async {
-                    await ref.read(businessSettingsRepositoryProvider).setDefaultTemplate(template);
-                    setState(() => _step = 3);
-                  }),
-                  onSkip: () => setState(() => _step = 3),
-                )
-              else
-                // The last step is what completes onboarding: finishing or
-                // skipping it is the only way out besides "Skip onboarding".
-                NumberingStep(
-                  onSaved: (sequences) async {
-                    await ref.read(businessSettingsRepositoryProvider).saveSequences(sequences);
-                    await _completeAndRefresh();
-                  },
-                  onSkip: () => _guard(_completeAndRefresh),
-                ),
+              StepSwitcher(child: KeyedSubtree(key: ValueKey(_step), child: _currentStep())),
             ],
           ),
         ),

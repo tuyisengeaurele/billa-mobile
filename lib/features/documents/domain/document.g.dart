@@ -78,6 +78,9 @@ _$DocumentImpl _$$DocumentImplFromJson(Map<String, dynamic> json) =>
       subtotal: (json['subtotal'] as num).toInt(),
       taxTotal: (json['taxTotal'] as num).toInt(),
       total: (json['total'] as num).toInt(),
+      language: json['language'] == null
+          ? DocumentLanguage.en
+          : documentLanguageFromJson(json['language'] as String),
       sentAt: json['sentAt'] as String?,
       amountPaid: (json['amountPaid'] as num).toInt(),
       paymentStatus: paymentStatusFromJson(json['paymentStatus'] as String?),
@@ -118,6 +121,7 @@ Map<String, dynamic> _$$DocumentImplToJson(_$DocumentImpl instance) =>
       'subtotal': instance.subtotal,
       'taxTotal': instance.taxTotal,
       'total': instance.total,
+      'language': documentLanguageToJson(instance.language),
       'sentAt': instance.sentAt,
       'amountPaid': instance.amountPaid,
       'paymentStatus': paymentStatusToJson(instance.paymentStatus),

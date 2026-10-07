@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../providers/item_list_controller.dart';
@@ -96,7 +97,10 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
             ),
           ),
           Expanded(
-            child: switch (state) {
+            child: FadeSwitcher(
+              child: KeyedSubtree(
+                key: ValueKey(asyncViewKind(state, isEmpty: (data) => data.items.isEmpty)),
+                child: switch (state) {
               AsyncData(value: final data) when data.items.isEmpty => EmptyState(
                   icon: Icons.inventory_2_outlined,
                   message: 'No items yet',
@@ -129,6 +133,8 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
                   child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
                 ),
             },
+              ),
+            ),
           ),
         ],
       ),

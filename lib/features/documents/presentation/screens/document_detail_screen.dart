@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../widgets/language_picker_sheet.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -116,17 +117,21 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     });
   }
 
-  Future<void> _send(String email) async {
-    if (!await _confirm('Send to $email?', null, 'Send')) return;
+  Future<void> _send(Document document, String email) async {
+    final language = await showLanguagePicker(context, initial: document.language);
+    if (language == null || !mounted) return;
+    if (!await _confirm('Send to $email?', 'The PDF will be in ${documentLanguageLabel(language)}.', 'Send')) return;
     await _runAction(() async {
-      await ref.read(documentRepositoryProvider).send(widget.documentId);
+      await ref.read(documentRepositoryProvider).send(widget.documentId, language: language);
       _reload();
     });
   }
 
-  Future<void> _sharePdf() async {
+  Future<void> _sharePdf(Document document) async {
+    final language = await showLanguagePicker(context, initial: document.language);
+    if (language == null) return;
     await _runAction(() async {
-      final bytes = await ref.read(documentRepositoryProvider).fetchPdfBytes(widget.documentId);
+      final bytes = await ref.read(documentRepositoryProvider).fetchPdfBytes(widget.documentId, language: language);
       final dir = await getTemporaryDirectory();
       final file = await File('${dir.path}/${widget.documentId}.pdf').writeAsBytes(bytes);
       await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
@@ -376,7 +381,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                       Expanded(
                         child: OutlinedButton(
                           key: const Key('document-share-pdf'),
-                          onPressed: _actionInProgress ? null : _sharePdf,
+                          onPressed: _actionInProgress ? null : () => _sharePdf(document),
                           child: const Text('Share PDF'),
                         ),
                       ),
@@ -388,7 +393,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                             key: const Key('document-send'),
                             onPressed: (_actionInProgress || document.customer.email == null)
                                 ? null
-                                : () => _send(document.customer.email!),
+                                : () => _send(document, document.customer.email!),
                             child: const Text('Send'),
                           ),
                         ),

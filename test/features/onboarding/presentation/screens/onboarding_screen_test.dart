@@ -292,4 +292,20 @@ void main() {
 
     expect(find.byKey(const Key('num-prefix-INVOICE')), findsOneWidget);
   });
+
+  testWidgets('moving to the next step cross-fades instead of jumping', (tester) async {
+    await tallScreen(tester);
+    await pumpOnboarding(tester);
+
+    await tester.tap(find.byKey(const Key('onboarding-details-skip')));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('Tell us about your business'), findsOneWidget);
+    expect(find.text('Add your logo'), findsOneWidget);
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tell us about your business'), findsNothing);
+    expect(find.text('Add your logo'), findsOneWidget);
+  });
 }

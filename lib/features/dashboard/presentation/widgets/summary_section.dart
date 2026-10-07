@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../documents/presentation/widgets/document_list_tile.dart' show documentTypeLabel;
 import '../../../documents/presentation/widgets/document_status_pill.dart';
@@ -21,20 +22,22 @@ class SummarySection extends ConsumerWidget {
     final summary = ref.watch(dashboardSummaryProvider);
     final value = summary.valueOrNull;
 
-    if (value != null) return _SummaryContent(summary: value);
-    if (summary.hasError) {
-      return SectionError(
-        message: "Couldn't load your activity",
-        onRetry: () => ref.invalidate(dashboardSummaryProvider),
-      );
-    }
-    return const Column(children: [
-      LoadingSkeleton(height: 72),
-      SizedBox(height: 12),
-      LoadingSkeleton(height: 56),
-      SizedBox(height: 8),
-      LoadingSkeleton(height: 56),
-    ]);
+    final Widget view = value != null
+        ? _SummaryContent(summary: value)
+        : summary.hasError
+            ? SectionError(
+                message: "Couldn't load your activity",
+                onRetry: () => ref.invalidate(dashboardSummaryProvider),
+              )
+            : const Column(children: [
+                LoadingSkeleton(height: 72),
+                SizedBox(height: 12),
+                LoadingSkeleton(height: 56),
+                SizedBox(height: 8),
+                LoadingSkeleton(height: 56),
+              ]);
+
+    return FadeSwitcher(child: KeyedSubtree(key: ValueKey(asyncViewKind(summary)), child: view));
   }
 }
 

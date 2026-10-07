@@ -81,4 +81,18 @@ void main() {
     expect(document.referencedDocument, isNull);
     expect(document.paymentStatus, isNull);
   });
+
+  test('reads the document language', () {
+    expect(Document.fromJson(_documentJson(extra: {'language': 'FR'})).language, DocumentLanguage.fr);
+    expect(Document.fromJson(_documentJson(extra: {'language': 'EN'})).language, DocumentLanguage.en);
+  });
+
+  test('defaults to English when the server does not send a language', () {
+    expect(Document.fromJson(_documentJson()).language, DocumentLanguage.en);
+  });
+
+  test('language names are shown in their own language', () {
+    expect(documentLanguageLabel(DocumentLanguage.en), 'English');
+    expect(documentLanguageLabel(DocumentLanguage.fr), 'Français');
+  });
 }

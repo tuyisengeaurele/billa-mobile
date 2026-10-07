@@ -42,4 +42,13 @@ void main() {
     expect(textTheme.bodyLarge!.fontFamily, startsWith('PlusJakartaSans'));
     expect(textTheme.labelLarge!.fontFamily, startsWith('PlusJakartaSans'));
   });
+
+  test('inputs are filled and rounded, with an accent outline on focus', () {
+    for (final (theme, colors) in [(AppTheme.light, AppColors.light), (AppTheme.dark, AppColors.dark)]) {
+      final input = theme.inputDecorationTheme;
+      expect(input.filled, isTrue);
+      expect(input.fillColor, colors.neutral100);
+      expect((input.focusedBorder as OutlineInputBorder).borderSide.color, colors.primary500);
+    }
+  });
 }

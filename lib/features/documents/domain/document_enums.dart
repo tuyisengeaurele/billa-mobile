@@ -97,3 +97,8 @@ String paymentMethodToJson(PaymentMethod value) => switch (value) {
       PaymentMethod.cheque => 'CHEQUE',
       PaymentMethod.other => 'OTHER',
     };
+
+String documentLanguageLabel(DocumentLanguage value) => switch (value) {
+      DocumentLanguage.en => 'English',
+      DocumentLanguage.fr => 'Français',
+    };

@@ -20,9 +20,9 @@ abstract class DocumentRepository {
   Future<Document> update(String id, DocumentDraftInput input);
   Future<Document> finalize(String id);
   Future<Document> convert(String id);
-  Future<String> send(String id);
+  Future<String> send(String id, {DocumentLanguage? language});
   Future<void> delete(String id);
-  Future<List<int>> fetchPdfBytes(String id);
+  Future<List<int>> fetchPdfBytes(String id, {DocumentLanguage? language});
   Future<Document> recordPayment(String documentId, PaymentInput input);
   Future<Document> voidPayment(String documentId, String paymentId, String reason);
   Future<List<Payment>> listPayments(String documentId);

@@ -79,4 +79,14 @@ void main() {
 
     expect(describeActionError(offline), 'Check your connection and try again');
   });
+
+  test('an expired sign-in challenge and a rate limit each get their own message', () {
+    expect(describeActionError(_error('invalid_challenge')), 'This sign-in expired — log in again');
+
+    final limited = DioException(
+      requestOptions: RequestOptions(path: '/x'),
+      response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 429, data: 'Too many requests'),
+    );
+    expect(describeActionError(limited), 'Too many attempts — wait a few minutes and try again');
+  });
 }
