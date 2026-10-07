@@ -8,7 +8,9 @@ import '../features/customers/domain/customer.dart';
 import '../features/customers/presentation/screens/customer_detail_screen.dart';
 import '../features/customers/presentation/screens/customer_form_screen.dart';
 import '../features/customers/presentation/screens/customer_list_screen.dart';
+import '../features/documents/domain/document_enums.dart';
 import '../features/documents/presentation/screens/document_detail_screen.dart';
+import '../features/documents/presentation/screens/document_editor_screen.dart';
 import '../features/documents/presentation/screens/document_list_screen.dart';
 import '../features/items/domain/item.dart';
 import '../features/items/presentation/screens/item_form_screen.dart';
@@ -61,6 +63,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ItemFormScreen(existing: state.extra as Item?),
       ),
       GoRoute(path: '/documents', builder: (context, state) => const DocumentListScreen()),
+      GoRoute(
+        path: '/documents/new',
+        builder: (context, state) => DocumentEditorScreen.create(type: state.extra as DocumentType),
+      ),
+      GoRoute(
+        path: '/documents/:id/edit',
+        builder: (context, state) => DocumentEditorScreen.edit(documentId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/documents/:id',
         builder: (context, state) => DocumentDetailScreen(documentId: state.pathParameters['id']!),

@@ -79,4 +79,46 @@ void main() {
 
     expect(find.text('converted-from screen'), findsOneWidget);
   });
+
+  testWidgets('a draft document shows an Edit action that opens the editor', (tester) async {
+    const draft = Document(
+      id: 'd1',
+      type: DocumentType.invoice,
+      status: DocumentStatus.draft,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 0,
+      taxTotal: 0,
+      total: 0,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+    when(() => repository.get('d1')).thenAnswer((_) async => draft);
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const DocumentDetailScreen(documentId: 'd1')),
+      GoRoute(path: '/documents/:id/edit', builder: (context, state) => const Scaffold(body: Text('editor screen'))),
+    ]);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [documentRepositoryProvider.overrideWithValue(repository)],
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.edit));
+    await tester.pumpAndSettle();
+
+    expect(find.text('editor screen'), findsOneWidget);
+  });
+
+  testWidgets('a finalized document shows no Edit action', (tester) async {
+    when(() => repository.get('d1')).thenAnswer((_) async => _document);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.edit), findsNothing);
+  });
 }
