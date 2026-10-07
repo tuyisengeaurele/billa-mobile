@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/auth/domain/auth_status.dart';
 import '../features/auth/presentation/providers/auth_controller.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
+import '../features/businesses/presentation/providers/my_businesses_provider.dart';
+import '../features/businesses/presentation/screens/businesses_screen.dart';
+import '../features/businesses/presentation/screens/join_business_screen.dart';
 import '../features/customers/domain/customer.dart';
 import '../features/customers/presentation/screens/customer_detail_screen.dart';
 import '../features/customers/presentation/screens/customer_form_screen.dart';
@@ -19,6 +23,7 @@ import '../features/items/presentation/screens/item_form_screen.dart';
 import '../features/items/presentation/screens/item_list_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/receivables/presentation/screens/receivables_screen.dart';
+import '../features/team/presentation/screens/team_screen.dart';
 import 'theme/bootstrap_screen.dart';
 
 const _authRoutes = {'/login', '/register'};
@@ -83,6 +88,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => RecordPaymentScreen(document: state.extra as Document),
       ),
       GoRoute(path: '/receivables', builder: (context, state) => const ReceivablesScreen()),
+      GoRoute(path: '/businesses', builder: (context, state) => const BusinessesScreen()),
+      GoRoute(path: '/businesses/join', builder: (context, state) => const JoinBusinessScreen()),
+      GoRoute(path: '/team', builder: (context, state) => const TeamScreen()),
     ],
   );
 });
@@ -93,17 +101,27 @@ class GoRouterRefreshNotifier extends ChangeNotifier {
   }
 }
 
-class _PlaceholderHomeScreen extends StatelessWidget {
+class _PlaceholderHomeScreen extends ConsumerWidget {
   const _PlaceholderHomeScreen();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider).valueOrNull;
+    final businessName = auth is Authenticated ? auth.business.name : null;
+    final isOwner = ref.watch(isOwnerOfActiveBusinessProvider);
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Billa', style: Theme.of(context).textTheme.displayMedium),
+            if (businessName != null)
+              TextButton.icon(
+                key: const Key('home-business-switcher'),
+                onPressed: () => context.push('/businesses'),
+                icon: const Icon(Icons.swap_horiz),
+                label: Text(businessName),
+              ),
             const SizedBox(height: 24),
             ElevatedButton(
               key: const Key('home-nav-customers'),
@@ -128,6 +146,14 @@ class _PlaceholderHomeScreen extends StatelessWidget {
               onPressed: () => context.push('/receivables'),
               child: const Text('Receivables'),
             ),
+            if (isOwner) ...[
+              const SizedBox(height: 12),
+              ElevatedButton(
+                key: const Key('home-nav-team'),
+                onPressed: () => context.push('/team'),
+                child: const Text('Team'),
+              ),
+            ],
           ],
         ),
       ),

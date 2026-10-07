@@ -19,6 +19,11 @@ import 'package:billa_mobile/features/items/presentation/providers/item_reposito
 import 'package:billa_mobile/features/onboarding/domain/business.dart';
 import 'package:billa_mobile/features/receivables/domain/receivables_repository.dart';
 import 'package:billa_mobile/features/receivables/presentation/providers/receivables_repository_provider.dart';
+import 'package:billa_mobile/features/businesses/domain/business_summary.dart';
+import 'package:billa_mobile/features/businesses/domain/businesses_repository.dart';
+import 'package:billa_mobile/features/businesses/presentation/providers/businesses_repository_provider.dart';
+import 'package:billa_mobile/features/team/domain/team_repository.dart';
+import 'package:billa_mobile/features/team/presentation/providers/team_repository_provider.dart';
 
 const _user = AuthUser(id: 'u1', email: 'a@b.com', totpEnabled: false, isAdmin: false);
 
@@ -26,6 +31,23 @@ class _MockCustomerRepository extends Mock implements CustomerRepository {}
 class _MockItemRepository extends Mock implements ItemRepository {}
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
 class _MockReceivablesRepository extends Mock implements ReceivablesRepository {}
+class _MockBusinessesRepository extends Mock implements BusinessesRepository {}
+
+class _MockTeamRepository extends Mock implements TeamRepository {}
+
+ProviderContainer _homeContainer(
+  List<BusinessSummary> summaries, {
+  TeamRepository? teamRepository,
+}) {
+  final businessesRepository = _MockBusinessesRepository();
+  when(() => businessesRepository.list()).thenAnswer((_) async => summaries);
+  const business = Business(id: 'b1', name: 'Acme', onboardingCompletedAt: '2026-01-01T00:00:00.000Z');
+  return ProviderContainer(overrides: [
+    authControllerProvider.overrideWith(() => _FakeAuthController(const AuthStatus.authenticated(_user, business))),
+    businessesRepositoryProvider.overrideWithValue(businessesRepository),
+    if (teamRepository != null) teamRepositoryProvider.overrideWithValue(teamRepository),
+  ]);
+}
 
 Future<GoRouter> _pumpRouter(WidgetTester tester, ProviderContainer container) async {
   final router = container.read(appRouterProvider);
@@ -175,6 +197,57 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nothing outstanding — all invoices are paid up'), findsOneWidget);
+  });
+
+  testWidgets('home shows the business name and an owner-only Team button', (tester) async {
+    final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+
+    expect(find.text('Acme'), findsOneWidget);
+    expect(find.byKey(const Key('home-nav-team')), findsOneWidget);
+  });
+
+  testWidgets('home hides the Team button for a non-owner', (tester) async {
+    final container = _homeContainer([const BusinessSummary(id: 'b1', name: 'Acme', isOwner: false)]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+
+    expect(find.byKey(const Key('home-nav-team')), findsNothing);
+  });
+
+  testWidgets('the business switcher opens the businesses screen', (tester) async {
+    final container = _homeContainer([
+      const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true),
+      const BusinessSummary(id: 'b2', name: 'Other Co', isOwner: false),
+    ]);
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-business-switcher')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Other Co'), findsOneWidget);
+    expect(find.text('Join a business'), findsOneWidget);
+  });
+
+  testWidgets('the Team button opens the team screen for an owner', (tester) async {
+    final teamRepository = _MockTeamRepository();
+    when(() => teamRepository.members()).thenAnswer((_) async => []);
+    when(() => teamRepository.invites()).thenAnswer((_) async => []);
+    final container = _homeContainer(
+      [const BusinessSummary(id: 'b1', name: 'Acme', isOwner: true)],
+      teamRepository: teamRepository,
+    );
+    addTearDown(container.dispose);
+
+    await _pumpRouter(tester, container);
+    await tester.tap(find.byKey(const Key('home-nav-team')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No pending invites'), findsOneWidget);
   });
 }
 

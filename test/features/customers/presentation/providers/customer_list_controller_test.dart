@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/core/pagination/paginated_result.dart';
+import 'package:billa_mobile/features/auth/presentation/providers/active_business_provider.dart';
 import 'package:billa_mobile/features/customers/domain/customer.dart';
 import 'package:billa_mobile/features/customers/domain/customer_repository.dart';
 import 'package:billa_mobile/features/customers/presentation/providers/customer_list_controller.dart';
@@ -35,5 +36,24 @@ void main() {
 
     final state = container.read(customerListControllerProvider).value!;
     expect(state.items.single.name, 'Acme');
+  });
+
+  test('refetches when the active business changes', () async {
+    final repository = _MockCustomerRepository();
+    when(() => repository.list(search: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Customer>[], total: 0, page: 1, pageSize: 20),
+    );
+    final businessId = StateProvider<String?>((ref) => 'b1');
+    final container = ProviderContainer(overrides: [
+      customerRepositoryProvider.overrideWithValue(repository),
+      activeBusinessIdProvider.overrideWith((ref) => ref.watch(businessId)),
+    ]);
+    addTearDown(container.dispose);
+
+    await container.read(customerListControllerProvider.future);
+    container.read(businessId.notifier).state = 'b2';
+    await container.read(customerListControllerProvider.future);
+
+    verify(() => repository.list(search: null, includeInactive: false, page: 1, pageSize: 20)).called(2);
   });
 }

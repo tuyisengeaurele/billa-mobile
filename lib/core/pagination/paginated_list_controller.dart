@@ -19,8 +19,16 @@ abstract class PaginatedListController<T> extends AsyncNotifier<PaginatedState<T
     required int page,
   });
 
+  // Providers whose change should refetch this list from scratch (for
+  // example the active business). A hook rather than a direct watch so this
+  // core class never depends on a feature.
+  List<ProviderListenable<Object?>> get rebuildOn => const [];
+
   @override
   Future<PaginatedState<T>> build() async {
+    for (final provider in rebuildOn) {
+      ref.watch(provider);
+    }
     ref.onDispose(() {
       _disposed = true;
       _debounceTimer?.cancel();
