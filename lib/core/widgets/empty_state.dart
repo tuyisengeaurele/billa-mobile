@@ -7,14 +7,14 @@ class EmptyState extends StatelessWidget {
     super.key,
     required this.icon,
     required this.message,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String message;
-  final String actionLabel;
-  final VoidCallback onAction;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +32,16 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colors.neutral600),
             ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: onAction,
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.small)),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: onAction,
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.small)),
+                ),
+                child: Text(actionLabel!),
               ),
-              child: Text(actionLabel),
-            ),
+            ],
           ],
         ),
       ),

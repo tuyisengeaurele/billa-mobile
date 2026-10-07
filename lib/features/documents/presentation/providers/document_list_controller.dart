@@ -1,0 +1,40 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/pagination/paginated_list_controller.dart';
+import '../../../../core/pagination/paginated_result.dart';
+import '../../../../core/pagination/paginated_state.dart';
+import '../../domain/document.dart';
+import '../../domain/document_enums.dart';
+import 'document_repository_provider.dart';
+
+class DocumentListController extends PaginatedListController<Document> {
+  List<DocumentType>? _types;
+  DocumentStatus? _statusFilter;
+
+  Future<void> setTypes(List<DocumentType>? types) {
+    _types = types;
+    return refresh();
+  }
+
+  Future<void> setStatusFilter(DocumentStatus? status) {
+    _statusFilter = status;
+    return refresh();
+  }
+
+  @override
+  Future<PaginatedResult<Document>> fetchPage({
+    required String search,
+    required bool includeInactive,
+    required int page,
+  }) {
+    return ref.read(documentRepositoryProvider).list(
+          types: _types,
+          status: _statusFilter,
+          search: search.isEmpty ? null : search,
+          page: page,
+          pageSize: PaginatedListController.pageSize,
+        );
+  }
+}
+
+final documentListControllerProvider =
+    AsyncNotifierProvider<DocumentListController, PaginatedState<Document>>(DocumentListController.new);
