@@ -24,6 +24,7 @@ mixin _$Item {
   String get description => throw _privateConstructorUsedError;
   int get unitPrice => throw _privateConstructorUsedError;
   String get unit => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _taxRateFromJson)
   double get taxRate => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
   bool get isActive => throw _privateConstructorUsedError;
@@ -43,7 +44,7 @@ abstract class $ItemCopyWith<$Res> {
       String description,
       int unitPrice,
       String unit,
-      double taxRate,
+      @JsonKey(fromJson: _taxRateFromJson) double taxRate,
       String? category,
       bool isActive});
 }
@@ -114,7 +115,7 @@ abstract class _$$ItemImplCopyWith<$Res> implements $ItemCopyWith<$Res> {
       String description,
       int unitPrice,
       String unit,
-      double taxRate,
+      @JsonKey(fromJson: _taxRateFromJson) double taxRate,
       String? category,
       bool isActive});
 }
@@ -178,7 +179,7 @@ class _$ItemImpl implements _Item {
       required this.description,
       required this.unitPrice,
       required this.unit,
-      required this.taxRate,
+      @JsonKey(fromJson: _taxRateFromJson) required this.taxRate,
       this.category,
       required this.isActive});
 
@@ -194,6 +195,7 @@ class _$ItemImpl implements _Item {
   @override
   final String unit;
   @override
+  @JsonKey(fromJson: _taxRateFromJson)
   final double taxRate;
   @override
   final String? category;
@@ -248,7 +250,7 @@ abstract class _Item implements Item {
       required final String description,
       required final int unitPrice,
       required final String unit,
-      required final double taxRate,
+      @JsonKey(fromJson: _taxRateFromJson) required final double taxRate,
       final String? category,
       required final bool isActive}) = _$ItemImpl;
 
@@ -263,6 +265,7 @@ abstract class _Item implements Item {
   @override
   String get unit;
   @override
+  @JsonKey(fromJson: _taxRateFromJson)
   double get taxRate;
   @override
   String? get category;

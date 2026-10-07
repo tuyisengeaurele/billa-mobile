@@ -12,7 +12,14 @@ import 'package:billa_mobile/features/dashboard/domain/dashboard_summary.dart';
 import 'package:billa_mobile/features/dashboard/domain/revenue_summary.dart';
 import 'package:billa_mobile/features/dashboard/presentation/providers/dashboard_repository_provider.dart';
 import 'package:billa_mobile/features/dashboard/presentation/screens/home_screen.dart';
+import 'package:billa_mobile/features/dashboard/presentation/widgets/home_header.dart';
+import 'package:billa_mobile/features/documents/domain/document.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
+import 'package:billa_mobile/features/documents/domain/document_repository.dart';
+import 'package:billa_mobile/features/documents/presentation/providers/document_repository_provider.dart';
+import 'package:billa_mobile/features/receivables/domain/outstanding_invoice.dart';
+import 'package:billa_mobile/features/receivables/domain/receivables_repository.dart';
+import 'package:billa_mobile/features/receivables/presentation/providers/receivables_repository_provider.dart';
 import 'package:billa_mobile/features/notifications/domain/notifications_page.dart';
 import 'package:billa_mobile/features/notifications/domain/notifications_repository.dart';
 import 'package:billa_mobile/features/notifications/presentation/providers/notifications_repository_provider.dart';
@@ -21,6 +28,37 @@ import '../../../account/support.dart';
 class _MockDashboardRepository extends Mock implements DashboardRepository {}
 
 class _MockNotificationsRepository extends Mock implements NotificationsRepository {}
+
+class _MockReceivablesRepository extends Mock implements ReceivablesRepository {}
+
+class _MockDocumentRepository extends Mock implements DocumentRepository {}
+
+const _outstanding = OutstandingInvoice(
+  id: 'd1',
+  number: 'INV-0001',
+  customerName: 'Acme Ltd',
+  total: 10000,
+  amountOwed: 4000,
+  dueDate: '2026-04-01',
+  daysOverdue: 0,
+  agingBucket: 'current',
+);
+
+const _document = Document(
+  id: 'd1',
+  type: DocumentType.invoice,
+  number: 'INV-0001',
+  status: DocumentStatus.finalized,
+  customerId: 'c1',
+  customer: DocumentCustomerRef(name: 'Acme Ltd'),
+  issueDate: '2026-03-01T00:00:00.000Z',
+  subtotal: 10000,
+  taxTotal: 0,
+  total: 10000,
+  amountPaid: 0,
+  createdAt: '2026-03-01T00:00:00.000Z',
+  updatedAt: '2026-03-01T00:00:00.000Z',
+);
 
 const _summary = DashboardSummary(
   draftCount: 3,
@@ -65,10 +103,18 @@ DioException _error() => DioException(
 void main() {
   late _MockDashboardRepository dashboard;
   late _MockNotificationsRepository notifications;
+  late _MockReceivablesRepository receivables;
+  late _MockDocumentRepository documents;
+  var now = DateTime(2026, 3, 1, 9);
 
   setUp(() {
     dashboard = _MockDashboardRepository();
     notifications = _MockNotificationsRepository();
+    receivables = _MockReceivablesRepository();
+    documents = _MockDocumentRepository();
+    now = DateTime(2026, 3, 1, 9);
+    when(() => receivables.list()).thenAnswer((_) async => [_outstanding]);
+    when(() => documents.get('d1')).thenAnswer((_) async => _document);
     when(() => dashboard.summary()).thenAnswer((_) async => _summary);
     when(() => dashboard.revenue()).thenAnswer((_) async => _revenue());
     when(() => notifications.list()).thenAnswer((_) async => const NotificationsPage(results: [], unreadCount: 0));
@@ -79,8 +125,13 @@ void main() {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(path: '/documents', builder: (context, state) => stub('documents ${state.uri}')),
+      GoRoute(path: '/documents/new', builder: (context, state) => stub('new ${(state.extra as DocumentType).name}')),
       GoRoute(path: '/documents/:id', builder: (context, state) => stub('document ${state.pathParameters['id']}')),
       GoRoute(path: '/receivables', builder: (context, state) => stub('receivables screen')),
+      GoRoute(
+        path: '/documents/:id/payments/new',
+        builder: (context, state) => stub('payment for ${(state.extra as Document).number}'),
+      ),
       GoRoute(path: '/customers/new', builder: (context, state) => stub('new customer screen')),
       GoRoute(path: '/customers', builder: (context, state) => stub('customers screen')),
       GoRoute(path: '/search', builder: (context, state) => stub('search screen')),
@@ -95,6 +146,9 @@ void main() {
         dashboardRepositoryProvider.overrideWithValue(dashboard),
         notificationsRepositoryProvider.overrideWithValue(notifications),
         isOwnerOfActiveBusinessProvider.overrideWith((ref) => owner),
+        homeClockProvider.overrideWithValue(() => now),
+        receivablesRepositoryProvider.overrideWithValue(receivables),
+        documentRepositoryProvider.overrideWithValue(documents),
       ],
       child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
     );
@@ -254,10 +308,9 @@ void main() {
     expect(tester.widget<Badge>(find.descendant(of: find.byKey(const Key('home-bell')), matching: find.byType(Badge))).isLabelVisible, isFalse);
   });
 
-  testWidgets('search, account, and the business switcher open their screens', (tester) async {
+  testWidgets('search and the business switcher open their screens', (tester) async {
     for (final (key, marker) in [
       ('home-search', 'search screen'),
-      ('home-account', 'settings screen'),
       ('home-business-switcher', 'businesses screen'),
     ]) {
       await pumpHome(tester);
@@ -269,17 +322,56 @@ void main() {
     }
   });
 
-  testWidgets('shortcuts open their lists and the Team shortcut is owner-only', (tester) async {
+  testWidgets('the hero actions start an invoice and a customer', (tester) async {
     await pumpHome(tester);
-    expect(find.byKey(const Key('home-nav-team')), findsNothing);
-    await tester.tap(find.byKey(const Key('home-nav-customers')));
+    await tester.tap(find.byKey(const Key('home-action-invoice')));
     await tester.pumpAndSettle();
-    expect(find.text('customers screen'), findsOneWidget);
+    expect(find.text('new invoice'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox());
-    await pumpHome(tester, owner: true);
-    await tester.tap(find.byKey(const Key('home-nav-team')));
+    await pumpHome(tester);
+    await tester.tap(find.byKey(const Key('home-action-customer')));
     await tester.pumpAndSettle();
-    expect(find.text('team screen'), findsOneWidget);
+    expect(find.text('new customer screen'), findsOneWidget);
+  });
+
+  testWidgets('the payment action asks which invoice, then opens the payment screen', (tester) async {
+    await pumpHome(tester);
+    await tester.tap(find.byKey(const Key('home-action-payment')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choose the invoice the customer is paying.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('payment-invoice-d1')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('payment for INV-0001'), findsOneWidget);
+  });
+
+  testWidgets('the hero actions stay available while revenue fails to load', (tester) async {
+    when(() => dashboard.revenue()).thenAnswer((_) async => throw _error());
+
+    await pumpHome(tester);
+
+    expect(find.byKey(const Key('home-action-invoice')), findsOneWidget);
+    expect(find.text("Couldn't load your revenue"), findsOneWidget);
+  });
+
+  testWidgets('greets by time of day and first name', (tester) async {
+    for (final (hour, greeting) in [(8, 'Good morning'), (13, 'Good afternoon'), (19, 'Good evening')]) {
+      now = DateTime(2026, 3, 1, hour);
+      await pumpHome(tester);
+
+      expect(find.text('$greeting, Ada'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    }
+  });
+
+  testWidgets('the avatar shows initials and opens the profile tab', (tester) async {
+    await pumpHome(tester);
+    expect(find.text('A'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('home-avatar')));
+    await tester.pumpAndSettle();
+    expect(find.text('settings screen'), findsOneWidget);
   });
 }

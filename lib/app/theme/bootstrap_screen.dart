@@ -40,8 +40,6 @@ class BootstrapScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(color: colors.neutral600),
             ),
-            const SizedBox(height: 48),
-            Text('Checking your session…', style: textTheme.labelMedium?.copyWith(color: colors.neutral500)),
           ],
         ),
       ),

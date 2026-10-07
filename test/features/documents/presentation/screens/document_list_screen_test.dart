@@ -95,7 +95,7 @@ void main() {
     expect(find.text('document detail screen'), findsOneWidget);
   });
 
-  testWidgets('the new-document FAB opens a type picker that navigates to the editor', (tester) async {
+  testWidgets('there is no floating add button: creating lives in the shell', (tester) async {
     when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
       (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
     );
@@ -103,12 +103,31 @@ void main() {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.byType(FloatingActionButton), findsNothing);
+  });
+
+  testWidgets('a tab that stays alive re-applies filters when it is opened with new ones', (tester) async {
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
+    );
+    when(() => repository.list(types: null, status: DocumentStatus.draft, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [_document], total: 1, page: 1, pageSize: 20),
+    );
+    final container = ProviderContainer(overrides: [documentRepositoryProvider.overrideWithValue(repository)]);
+    addTearDown(container.dispose);
+
+    Widget host(DocumentStatus? status) => UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(theme: AppTheme.light, home: DocumentListScreen(initialStatus: status)),
+        );
+
+    await tester.pumpWidget(host(null));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Invoice').last); // the type-picker sheet's row, not the list screen's filter chip
+    await tester.pumpWidget(host(DocumentStatus.draft));
     await tester.pumpAndSettle();
 
-    expect(find.text('new document screen: DocumentType.invoice'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('document-status-draft'))).selected, isTrue);
+    expect(find.text('INV-0001'), findsOneWidget);
   });
 
   testWidgets('opens with the initial status selected and fetches only those documents', (tester) async {

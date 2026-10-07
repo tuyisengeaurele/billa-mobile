@@ -49,6 +49,9 @@ Widget accountApp({
         '/settings/security/two-factor',
         '/settings/security/sessions',
         '/settings/business',
+        '/team',
+        '/items',
+        '/businesses',
       ])
         if (stub != path) GoRoute(path: stub, builder: (context, state) => Scaffold(body: Text('stub $stub'))),
     ],

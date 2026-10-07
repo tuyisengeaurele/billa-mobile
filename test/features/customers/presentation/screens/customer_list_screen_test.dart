@@ -66,4 +66,15 @@ void main() {
 
     verify(() => repository.list(search: 'acme', includeInactive: false, page: 1, pageSize: 20)).called(1);
   });
+
+  testWidgets('has no floating add button: creating lives in the shell', (tester) async {
+    when(() => repository.list(search: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: [], total: 0, page: 1, pageSize: 20),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FloatingActionButton), findsNothing);
+  });
 }

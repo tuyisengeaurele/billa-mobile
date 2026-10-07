@@ -60,4 +60,18 @@ void main() {
 
     expect(find.text('edit item screen'), findsOneWidget);
   });
+
+  testWidgets('adds from the app bar action and has no floating button', (tester) async {
+    when(() => repository.list(search: null, category: null, includeInactive: false, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Item>[], total: 0, page: 1, pageSize: 20),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FloatingActionButton), findsNothing);
+    await tester.tap(find.byKey(const Key('item-add')));
+    await tester.pumpAndSettle();
+    expect(find.text('new item screen'), findsOneWidget);
+  });
 }

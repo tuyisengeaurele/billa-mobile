@@ -15,3 +15,9 @@ final revenueProvider = FutureProvider.autoDispose<RevenueSummary>((ref) {
   ref.watch(activeBusinessIdProvider);
   return ref.watch(dashboardRepositoryProvider).revenue();
 });
+
+/// Drives the badge on the Payments tab. Zero while the summary loads or
+/// fails, so a slow or failed load shows no badge instead of a wrong one.
+final overdueCountProvider = Provider<int>((ref) {
+  return ref.watch(dashboardSummaryProvider).valueOrNull?.overdueInvoiceCount ?? 0;
+});

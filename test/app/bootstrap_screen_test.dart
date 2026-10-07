@@ -18,7 +18,7 @@ void main() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 
-  testWidgets('shows the animated logo over a static wordmark, tagline, and the reason for waiting', (tester) async {
+  testWidgets('shows the animated logo over a static wordmark and tagline, with no status text', (tester) async {
     final repository = _MockAuthRepository();
     // Never completes: the screen is shown while the session check is running.
     final pending = Completer<AuthStatus>();
@@ -33,7 +33,6 @@ void main() {
     expect(find.byType(AnimatedBrandMark), findsOneWidget);
     expect(find.text('Billa'), findsOneWidget);
     expect(find.text('Invoices, quotes and receipts for your business'), findsOneWidget);
-    expect(find.text('Checking your session…'), findsOneWidget);
-
+    expect(find.textContaining('session'), findsNothing);
   });
 }

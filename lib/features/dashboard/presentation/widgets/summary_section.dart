@@ -5,6 +5,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
+import '../../../documents/domain/document_enums.dart';
 import '../../../documents/presentation/widgets/document_list_tile.dart' show documentTypeLabel;
 import '../../../documents/presentation/widgets/document_status_pill.dart';
 import '../../domain/dashboard_summary.dart';
@@ -94,7 +95,7 @@ class _SummaryContent extends StatelessWidget {
             Expanded(child: Text('Recent documents', style: Theme.of(context).textTheme.titleSmall)),
             TextButton(
               key: const Key('home-see-all-documents'),
-              onPressed: () => context.push('/documents'),
+              onPressed: () => context.go('/documents'),
               child: const Text('See all'),
             ),
           ],
@@ -102,7 +103,7 @@ class _SummaryContent extends StatelessWidget {
         if (summary.recentDocuments.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text('No documents yet. Create your first one from the Documents list.'),
+            child: Text('No documents yet. Tap New invoice above to create your first one.'),
           )
         else
           for (final document in summary.recentDocuments)
@@ -139,7 +140,7 @@ class _AttentionCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadii.small),
-      onTap: () => context.push(route),
+      onTap: () => context.go(route),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -199,8 +200,8 @@ class _FirstSteps extends StatelessWidget {
               ),
               OutlinedButton(
                 key: const Key('home-first-document'),
-                onPressed: () => context.push('/documents'),
-                child: const Text('Create a document'),
+                onPressed: () => context.push('/documents/new', extra: DocumentType.invoice),
+                child: const Text('Create an invoice'),
               ),
             ],
           ),

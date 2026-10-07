@@ -56,11 +56,64 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Acme'), findsOneWidget);
-    expect(find.text('RWF 4,000'), findsOneWidget);
+    expect(find.text('RWF 4,000'), findsWidgets);
 
     await tester.tap(find.text('Acme'));
     await tester.pumpAndSettle();
 
     expect(find.text('detail screen'), findsOneWidget);
+  });
+
+  testWidgets('summarises the total owed and how many invoices are overdue', (tester) async {
+    when(() => repository.list()).thenAnswer((_) async => [
+          const OutstandingInvoice(
+            id: 'd1',
+            number: 'INV-0001',
+            customerName: 'Acme',
+            total: 10000,
+            amountOwed: 4000,
+            dueDate: '2026-01-01',
+            daysOverdue: 12,
+            agingBucket: '0-30',
+          ),
+          const OutstandingInvoice(
+            id: 'd2',
+            number: 'INV-0002',
+            customerName: 'Beta',
+            total: 5000,
+            amountOwed: 5000,
+            dueDate: '2026-12-01',
+            daysOverdue: 0,
+            agingBucket: 'current',
+          ),
+        ]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.descendant(of: find.byKey(const Key('payments-summary')), matching: find.text('RWF 9,000')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('payments-summary')), matching: find.text('2 invoices')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('payments-summary')), matching: find.text('1 overdue')), findsOneWidget);
+  });
+
+  testWidgets('says so when nothing is overdue', (tester) async {
+    when(() => repository.list()).thenAnswer((_) async => [
+          const OutstandingInvoice(
+            id: 'd2',
+            number: 'INV-0002',
+            customerName: 'Beta',
+            total: 5000,
+            amountOwed: 5000,
+            dueDate: '2026-12-01',
+            daysOverdue: 0,
+            agingBucket: 'current',
+          ),
+        ]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 invoice'), findsOneWidget);
+    expect(find.text('None overdue'), findsOneWidget);
   });
 }

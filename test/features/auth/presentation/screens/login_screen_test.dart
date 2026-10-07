@@ -136,6 +136,7 @@ void main() {
         .thenAnswer((_) async => throw error);
     await reachCodeForm(tester);
     await tester.enterText(find.byKey(const Key('login-2fa-code')), '123456');
+    await tester.pump();
     await tester.tap(find.text('Verify'));
     await tester.pumpAndSettle();
   }

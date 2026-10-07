@@ -11,7 +11,7 @@ _$ItemImpl _$$ItemImplFromJson(Map<String, dynamic> json) => _$ItemImpl(
       description: json['description'] as String,
       unitPrice: (json['unitPrice'] as num).toInt(),
       unit: json['unit'] as String,
-      taxRate: (json['taxRate'] as num).toDouble(),
+      taxRate: _taxRateFromJson(json['taxRate']),
       category: json['category'] as String?,
       isActive: json['isActive'] as bool,
     );
