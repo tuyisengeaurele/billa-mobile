@@ -69,4 +69,34 @@ void main() {
 
     expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
   });
+
+  test('updateUser patches the user and keeps the business', () async {
+    when(() => repository.me()).thenAnswer((_) async => const AuthStatus.authenticated(_user, _business));
+    await container.read(authControllerProvider.future);
+
+    container.read(authControllerProvider.notifier).updateUser((u) => u.copyWith(name: 'Ada'));
+
+    expect(
+      container.read(authControllerProvider).value,
+      const AuthStatus.authenticated(AuthUser(id: 'u1', email: 'a@b.com', name: 'Ada', totpEnabled: false, isAdmin: false), _business),
+    );
+  });
+
+  test('updateUser does nothing when not authenticated', () async {
+    await container.read(authControllerProvider.future);
+
+    container.read(authControllerProvider.notifier).updateUser((u) => u.copyWith(name: 'Ada'));
+
+    expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
+  });
+
+  test('clearSession signs out locally without a network call', () async {
+    when(() => repository.me()).thenAnswer((_) async => const AuthStatus.authenticated(_user, _business));
+    await container.read(authControllerProvider.future);
+
+    container.read(authControllerProvider.notifier).clearSession();
+
+    expect(container.read(authControllerProvider).value, const AuthStatus.unauthenticated());
+    verifyNever(() => repository.logout());
+  });
 }
