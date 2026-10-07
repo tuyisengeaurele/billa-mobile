@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/errors/action_errors.dart';
+import '../../../../core/widgets/action_error_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -21,6 +23,7 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
   late final _taxRateController = TextEditingController(text: (widget.existing?.taxRate ?? 18).toString());
   late final _categoryController = TextEditingController(text: widget.existing?.category ?? '');
   String? _errorMessage;
+  String? _saveError;
   bool _isSaving = false;
 
   String? _orNull(TextEditingController controller) {
@@ -42,6 +45,7 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
     }
     setState(() {
       _errorMessage = null;
+      _saveError = null;
       _isSaving = true;
     });
     try {
@@ -65,8 +69,8 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
         );
       }
       if (mounted) context.pop();
-    } catch (_) {
-      setState(() => _errorMessage = "Couldn't save this item");
+    } catch (e) {
+      if (mounted) setState(() => _saveError = describeActionError(e));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -103,6 +107,10 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
               if (_errorMessage != null) ...[
                 const SizedBox(height: 8),
                 Text(_errorMessage!),
+              ],
+              if (_saveError != null) ...[
+                const SizedBox(height: 8),
+                ActionErrorBanner(message: _saveError!, onRetry: _isSaving ? null : _save),
               ],
               const SizedBox(height: 16),
               AppButton(key: const Key('item-form-save'), label: 'Save', onPressed: _save, isLoading: _isSaving),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/action_errors.dart';
 import '../../domain/document.dart';
 import '../../domain/document_draft_input.dart';
 import '../../domain/document_enums.dart';
@@ -329,10 +330,10 @@ class DocumentEditorController extends AutoDisposeFamilyAsyncNotifier<DocumentEd
           autosaveError: null,
         ));
       }
-    } catch (_) {
+    } catch (e) {
       final latest = state.value;
       if (latest != null) {
-        state = AsyncData(latest.copyWith(autosaveStatus: AutosaveStatus.error, autosaveError: "Couldn't save"));
+        state = AsyncData(latest.copyWith(autosaveStatus: AutosaveStatus.error, autosaveError: describeActionError(e)));
       }
     } finally {
       _saving = false;

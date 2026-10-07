@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -101,5 +102,29 @@ void main() {
 
     expect(find.text('Camera'), findsOneWidget);
     expect(find.text('Gallery'), findsOneWidget);
+  });
+
+  testWidgets('a failed payment keeps the amount, says why, and Retry records it', (tester) async {
+    var failing = true;
+    when(() => repository.recordPayment('d1', any())).thenAnswer((_) async {
+      if (failing) throw DioException(requestOptions: RequestOptions(path: '/documents/d1/payments'), type: DioExceptionType.connectionTimeout);
+      return _invoice;
+    });
+
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp());
+    router.push('/payment');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('payment-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(tester.widget<TextField>(find.byKey(const Key('payment-amount'))).controller!.text, '6620');
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('detail screen'), findsOneWidget);
   });
 }

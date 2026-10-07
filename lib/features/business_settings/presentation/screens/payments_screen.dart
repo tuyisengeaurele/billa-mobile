@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/action_errors.dart';
@@ -117,8 +118,8 @@ class _PaymentsFormState extends ConsumerState<_PaymentsForm> {
         Text('Signature', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         if (signatureUrl != null)
-          Image.network(
-            resolveAssetUrl(signatureUrl),
+          Image(
+            image: CachedNetworkImageProvider(resolveAssetUrl(signatureUrl)),
             height: 64,
             alignment: Alignment.centerLeft,
             errorBuilder: (context, error, stackTrace) => const Text('Signature added'),

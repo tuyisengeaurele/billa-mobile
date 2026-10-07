@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,5 +56,29 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => repository.update('c1', name: 'Acme Ltd', tin: null, address: null, phone: '0788000000', email: null)).called(1);
+  });
+
+  testWidgets('a failed save keeps what was typed, says why, and Retry saves it', (tester) async {
+    var failing = true;
+    when(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null)).thenAnswer((_) async {
+      if (failing) throw DioException(requestOptions: RequestOptions(path: '/customers'), type: DioExceptionType.connectionError);
+      return const Customer(id: 'c1', name: 'Acme', isActive: true, createdAt: '2026-01-01T00:00:00.000Z');
+    });
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.enterText(find.byKey(const Key('customer-form-name')), 'Acme');
+    await tester.enterText(find.widgetWithText(TextField, 'Phone (optional)'), '0788000000');
+    await tester.tap(find.byKey(const Key('customer-form-save')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.text('Acme'), findsOneWidget);
+    expect(find.text('0788000000'), findsOneWidget);
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null)).called(2);
   });
 }

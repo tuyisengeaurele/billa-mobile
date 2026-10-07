@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:billa_mobile/app/shell/app_shell.dart';
 import 'package:billa_mobile/core/widgets/app_sheet.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import 'package:billa_mobile/core/network/connectivity_provider.dart';
 import 'package:billa_mobile/features/dashboard/presentation/providers/dashboard_provider.dart';
 
 class _Counter extends StatefulWidget {
@@ -32,7 +33,7 @@ class _CounterState extends State<_Counter> {
 }
 
 void main() {
-  Widget buildApp({int overdue = 0, String initial = '/'}) {
+  Widget buildApp({int overdue = 0, String initial = '/', bool online = true}) {
     final router = GoRouter(initialLocation: initial, routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(navigationShell: shell),
@@ -55,7 +56,10 @@ void main() {
       GoRoute(path: '/pushed', builder: (context, state) => const Scaffold(body: Text('pushed screen'))),
     ]);
     return ProviderScope(
-      overrides: [overdueCountProvider.overrideWithValue(overdue)],
+      overrides: [
+        overdueCountProvider.overrideWithValue(overdue),
+        connectivityProvider.overrideWith((ref) => Stream.value(online)),
+      ],
       child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
     );
   }
@@ -153,6 +157,27 @@ void main() {
 
     expect(find.text('sheet content'), findsOneWidget);
     expect(find.byKey(const Key('nav-tab-0')).hitTestable(), findsNothing);
+  });
+
+  testWidgets('online, the tab pads for the status bar itself', (tester) async {
+    tester.view.padding = const FakeViewPadding(top: 24);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(MediaQuery.of(tester.element(find.byKey(const Key('counter-home')))).padding.top, 24);
+  });
+
+  testWidgets('offline, the banner takes the status bar and the tab below stops padding for it', (tester) async {
+    tester.view.padding = const FakeViewPadding(top: 24);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(buildApp(online: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You're offline. Showing saved data."), findsOneWidget);
+    expect(MediaQuery.of(tester.element(find.byKey(const Key('counter-home')))).padding.top, 0);
   });
 
   testWidgets('screens are told the bar footprint so their last row can stay clear of it', (tester) async {
