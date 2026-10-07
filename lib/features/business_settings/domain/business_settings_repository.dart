@@ -28,6 +28,7 @@ abstract class BusinessSettingsRepository {
     required bool requireApprovalToFinalize,
     required bool remindersEnabled,
     required int reminderCadenceDays,
+    required int dueSoonReminderDays,
   });
 
   Future<BusinessSettings> setDefaultTemplate(DocumentTemplate template);

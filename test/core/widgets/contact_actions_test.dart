@@ -108,4 +108,67 @@ void main() {
 
     expect(find.text("Couldn't open that app. Is it installed?"), findsOneWidget);
   });
+
+  Future<void> openWithCallback(WidgetTester tester, Future<void> Function() onOpened) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [linkLauncherProvider.overrideWithValue(launcher)],
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: Consumer(
+            builder: (context, ref, _) => TextButton(
+              onPressed: () => showContactActions(
+                context,
+                ref,
+                title: 'Acme',
+                phone: '0788123456',
+                message: 'Hello there',
+                onWhatsAppOpened: onOpened,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('tells the caller once WhatsApp has opened, and only for WhatsApp', (tester) async {
+    var opened = 0;
+    await openWithCallback(tester, () async => opened++);
+    await tester.tap(find.byKey(const Key('contact-sms')));
+    await tester.pumpAndSettle();
+    expect(opened, 0);
+
+    await openWithCallback(tester, () async => opened++);
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+  });
+
+  testWidgets('says nothing to the caller when WhatsApp could not be opened', (tester) async {
+    launcher.succeeds = false;
+    var opened = 0;
+    await openWithCallback(tester, () async => opened++);
+
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    expect(opened, 0);
+    expect(find.text("Couldn't open that app. Is it installed?"), findsOneWidget);
+  });
+
+  testWidgets('a callback that fails does not undo or complain about the share', (tester) async {
+    await openWithCallback(tester, () async => throw Exception('server down'));
+
+    await tester.tap(find.byKey(const Key('contact-whatsapp')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SnackBar), findsNothing);
+  });
 }

@@ -47,6 +47,12 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Future<String> sendStatement(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/customers/$id/send-statement');
+    return response.data!['sentTo'] as String;
+  }
+
+  @override
   Future<Customer> create({
     required String name,
     String? tin,

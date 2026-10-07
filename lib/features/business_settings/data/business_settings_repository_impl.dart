@@ -66,12 +66,14 @@ class BusinessSettingsRepositoryImpl implements BusinessSettingsRepository {
     required bool requireApprovalToFinalize,
     required bool remindersEnabled,
     required int reminderCadenceDays,
+    required int dueSoonReminderDays,
   }) {
     return _patch({
       'defaultTemplate': documentTemplateToJson(defaultTemplate),
       'requireApprovalToFinalize': requireApprovalToFinalize,
       'remindersEnabled': remindersEnabled,
       'reminderCadenceDays': reminderCadenceDays,
+      'dueSoonReminderDays': dueSoonReminderDays,
     });
   }
 

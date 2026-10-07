@@ -37,8 +37,12 @@ mixin _$BusinessSettings {
   String? get primaryColor => throw _privateConstructorUsedError;
   List<String> get accentColors => throw _privateConstructorUsedError;
   bool get remindersEnabled => throw _privateConstructorUsedError;
-  int get reminderCadenceDays => throw _privateConstructorUsedError;
-  bool get requireApprovalToFinalize => throw _privateConstructorUsedError;
+  int get reminderCadenceDays =>
+      throw _privateConstructorUsedError; // How many days before the due date a customer gets a heads-up; 0 turns the heads-up off.
+  int get dueSoonReminderDays => throw _privateConstructorUsedError;
+  bool get requireApprovalToFinalize =>
+      throw _privateConstructorUsedError; // Whether customers can pay on the public page, which decides how a statement is worded.
+  bool get momoEnabled => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
   DocumentTemplate get defaultTemplate => throw _privateConstructorUsedError;
 
@@ -73,7 +77,9 @@ abstract class $BusinessSettingsCopyWith<$Res> {
       List<String> accentColors,
       bool remindersEnabled,
       int reminderCadenceDays,
+      int dueSoonReminderDays,
       bool requireApprovalToFinalize,
+      bool momoEnabled,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       DocumentTemplate defaultTemplate});
@@ -110,7 +116,9 @@ class _$BusinessSettingsCopyWithImpl<$Res, $Val extends BusinessSettings>
     Object? accentColors = null,
     Object? remindersEnabled = null,
     Object? reminderCadenceDays = null,
+    Object? dueSoonReminderDays = null,
     Object? requireApprovalToFinalize = null,
+    Object? momoEnabled = null,
     Object? defaultTemplate = null,
   }) {
     return _then(_value.copyWith(
@@ -186,9 +194,17 @@ class _$BusinessSettingsCopyWithImpl<$Res, $Val extends BusinessSettings>
           ? _value.reminderCadenceDays
           : reminderCadenceDays // ignore: cast_nullable_to_non_nullable
               as int,
+      dueSoonReminderDays: null == dueSoonReminderDays
+          ? _value.dueSoonReminderDays
+          : dueSoonReminderDays // ignore: cast_nullable_to_non_nullable
+              as int,
       requireApprovalToFinalize: null == requireApprovalToFinalize
           ? _value.requireApprovalToFinalize
           : requireApprovalToFinalize // ignore: cast_nullable_to_non_nullable
+              as bool,
+      momoEnabled: null == momoEnabled
+          ? _value.momoEnabled
+          : momoEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
       defaultTemplate: null == defaultTemplate
           ? _value.defaultTemplate
@@ -225,7 +241,9 @@ abstract class _$$BusinessSettingsImplCopyWith<$Res>
       List<String> accentColors,
       bool remindersEnabled,
       int reminderCadenceDays,
+      int dueSoonReminderDays,
       bool requireApprovalToFinalize,
+      bool momoEnabled,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       DocumentTemplate defaultTemplate});
@@ -260,7 +278,9 @@ class __$$BusinessSettingsImplCopyWithImpl<$Res>
     Object? accentColors = null,
     Object? remindersEnabled = null,
     Object? reminderCadenceDays = null,
+    Object? dueSoonReminderDays = null,
     Object? requireApprovalToFinalize = null,
+    Object? momoEnabled = null,
     Object? defaultTemplate = null,
   }) {
     return _then(_$BusinessSettingsImpl(
@@ -336,9 +356,17 @@ class __$$BusinessSettingsImplCopyWithImpl<$Res>
           ? _value.reminderCadenceDays
           : reminderCadenceDays // ignore: cast_nullable_to_non_nullable
               as int,
+      dueSoonReminderDays: null == dueSoonReminderDays
+          ? _value.dueSoonReminderDays
+          : dueSoonReminderDays // ignore: cast_nullable_to_non_nullable
+              as int,
       requireApprovalToFinalize: null == requireApprovalToFinalize
           ? _value.requireApprovalToFinalize
           : requireApprovalToFinalize // ignore: cast_nullable_to_non_nullable
+              as bool,
+      momoEnabled: null == momoEnabled
+          ? _value.momoEnabled
+          : momoEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
       defaultTemplate: null == defaultTemplate
           ? _value.defaultTemplate
@@ -370,7 +398,9 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
       final List<String> accentColors = const [],
       this.remindersEnabled = true,
       this.reminderCadenceDays = 7,
+      this.dueSoonReminderDays = 3,
       this.requireApprovalToFinalize = false,
+      this.momoEnabled = false,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       this.defaultTemplate = DocumentTemplate.minimal})
@@ -424,16 +454,24 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
   @override
   @JsonKey()
   final int reminderCadenceDays;
+// How many days before the due date a customer gets a heads-up; 0 turns the heads-up off.
+  @override
+  @JsonKey()
+  final int dueSoonReminderDays;
   @override
   @JsonKey()
   final bool requireApprovalToFinalize;
+// Whether customers can pay on the public page, which decides how a statement is worded.
+  @override
+  @JsonKey()
+  final bool momoEnabled;
   @override
   @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
   final DocumentTemplate defaultTemplate;
 
   @override
   String toString() {
-    return 'BusinessSettings(id: $id, name: $name, tin: $tin, industry: $industry, phone: $phone, email: $email, address: $address, rraEbmNumber: $rraEbmNumber, bankName: $bankName, bankAccountNumber: $bankAccountNumber, signatoryName: $signatoryName, signatoryTitle: $signatoryTitle, signatureUrl: $signatureUrl, logoUrl: $logoUrl, primaryColor: $primaryColor, accentColors: $accentColors, remindersEnabled: $remindersEnabled, reminderCadenceDays: $reminderCadenceDays, requireApprovalToFinalize: $requireApprovalToFinalize, defaultTemplate: $defaultTemplate)';
+    return 'BusinessSettings(id: $id, name: $name, tin: $tin, industry: $industry, phone: $phone, email: $email, address: $address, rraEbmNumber: $rraEbmNumber, bankName: $bankName, bankAccountNumber: $bankAccountNumber, signatoryName: $signatoryName, signatoryTitle: $signatoryTitle, signatureUrl: $signatureUrl, logoUrl: $logoUrl, primaryColor: $primaryColor, accentColors: $accentColors, remindersEnabled: $remindersEnabled, reminderCadenceDays: $reminderCadenceDays, dueSoonReminderDays: $dueSoonReminderDays, requireApprovalToFinalize: $requireApprovalToFinalize, momoEnabled: $momoEnabled, defaultTemplate: $defaultTemplate)';
   }
 
   @override
@@ -470,9 +508,13 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
                 other.remindersEnabled == remindersEnabled) &&
             (identical(other.reminderCadenceDays, reminderCadenceDays) ||
                 other.reminderCadenceDays == reminderCadenceDays) &&
+            (identical(other.dueSoonReminderDays, dueSoonReminderDays) ||
+                other.dueSoonReminderDays == dueSoonReminderDays) &&
             (identical(other.requireApprovalToFinalize,
                     requireApprovalToFinalize) ||
                 other.requireApprovalToFinalize == requireApprovalToFinalize) &&
+            (identical(other.momoEnabled, momoEnabled) ||
+                other.momoEnabled == momoEnabled) &&
             (identical(other.defaultTemplate, defaultTemplate) ||
                 other.defaultTemplate == defaultTemplate));
   }
@@ -499,7 +541,9 @@ class _$BusinessSettingsImpl implements _BusinessSettings {
         const DeepCollectionEquality().hash(_accentColors),
         remindersEnabled,
         reminderCadenceDays,
+        dueSoonReminderDays,
         requireApprovalToFinalize,
+        momoEnabled,
         defaultTemplate
       ]);
 
@@ -538,7 +582,9 @@ abstract class _BusinessSettings implements BusinessSettings {
       final List<String> accentColors,
       final bool remindersEnabled,
       final int reminderCadenceDays,
+      final int dueSoonReminderDays,
       final bool requireApprovalToFinalize,
+      final bool momoEnabled,
       @JsonKey(
           fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
       final DocumentTemplate defaultTemplate}) = _$BusinessSettingsImpl;
@@ -582,8 +628,12 @@ abstract class _BusinessSettings implements BusinessSettings {
   bool get remindersEnabled;
   @override
   int get reminderCadenceDays;
+  @override // How many days before the due date a customer gets a heads-up; 0 turns the heads-up off.
+  int get dueSoonReminderDays;
   @override
   bool get requireApprovalToFinalize;
+  @override // Whether customers can pay on the public page, which decides how a statement is worded.
+  bool get momoEnabled;
   @override
   @JsonKey(fromJson: documentTemplateFromJson, toJson: documentTemplateToJson)
   DocumentTemplate get defaultTemplate;

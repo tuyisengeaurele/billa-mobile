@@ -45,3 +45,14 @@ class UrlLinkLauncher implements LinkLauncher {
 }
 
 final linkLauncherProvider = Provider<LinkLauncher>((ref) => UrlLinkLauncher());
+
+/// Opens a web address in the phone's browser or the app that handles it; false when nothing could.
+final externalUrlOpenerProvider = Provider<Future<bool> Function(Uri)>((ref) {
+  return (uri) async {
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
+    }
+  };
+});

@@ -2,6 +2,7 @@ import '../../../../core/widgets/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/money_text.dart';
 import '../../../../core/errors/action_errors.dart';
@@ -10,7 +11,11 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../domain/customer.dart';
+import '../../../auth/domain/auth_status.dart';
+import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../business_settings/presentation/providers/business_settings_repository_provider.dart';
 import '../../domain/customer_payment_stats.dart';
+import '../../domain/statement_message.dart';
 import '../providers/customer_repository_provider.dart';
 
 class CustomerDetailScreen extends ConsumerStatefulWidget {
@@ -77,6 +82,60 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     );
   }
 
+  // The details of the business only decide the wording, so when they cannot be loaded the statement is
+  // still sent, without an invitation to pay online.
+  Future<void> _shareStatement(Customer customer) async {
+    final status = ref.read(authControllerProvider).valueOrNull;
+    var business = status is Authenticated ? status.business.name : 'us';
+    var payable = false;
+    try {
+      final settings = await ref.read(businessSettingsRepositoryProvider).get();
+      business = settings.name;
+      payable = settings.momoEnabled;
+    } catch (_) {
+      // Fall back to what is already known.
+    }
+    if (!mounted) return;
+    await showContactActions(
+      context,
+      ref,
+      title: customer.name,
+      phone: customer.phone,
+      message: statementMessage(
+        customer: customer.name,
+        business: business,
+        totals: customer.outstandingTotals,
+        portalUrl: '$apiBaseUrl/portal/${customer.portalToken}',
+        payable: payable,
+      ),
+    );
+  }
+
+  Future<void> _emailStatement(Customer customer) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Email the statement to ${customer.email}?',
+      confirmLabel: 'Send',
+    );
+    if (!confirmed || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final repository = ref.read(customerRepositoryProvider);
+
+    Future<void> attempt() async {
+      try {
+        final sentTo = await repository.sendStatement(customer.id);
+        messenger.showSnackBar(SnackBar(content: Text('Statement sent to $sentTo')));
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(describeActionError(e)),
+          action: SnackBarAction(label: 'Retry', onPressed: attempt),
+        ));
+      }
+    }
+
+    await attempt();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +158,8 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             );
           }
           final (customer, stats) = snapshot.data!;
-          return Padding(
+          // Scrolls because the statement actions made the screen taller than a small phone.
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -150,6 +210,34 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                   icon: const Icon(Icons.chat_outlined),
                   label: const Text('Contact'),
                 ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  key: const Key('customer-statement'),
+                  onPressed: customer.outstandingTotals.isEmpty || customer.portalToken == null
+                      ? null
+                      : () => _shareStatement(customer),
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Send statement'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  key: const Key('customer-statement-email'),
+                  onPressed: customer.outstandingTotals.isEmpty || (customer.email ?? '').isEmpty
+                      ? null
+                      : () => _emailStatement(customer),
+                  icon: const Icon(Icons.mail_outline),
+                  label: const Text('Email statement'),
+                ),
+                if (customer.outstandingTotals.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('They owe nothing right now, so there is no statement to send.'),
+                  )
+                else if ((customer.email ?? '').isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('Add an email address to this customer to email a statement.'),
+                  ),
                 const SizedBox(height: 8),
                 AppButton(
                   key: const Key('customer-toggle-active'),

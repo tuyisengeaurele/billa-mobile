@@ -13,6 +13,7 @@ class BusinessSettingsScreen extends ConsumerWidget {
     ('bs-documents', Icons.description_outlined, 'Documents', '/settings/business/documents'),
     ('bs-numbering', Icons.pin_outlined, 'Numbering', '/settings/business/numbering'),
     ('bs-logo', Icons.image_outlined, 'Logo and brand', '/settings/business/logo'),
+    ('bs-activity', Icons.history_outlined, 'Activity', '/settings/business/activity'),
   ];
 
   @override

@@ -12,6 +12,7 @@ import '../features/account/presentation/screens/two_factor_setup_screen.dart';
 import '../features/business_settings/presentation/screens/business_details_screen.dart';
 import '../features/business_settings/presentation/screens/business_settings_screen.dart';
 import '../features/business_settings/presentation/screens/document_settings_screen.dart';
+import '../features/activity/presentation/screens/activity_screen.dart';
 import '../features/business_settings/presentation/screens/logo_screen.dart';
 import '../features/business_settings/presentation/screens/numbering_screen.dart';
 import '../features/business_settings/presentation/screens/payments_screen.dart';
@@ -165,6 +166,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/business/documents', builder: (context, state) => const DocumentSettingsScreen()),
       GoRoute(path: '/settings/business/numbering', builder: (context, state) => const NumberingScreen()),
       GoRoute(path: '/settings/business/logo', builder: (context, state) => const LogoScreen()),
+      GoRoute(path: '/settings/business/activity', builder: (context, state) => const ActivityScreen()),
     ],
   );
 });

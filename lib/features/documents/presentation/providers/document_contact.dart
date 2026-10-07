@@ -27,7 +27,8 @@ Future<void> startDocumentContact(BuildContext context, WidgetRef ref, {required
     final customer = await ref.read(customerRepositoryProvider).get(document.customerId);
     final link = publicDocumentUrl(apiBaseUrl, token);
     final owed = document.total - document.amountPaid;
-    final isChase = document.type == DocumentType.invoice && owed > 0;
+    // A reminder only makes sense once the invoice has gone out; the first message is the invoice itself.
+    final isChase = document.type == DocumentType.invoice && owed > 0 && document.sentAt != null;
     final status = ref.read(authControllerProvider).valueOrNull;
     final business = status is Authenticated ? status.business.name : '';
     final payable = document.business?.momoEnabled == true && document.currency == Currency.rwf;
@@ -41,6 +42,8 @@ Future<void> startDocumentContact(BuildContext context, WidgetRef ref, {required
       ref,
       title: customer.name,
       phone: customer.phone,
+      // Only a first share is recorded; a reminder to pay is not the document going out.
+      onWhatsAppOpened: isChase ? null : () => ref.read(documentRepositoryProvider).markShared(document.id),
       message: isChase
           ? reminderMessage(
               customer: customer.name,

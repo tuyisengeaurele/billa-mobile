@@ -31,6 +31,7 @@ void main() {
         requireApprovalToFinalize: true,
         remindersEnabled: false,
         reminderCadenceDays: 14,
+        dueSoonReminderDays: 3,
       ),
     ).thenAnswer((_) async => testSettings);
 
@@ -49,6 +50,7 @@ void main() {
         requireApprovalToFinalize: true,
         remindersEnabled: false,
         reminderCadenceDays: 14,
+        dueSoonReminderDays: 3,
       ),
     ).called(1);
     expect(find.text('Document settings saved'), findsOneWidget);
@@ -92,6 +94,7 @@ void main() {
         requireApprovalToFinalize: false,
         remindersEnabled: true,
         reminderCadenceDays: 7,
+        dueSoonReminderDays: 3,
       ),
     ).thenAnswer((_) async => throw apiError('not_owner'));
 
@@ -101,5 +104,58 @@ void main() {
 
     expect(find.text('Only the business owner can change this'), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('the days-before choice shows only while reminders are on, and says what each means', (tester) async {
+    await pumpSettings(tester, buildApp());
+
+    expect(find.byKey(const Key('ds-due-soon')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('ds-reminders')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('ds-due-soon')), findsNothing);
+  });
+
+  testWidgets('offers not sending and the usual days, and saves the one chosen', (tester) async {
+    when(
+      () => repository.updateDocumentSettings(
+        defaultTemplate: DocumentTemplate.minimal,
+        requireApprovalToFinalize: false,
+        remindersEnabled: true,
+        reminderCadenceDays: 7,
+        dueSoonReminderDays: 0,
+      ),
+    ).thenAnswer((_) async => testSettings);
+    await pumpSettings(tester, buildApp());
+
+    await tester.tap(find.byKey(const Key('ds-due-soon')));
+    await tester.pumpAndSettle();
+    for (final label in ["Don't send", '1 day before', '2 days before', '3 days before', '5 days before', '7 days before']) {
+      expect(find.text(label), findsWidgets, reason: label);
+    }
+    await tester.tap(find.text("Don't send").last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ds-save')));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => repository.updateDocumentSettings(
+        defaultTemplate: DocumentTemplate.minimal,
+        requireApprovalToFinalize: false,
+        remindersEnabled: true,
+        reminderCadenceDays: 7,
+        dueSoonReminderDays: 0,
+      ),
+    ).called(1);
+  });
+
+  testWidgets('a value set on the web that is not in the list is kept and shown', (tester) async {
+    when(() => repository.get()).thenAnswer(
+      (_) async => const BusinessSettings(id: 'b1', name: 'Acme', dueSoonReminderDays: 4),
+    );
+    await pumpSettings(tester, buildApp());
+
+    expect(find.text('4 days before'), findsOneWidget);
   });
 }

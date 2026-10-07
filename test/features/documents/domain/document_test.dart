@@ -204,4 +204,50 @@ void main() {
     expect(document.nextRecurrenceAt, '2026-11-01T00:00:00.000Z');
     expect(Document.fromJson(_documentJson()).nextRecurrenceAt, isNull);
   });
+
+  test('reads when a customer first and last opened a document and how many times', () {
+    final document = Document.fromJson(_documentJson(extra: {
+      'firstViewedAt': '2026-02-01T08:00:00.000Z',
+      'lastViewedAt': '2026-02-03T09:30:00.000Z',
+      'viewCount': 4,
+    }));
+
+    expect(document.firstViewedAt, '2026-02-01T08:00:00.000Z');
+    expect(document.lastViewedAt, '2026-02-03T09:30:00.000Z');
+    expect(document.viewCount, 4);
+  });
+
+  test('a document nobody has opened has no view times and no views', () {
+    final document = Document.fromJson(_documentJson());
+
+    expect(document.firstViewedAt, isNull);
+    expect(document.lastViewedAt, isNull);
+    expect(document.viewCount, 0);
+  });
+
+  test('reads the files attached to a document, and none when the server sends none', () {
+    final withFiles = Document.fromJson(_documentJson(extra: {
+      'attachments': [
+        {
+          'id': 'a1',
+          'fileName': 'po.png',
+          'url': '/uploads/b1/po.png',
+          'contentType': 'image/png',
+          'sizeBytes': 2048,
+          'createdAt': '2026-01-02T00:00:00.000Z',
+        },
+      ],
+    }));
+    final without = Document.fromJson(_documentJson());
+
+    expect(withFiles.attachments.single.fileName, 'po.png');
+    expect(withFiles.attachments.single.sizeBytes, 2048);
+    expect(withFiles.attachments.single.isImage, isTrue);
+    expect(without.attachments, isEmpty);
+  });
+
+  test('reminders are on for a document unless the server says they are off', () {
+    expect(Document.fromJson(_documentJson()).remindersEnabled, isTrue);
+    expect(Document.fromJson(_documentJson(extra: {'remindersEnabled': false})).remindersEnabled, isFalse);
+  });
 }

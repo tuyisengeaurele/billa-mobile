@@ -320,4 +320,63 @@ void main() {
 
     expect(rates[Currency.usd]!.rate, 1450.5);
   });
+
+  test('markShared tells the server the document went out on WhatsApp and returns when', () async {
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/shared', data: {'channel': 'WHATSAPP'})).thenAnswer(
+      (_) async => _response(200, {'sentAt': '2026-02-01T10:00:00.000Z'}, RequestOptions(path: '/documents/d1/shared')),
+    );
+
+    final sentAt = await repository.markShared('d1');
+
+    expect(sentAt, '2026-02-01T10:00:00.000Z');
+  });
+
+  test('uploadAttachment posts the file as multipart and returns the stored attachment', () async {
+    final options = RequestOptions(path: '/documents/d1/attachments');
+    when(() => dio.post<Map<String, dynamic>>('/documents/d1/attachments', data: any(named: 'data'))).thenAnswer(
+      (_) async => _response(
+        201,
+        {
+          'attachment': {
+            'id': 'a1',
+            'fileName': 'po.png',
+            'url': '/uploads/b1/po.png',
+            'contentType': 'image/png',
+            'sizeBytes': 3,
+            'createdAt': '2026-01-02T00:00:00.000Z',
+          },
+        },
+        options,
+      ),
+    );
+
+    final attachment = await repository.uploadAttachment('d1', [1, 2, 3], 'po.png');
+
+    expect(attachment.id, 'a1');
+    final sent = verify(() => dio.post<Map<String, dynamic>>('/documents/d1/attachments', data: captureAny(named: 'data')))
+        .captured
+        .single as FormData;
+    expect(sent.files.single.key, 'file');
+  });
+
+  test('deleteAttachment deletes that file from that document', () async {
+    when(() => dio.delete<void>('/documents/d1/attachments/a1')).thenAnswer(
+      (_) async => Response<void>(statusCode: 204, requestOptions: RequestOptions(path: '/documents/d1/attachments/a1')),
+    );
+
+    await repository.deleteAttachment('d1', 'a1');
+
+    verify(() => dio.delete<void>('/documents/d1/attachments/a1')).called(1);
+  });
+
+  test('setReminders turns automatic reminders on or off for one document', () async {
+    final options = RequestOptions(path: '/documents/d1/reminders');
+    when(() => dio.patch<Map<String, dynamic>>('/documents/d1/reminders', data: {'enabled': false})).thenAnswer(
+      (_) async => _response(200, {'document': {..._documentJson(), 'remindersEnabled': false}}, options),
+    );
+
+    final document = await repository.setReminders('d1', enabled: false);
+
+    expect(document.remindersEnabled, isFalse);
+  });
 }

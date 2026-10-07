@@ -34,6 +34,7 @@ Document _doc({String id = 'd1', DocumentStatus status = DocumentStatus.finalize
       total: 10000,
       amountPaid: 0,
       publicToken: 'tok',
+      sentAt: '2026-01-02T00:00:00.000Z',
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     );
