@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:billa_mobile/features/documents/domain/document.dart';
 import 'package:billa_mobile/features/documents/domain/document_enums.dart';
 import 'package:billa_mobile/features/documents/domain/document_repository.dart';
@@ -34,6 +35,25 @@ const _invoice = Document(
   updatedAt: '2026-01-01T00:00:00.000Z',
 );
 
+const _usdInvoice = Document(
+  id: 'd1',
+  type: DocumentType.invoice,
+  number: 'INV-0002',
+  status: DocumentStatus.finalized,
+  customerId: 'c1',
+  customer: _customer,
+  issueDate: '2026-01-01T00:00:00.000Z',
+  subtotal: 125050,
+  taxTotal: 0,
+  total: 125050,
+  currency: Currency.usd,
+  exchangeRate: 1450,
+  amountPaid: 25050,
+  paymentStatus: PaymentStatus.partiallyPaid,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+);
+
 void main() {
   setUpAll(() {
     registerFallbackValue(_FakePaymentInput());
@@ -46,10 +66,10 @@ void main() {
     repository = _MockDocumentRepository();
   });
 
-  Widget buildApp() {
+  Widget buildApp({Document document = _invoice}) {
     router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const Scaffold(body: Text('detail screen'))),
-      GoRoute(path: '/payment', builder: (context, state) => const RecordPaymentScreen(document: _invoice)),
+      GoRoute(path: '/payment', builder: (context, state) => RecordPaymentScreen(document: document)),
     ]);
     return ProviderScope(
       overrides: [documentRepositoryProvider.overrideWithValue(repository)],
@@ -126,5 +146,48 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('detail screen'), findsOneWidget);
+  });
+
+  testWidgets('a foreign invoice defaults the amount to the balance in whole units and labels the currency', (tester) async {
+    await tester.pumpWidget(buildApp(document: _usdInvoice));
+    router.push('/payment');
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byKey(const Key('payment-amount')));
+    expect(field.controller!.text, '1000'); // total 1250.50 - paid 250.50, in dollars
+    expect(find.text('Amount (USD)'), findsOneWidget);
+  });
+
+  testWidgets('a foreign amount typed with a decimal is saved in the smallest unit', (tester) async {
+    useTallScreen(tester);
+    when(() => repository.recordPayment('d1', any())).thenAnswer((_) async => _usdInvoice);
+    await tester.pumpWidget(buildApp(document: _usdInvoice));
+    router.push('/payment');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('payment-amount')), '10.5');
+    await tester.ensureVisible(find.byKey(const Key('payment-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('payment-submit')));
+    await tester.pumpAndSettle();
+
+    final input = verify(() => repository.recordPayment('d1', captureAny())).captured.single as PaymentInput;
+    expect(input.amount, 1050);
+  });
+
+  testWidgets('an amount that is not a number asks for a valid one and sends nothing', (tester) async {
+    useTallScreen(tester);
+    await tester.pumpWidget(buildApp(document: _usdInvoice));
+    router.push('/payment');
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('payment-amount')), '1.2.3');
+    await tester.ensureVisible(find.byKey(const Key('payment-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('payment-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter an amount greater than zero'), findsOneWidget);
+    verifyNever(() => repository.recordPayment(any(), any()));
   });
 }

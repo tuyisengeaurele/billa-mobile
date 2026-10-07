@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
@@ -93,5 +94,33 @@ void main() {
     ));
 
     expect(find.byKey(const Key('document-swipe-duplicate-d1')), findsNothing);
+  });
+
+  testWidgets('shows a foreign total in its own currency', (tester) async {
+    const usd = Document(
+      id: 'd3',
+      type: DocumentType.invoice,
+      number: 'INV-0002',
+      status: DocumentStatus.finalized,
+      customerId: 'c1',
+      customer: _customer,
+      issueDate: '2026-01-01T00:00:00.000Z',
+      subtotal: 125050,
+      taxTotal: 0,
+      total: 125050,
+      currency: Currency.usd,
+      exchangeRate: 1450,
+      amountPaid: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: DocumentListTile(document: usd, onTap: () {})),
+    ));
+
+    expect(find.text('USD 1,250.50'), findsOneWidget);
+    expect(find.textContaining('RWF'), findsNothing);
   });
 }

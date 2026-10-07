@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:billa_mobile/core/privacy/privacy_scope.dart';
 import 'package:billa_mobile/core/widgets/money_text.dart';
 
@@ -53,5 +54,18 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: PrivacyScope(hidden: false, child: MoneyText(1000))));
 
     expect(find.text('RWF 1,000'), findsOneWidget);
+  });
+
+  testWidgets('writes the amount in its own currency', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: MoneyText(125050, currency: Currency.usd)));
+    expect(find.text('USD 1,250.50'), findsOneWidget);
+  });
+
+  testWidgets('hides a foreign amount in privacy mode with its own code', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: PrivacyScope(hidden: true, child: MoneyText(125050, currency: Currency.usd))),
+    );
+    expect(find.text('USD \u2022\u2022\u2022\u2022'), findsOneWidget);
+    expect(find.text('USD 1,250.50'), findsNothing);
   });
 }

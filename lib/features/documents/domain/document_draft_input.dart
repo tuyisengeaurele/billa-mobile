@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../core/formatting/currency.dart';
 import 'document_enums.dart';
 
 part 'document_draft_input.freezed.dart';
@@ -23,6 +24,22 @@ class DocumentLineInput with _$DocumentLineInput {
 }
 
 @freezed
+class InstallmentInput with _$InstallmentInput {
+  @JsonSerializable(includeIfNull: false)
+  const factory InstallmentInput({String? label, required int amount, required String dueDate}) = _InstallmentInput;
+
+  factory InstallmentInput.fromJson(Map<String, dynamic> json) => _$InstallmentInputFromJson(json);
+}
+
+@freezed
+class RecurrenceInput with _$RecurrenceInput {
+  @JsonSerializable(includeIfNull: false)
+  const factory RecurrenceInput({required String interval, String? endDate}) = _RecurrenceInput;
+
+  factory RecurrenceInput.fromJson(Map<String, dynamic> json) => _$RecurrenceInputFromJson(json);
+}
+
+@freezed
 class DocumentDraftInput with _$DocumentDraftInput {
   // Without this, toJson() leaves nested DocumentLineInput objects
   // unconverted (relying on dart:convert's jsonEncode to call their own
@@ -40,6 +57,10 @@ class DocumentDraftInput with _$DocumentDraftInput {
     @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
     @Default(DocumentLanguage.en)
     DocumentLanguage language,
+    @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson) @Default(Currency.rwf) Currency currency,
+    double? exchangeRate,
+    List<InstallmentInput>? installments,
+    RecurrenceInput? recurrence,
     @Default(<DocumentLineInput>[]) List<DocumentLineInput> lines,
   }) = _DocumentDraftInput;
 

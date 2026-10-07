@@ -21,6 +21,8 @@ SessionInfo _$SessionInfoFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$SessionInfo {
   String get id => throw _privateConstructorUsedError;
+  String? get deviceName => throw _privateConstructorUsedError;
+  String? get lastUsedAt => throw _privateConstructorUsedError;
   String get createdAt => throw _privateConstructorUsedError;
   String get expiresAt => throw _privateConstructorUsedError;
   bool get isCurrent => throw _privateConstructorUsedError;
@@ -37,7 +39,13 @@ abstract class $SessionInfoCopyWith<$Res> {
           SessionInfo value, $Res Function(SessionInfo) then) =
       _$SessionInfoCopyWithImpl<$Res, SessionInfo>;
   @useResult
-  $Res call({String id, String createdAt, String expiresAt, bool isCurrent});
+  $Res call(
+      {String id,
+      String? deviceName,
+      String? lastUsedAt,
+      String createdAt,
+      String expiresAt,
+      bool isCurrent});
 }
 
 /// @nodoc
@@ -54,6 +62,8 @@ class _$SessionInfoCopyWithImpl<$Res, $Val extends SessionInfo>
   @override
   $Res call({
     Object? id = null,
+    Object? deviceName = freezed,
+    Object? lastUsedAt = freezed,
     Object? createdAt = null,
     Object? expiresAt = null,
     Object? isCurrent = null,
@@ -63,6 +73,14 @@ class _$SessionInfoCopyWithImpl<$Res, $Val extends SessionInfo>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      deviceName: freezed == deviceName
+          ? _value.deviceName
+          : deviceName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastUsedAt: freezed == lastUsedAt
+          ? _value.lastUsedAt
+          : lastUsedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -87,7 +105,13 @@ abstract class _$$SessionInfoImplCopyWith<$Res>
       __$$SessionInfoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String createdAt, String expiresAt, bool isCurrent});
+  $Res call(
+      {String id,
+      String? deviceName,
+      String? lastUsedAt,
+      String createdAt,
+      String expiresAt,
+      bool isCurrent});
 }
 
 /// @nodoc
@@ -102,6 +126,8 @@ class __$$SessionInfoImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? deviceName = freezed,
+    Object? lastUsedAt = freezed,
     Object? createdAt = null,
     Object? expiresAt = null,
     Object? isCurrent = null,
@@ -111,6 +137,14 @@ class __$$SessionInfoImplCopyWithImpl<$Res>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
+      deviceName: freezed == deviceName
+          ? _value.deviceName
+          : deviceName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastUsedAt: freezed == lastUsedAt
+          ? _value.lastUsedAt
+          : lastUsedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -132,6 +166,8 @@ class __$$SessionInfoImplCopyWithImpl<$Res>
 class _$SessionInfoImpl implements _SessionInfo {
   const _$SessionInfoImpl(
       {required this.id,
+      this.deviceName,
+      this.lastUsedAt,
       required this.createdAt,
       required this.expiresAt,
       required this.isCurrent});
@@ -142,6 +178,10 @@ class _$SessionInfoImpl implements _SessionInfo {
   @override
   final String id;
   @override
+  final String? deviceName;
+  @override
+  final String? lastUsedAt;
+  @override
   final String createdAt;
   @override
   final String expiresAt;
@@ -150,7 +190,7 @@ class _$SessionInfoImpl implements _SessionInfo {
 
   @override
   String toString() {
-    return 'SessionInfo(id: $id, createdAt: $createdAt, expiresAt: $expiresAt, isCurrent: $isCurrent)';
+    return 'SessionInfo(id: $id, deviceName: $deviceName, lastUsedAt: $lastUsedAt, createdAt: $createdAt, expiresAt: $expiresAt, isCurrent: $isCurrent)';
   }
 
   @override
@@ -159,6 +199,10 @@ class _$SessionInfoImpl implements _SessionInfo {
         (other.runtimeType == runtimeType &&
             other is _$SessionInfoImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.deviceName, deviceName) ||
+                other.deviceName == deviceName) &&
+            (identical(other.lastUsedAt, lastUsedAt) ||
+                other.lastUsedAt == lastUsedAt) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.expiresAt, expiresAt) ||
@@ -169,8 +213,8 @@ class _$SessionInfoImpl implements _SessionInfo {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, createdAt, expiresAt, isCurrent);
+  int get hashCode => Object.hash(
+      runtimeType, id, deviceName, lastUsedAt, createdAt, expiresAt, isCurrent);
 
   @JsonKey(ignore: true)
   @override
@@ -189,6 +233,8 @@ class _$SessionInfoImpl implements _SessionInfo {
 abstract class _SessionInfo implements SessionInfo {
   const factory _SessionInfo(
       {required final String id,
+      final String? deviceName,
+      final String? lastUsedAt,
       required final String createdAt,
       required final String expiresAt,
       required final bool isCurrent}) = _$SessionInfoImpl;
@@ -198,6 +244,10 @@ abstract class _SessionInfo implements SessionInfo {
 
   @override
   String get id;
+  @override
+  String? get deviceName;
+  @override
+  String? get lastUsedAt;
   @override
   String get createdAt;
   @override

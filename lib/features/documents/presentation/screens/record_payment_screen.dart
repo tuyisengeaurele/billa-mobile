@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/formatting/currency.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../domain/document.dart';
@@ -35,8 +36,9 @@ class RecordPaymentScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
-  late final _amountController =
-      TextEditingController(text: (widget.document.total - widget.document.amountPaid).toString());
+  late final _amountController = TextEditingController(
+    text: minorToMajorText(widget.document.total - widget.document.amountPaid, widget.document.currency),
+  );
   final _notesController = TextEditingController();
   final _referenceController = TextEditingController();
   final _payerController = TextEditingController();
@@ -86,7 +88,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   }
 
   Future<void> _save() async {
-    final amount = int.tryParse(_amountController.text.trim());
+    final amount = parseMajorAmount(_amountController.text, widget.document.currency);
     if (amount == null || amount <= 0) {
       setState(() => _errorMessage = 'Enter an amount greater than zero');
       return;
@@ -132,9 +134,15 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             TextField(
               key: const Key('payment-amount'),
               controller: _amountController,
-              decoration: const InputDecoration(labelText: 'Amount'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: widget.document.currency == Currency.rwf ? 'Amount' : 'Amount (${widget.document.currency.code})',
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: widget.document.currency.decimals > 0),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                  widget.document.currency.decimals > 0 ? RegExp(r'[0-9.,]') : RegExp(r'[0-9]'),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<PaymentMethod>(

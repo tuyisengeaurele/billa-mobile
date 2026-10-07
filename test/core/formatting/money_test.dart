@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:billa_mobile/core/formatting/money.dart';
 
 void main() {
@@ -15,5 +16,13 @@ void main() {
 
   test('accepts another currency symbol', () {
     expect(formatMoney(5000, symbol: 'USD'), 'USD 5,000');
+  });
+
+  test('shows the decimals a currency has', () {
+    expect(formatMoney(125050, currency: Currency.usd), 'USD 1,250.50');
+    expect(formatMoney(5, currency: Currency.usd), 'USD 0.05');
+    expect(formatMoney(0, currency: Currency.usd), 'USD 0.00');
+    expect(formatMoney(-1205, currency: Currency.usd), 'USD -12.05');
+    expect(formatMoney(2500000, currency: Currency.ugx), 'UGX 2,500,000');
   });
 }

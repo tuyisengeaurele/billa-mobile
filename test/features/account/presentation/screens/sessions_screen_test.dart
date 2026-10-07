@@ -12,12 +12,15 @@ class _MockSecurityRepository extends Mock implements SecurityRepository {}
 
 const _current = SessionInfo(
   id: 's1',
+  deviceName: 'TECNO CC7, Android 9',
   createdAt: '2026-01-01T00:00:00.000Z',
   expiresAt: '2026-02-01T00:00:00.000Z',
   isCurrent: true,
 );
 const _other = SessionInfo(
   id: 's2',
+  deviceName: 'Chrome on Windows',
+  lastUsedAt: '2020-01-01T00:00:00.000Z',
   createdAt: '2026-01-02T00:00:00.000Z',
   expiresAt: '2026-02-02T00:00:00.000Z',
   isCurrent: false,
@@ -112,5 +115,63 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('names each device and says when the others were last active', (tester) async {
+    when(() => repository.sessions()).thenAnswer((_) async => [_current, _other]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('TECNO CC7, Android 9'), findsOneWidget);
+    expect(find.text('This device'), findsOneWidget);
+    expect(find.text('Active now'), findsOneWidget);
+    expect(find.text('Chrome on Windows'), findsOneWidget);
+    expect(find.textContaining('Last active 2020-01-01'), findsOneWidget);
+  });
+
+  testWidgets('a session from a server that sends no device name is still listed', (tester) async {
+    const legacy = SessionInfo(
+      id: 's3',
+      createdAt: '2026-01-02T00:00:00.000Z',
+      expiresAt: '2026-02-02T00:00:00.000Z',
+      isCurrent: false,
+    );
+    when(() => repository.sessions()).thenAnswer((_) async => [_current, legacy]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unknown device'), findsOneWidget);
+    expect(find.byKey(const Key('session-revoke-s3')), findsOneWidget);
+  });
+
+  testWidgets('names each device and says when the others were last active', (tester) async {
+    when(() => repository.sessions()).thenAnswer((_) async => [_current, _other]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('TECNO CC7, Android 9'), findsOneWidget);
+    expect(find.text('This device'), findsOneWidget);
+    expect(find.text('Active now'), findsOneWidget);
+    expect(find.text('Chrome on Windows'), findsOneWidget);
+    expect(find.textContaining('Last active 2020-01-01'), findsOneWidget);
+  });
+
+  testWidgets('a session from a server that sends no device name is still listed', (tester) async {
+    const legacy = SessionInfo(
+      id: 's3',
+      createdAt: '2026-01-02T00:00:00.000Z',
+      expiresAt: '2026-02-02T00:00:00.000Z',
+      isCurrent: false,
+    );
+    when(() => repository.sessions()).thenAnswer((_) async => [_current, legacy]);
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unknown device'), findsOneWidget);
+    expect(find.byKey(const Key('session-revoke-s3')), findsOneWidget);
   });
 }

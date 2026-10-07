@@ -2,6 +2,7 @@ import '../../../core/pagination/paginated_result.dart';
 import 'document.dart';
 import 'document_draft_input.dart';
 import 'document_enums.dart';
+import 'exchange_rates.dart';
 import 'payment.dart';
 import 'payment_input.dart';
 
@@ -15,6 +16,7 @@ abstract class DocumentRepository {
     int pageSize = 20,
   });
 
+  Future<ExchangeRates> rates();
   Future<Document> get(String id);
   Future<Document> create(DocumentDraftInput input);
   Future<Document> update(String id, DocumentDraftInput input);

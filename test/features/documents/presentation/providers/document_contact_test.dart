@@ -1,3 +1,4 @@
+import 'package:billa_mobile/core/formatting/currency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import 'package:billa_mobile/features/documents/domain/document_enums.dart';
 import 'package:billa_mobile/features/documents/domain/document_repository.dart';
 import 'package:billa_mobile/features/documents/presentation/providers/document_contact.dart';
 import 'package:billa_mobile/features/documents/presentation/providers/document_repository_provider.dart';
+import 'package:billa_mobile/features/auth/presentation/providers/auth_controller.dart';
+import '../../../account/support.dart';
 import '../../../../support/tall_screen.dart';
 
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
@@ -61,15 +64,20 @@ void main() {
       overrides: [
         documentRepositoryProvider.overrideWithValue(documents),
         customerRepositoryProvider.overrideWithValue(customers),
+        authControllerProvider.overrideWith(FakeAuthController.new),
       ],
       child: MaterialApp(
         theme: AppTheme.light,
         home: Scaffold(
           body: Consumer(
-            builder: (context, ref, _) => TextButton(
-              onPressed: () => startDocumentContact(context, ref, documentId: 'd1'),
-              child: const Text('go'),
-            ),
+            builder: (context, ref, _) {
+              // The signed-in business is already loaded by the time anyone taps share; watching it here does the same.
+              ref.watch(authControllerProvider);
+              return TextButton(
+                onPressed: () => startDocumentContact(context, ref, documentId: 'd1'),
+                child: const Text('go'),
+              );
+            },
           ),
         ),
       ),
@@ -94,14 +102,14 @@ void main() {
   testWidgets('a quote opens a share message instead of a reminder', (tester) async {
     await start(tester, _document(type: DocumentType.quote, amountPaid: 0));
 
-    expect(find.textContaining('here is quote INV-0001'), findsOneWidget);
+    expect(find.textContaining('Acme sent you quote INV-0001'), findsOneWidget);
     expect(find.textContaining('outstanding'), findsNothing);
   });
 
   testWidgets('a fully paid invoice is shared, not chased', (tester) async {
     await start(tester, _document(amountPaid: 10000));
 
-    expect(find.textContaining('here is invoice INV-0001'), findsOneWidget);
+    expect(find.textContaining('sent you invoice INV-0001'), findsOneWidget);
   });
 
   testWidgets('a draft cannot be sent yet and says what to do first', (tester) async {
@@ -129,5 +137,40 @@ void main() {
     await pressGo(tester);
 
     expect(find.text('Check your connection and try again'), findsOneWidget);
+  });
+
+  testWidgets('a reminder names the business and takes payment only when MoMo is on and the invoice is RWF', (tester) async {
+    await start(
+      tester,
+      _document().copyWith(business: const DocumentBusinessRef(momoEnabled: true), dueDate: '2026-10-01T00:00:00.000Z'),
+    );
+
+    expect(find.textContaining('a reminder from Acme that invoice INV-0001'), findsOneWidget);
+    expect(find.textContaining('Due date: 1 Oct 2026.'), findsOneWidget);
+    expect(find.textContaining('View and pay it here'), findsOneWidget);
+  });
+
+  testWidgets('a foreign invoice reminder is in its currency and does not invite payment', (tester) async {
+    await start(
+      tester,
+      _document(total: 125050, amountPaid: 25000).copyWith(
+        currency: Currency.usd,
+        exchangeRate: 1450,
+        business: const DocumentBusinessRef(momoEnabled: true),
+      ),
+    );
+
+    expect(find.textContaining('USD 1,000.50 outstanding'), findsOneWidget);
+    expect(find.textContaining('View it here'), findsOneWidget);
+    expect(find.textContaining('View and pay'), findsNothing);
+  });
+
+  testWidgets('a reminder for an invoice on a plan says which instalment is due now', (tester) async {
+    await start(
+      tester,
+      _document().copyWith(nextInstallment: const DocumentNextInstallment(label: 'Deposit', remaining: 1500, dueDate: '2026-10-01')),
+    );
+
+    expect(find.textContaining('of which RWF 1,500 (Deposit) is due now'), findsOneWidget);
   });
 }

@@ -4,19 +4,16 @@ import 'package:billa_mobile/features/team/domain/team_member.dart';
 import 'package:billa_mobile/features/team/domain/team_role.dart';
 
 void main() {
-  test('roles are lowercase in responses and uppercase in requests', () {
-    expect(teamRoleFromJson('accountant'), TeamRole.accountant);
+  test('roles are lowercase in responses', () {
+    expect(teamRoleFromJson('owner'), TeamRole.owner);
+    expect(teamRoleFromJson('member'), TeamRole.member);
     expect(teamRoleToJson(TeamRole.member), 'member');
-    expect(teamRoleToRequest(TeamRole.member), 'MEMBER');
-    expect(teamRoleToRequest(TeamRole.accountant), 'ACCOUNTANT');
+    expect(teamRoleToJson(TeamRole.owner), 'owner');
   });
 
-  test('an owner can never be assigned or invited', () {
-    expect(() => teamRoleToRequest(TeamRole.owner), throwsArgumentError);
-  });
-
-  test('an unknown role is rejected', () {
-    expect(() => teamRoleFromJson('admin'), throwsArgumentError);
+  test('a retired or unknown role reads as a plain member instead of failing the whole team list', () {
+    expect(teamRoleFromJson('accountant'), TeamRole.member);
+    expect(teamRoleFromJson('admin'), TeamRole.member);
   });
 
   test('TeamMember.fromJson parses the owner row', () {
@@ -35,13 +32,13 @@ void main() {
     final invite = PendingInvite.fromJson({
       'id': 'i1',
       'email': 'new@example.com',
-      'role': 'accountant',
+      'role': 'member',
       'expiresAt': '2026-02-01T00:00:00.000Z',
       'createdAt': '2026-01-25T00:00:00.000Z',
       'link': 'https://app.example.com/invite/tok123',
     });
 
-    expect(invite.role, TeamRole.accountant);
+    expect(invite.role, TeamRole.member);
     expect(invite.link, endsWith('/invite/tok123'));
   });
 }

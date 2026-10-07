@@ -18,7 +18,7 @@ const _member = TeamMember(id: 'u2', email: 'member@x.com', role: TeamRole.membe
 const _invite = PendingInvite(
   id: 'i1',
   email: 'new@x.com',
-  role: TeamRole.accountant,
+  role: TeamRole.member,
   expiresAt: '2026-02-01T00:00:00.000Z',
   createdAt: '2026-01-25T00:00:00.000Z',
   link: 'https://app.example.com/invite/tok',
@@ -62,17 +62,13 @@ void main() {
     expect(find.byIcon(Icons.person_remove), findsOneWidget);
   });
 
-  testWidgets('changing a member role calls updateRole', (tester) async {
-    when(() => repository.updateRole('u2', TeamRole.accountant)).thenAnswer((_) async {});
-
+  testWidgets('members carry no role controls, only a remove action', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButton<TeamRole>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Accountant').last);
-    await tester.pumpAndSettle();
 
-    verify(() => repository.updateRole('u2', TeamRole.accountant)).called(1);
+    expect(find.byType(DropdownButton<TeamRole>), findsNothing);
+    expect(find.byType(SegmentedButton<TeamRole>), findsNothing);
+    expect(find.text('Accountant'), findsNothing);
   });
 
   testWidgets('removing a member confirms first', (tester) async {
@@ -88,19 +84,19 @@ void main() {
     verify(() => repository.removeMember('u2')).called(1);
   });
 
-  testWidgets('inviting someone sends the email and role, then reloads', (tester) async {
-    when(() => repository.invite('friend@x.com', TeamRole.member)).thenAnswer((_) async {});
+  testWidgets('inviting someone sends the email, then reloads', (tester) async {
+    when(() => repository.invite('friend@x.com')).thenAnswer((_) async {});
 
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
     await sendInvite(tester, 'friend@x.com');
 
-    verify(() => repository.invite('friend@x.com', TeamRole.member)).called(1);
+    verify(() => repository.invite('friend@x.com')).called(1);
     verify(() => repository.invites()).called(2);
   });
 
   testWidgets('an already-member error shows its specific message with a retry', (tester) async {
-    when(() => repository.invite('member@x.com', TeamRole.member)).thenThrow(_error('already_member'));
+    when(() => repository.invite('member@x.com')).thenThrow(_error('already_member'));
 
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();

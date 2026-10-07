@@ -201,6 +201,498 @@ abstract class _DocumentRef implements DocumentRef {
       throw _privateConstructorUsedError;
 }
 
+DocumentInstallment _$DocumentInstallmentFromJson(Map<String, dynamic> json) {
+  return _DocumentInstallment.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DocumentInstallment {
+  String? get label => throw _privateConstructorUsedError;
+  int get amount => throw _privateConstructorUsedError;
+  String get dueDate => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DocumentInstallmentCopyWith<DocumentInstallment> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DocumentInstallmentCopyWith<$Res> {
+  factory $DocumentInstallmentCopyWith(
+          DocumentInstallment value, $Res Function(DocumentInstallment) then) =
+      _$DocumentInstallmentCopyWithImpl<$Res, DocumentInstallment>;
+  @useResult
+  $Res call({String? label, int amount, String dueDate});
+}
+
+/// @nodoc
+class _$DocumentInstallmentCopyWithImpl<$Res, $Val extends DocumentInstallment>
+    implements $DocumentInstallmentCopyWith<$Res> {
+  _$DocumentInstallmentCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? amount = null,
+    Object? dueDate = null,
+  }) {
+    return _then(_value.copyWith(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DocumentInstallmentImplCopyWith<$Res>
+    implements $DocumentInstallmentCopyWith<$Res> {
+  factory _$$DocumentInstallmentImplCopyWith(_$DocumentInstallmentImpl value,
+          $Res Function(_$DocumentInstallmentImpl) then) =
+      __$$DocumentInstallmentImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? label, int amount, String dueDate});
+}
+
+/// @nodoc
+class __$$DocumentInstallmentImplCopyWithImpl<$Res>
+    extends _$DocumentInstallmentCopyWithImpl<$Res, _$DocumentInstallmentImpl>
+    implements _$$DocumentInstallmentImplCopyWith<$Res> {
+  __$$DocumentInstallmentImplCopyWithImpl(_$DocumentInstallmentImpl _value,
+      $Res Function(_$DocumentInstallmentImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? amount = null,
+    Object? dueDate = null,
+  }) {
+    return _then(_$DocumentInstallmentImpl(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      amount: null == amount
+          ? _value.amount
+          : amount // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DocumentInstallmentImpl implements _DocumentInstallment {
+  const _$DocumentInstallmentImpl(
+      {this.label, required this.amount, required this.dueDate});
+
+  factory _$DocumentInstallmentImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DocumentInstallmentImplFromJson(json);
+
+  @override
+  final String? label;
+  @override
+  final int amount;
+  @override
+  final String dueDate;
+
+  @override
+  String toString() {
+    return 'DocumentInstallment(label: $label, amount: $amount, dueDate: $dueDate)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocumentInstallmentImpl &&
+            (identical(other.label, label) || other.label == label) &&
+            (identical(other.amount, amount) || other.amount == amount) &&
+            (identical(other.dueDate, dueDate) || other.dueDate == dueDate));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, label, amount, dueDate);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocumentInstallmentImplCopyWith<_$DocumentInstallmentImpl> get copyWith =>
+      __$$DocumentInstallmentImplCopyWithImpl<_$DocumentInstallmentImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DocumentInstallmentImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DocumentInstallment implements DocumentInstallment {
+  const factory _DocumentInstallment(
+      {final String? label,
+      required final int amount,
+      required final String dueDate}) = _$DocumentInstallmentImpl;
+
+  factory _DocumentInstallment.fromJson(Map<String, dynamic> json) =
+      _$DocumentInstallmentImpl.fromJson;
+
+  @override
+  String? get label;
+  @override
+  int get amount;
+  @override
+  String get dueDate;
+  @override
+  @JsonKey(ignore: true)
+  _$$DocumentInstallmentImplCopyWith<_$DocumentInstallmentImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+DocumentNextInstallment _$DocumentNextInstallmentFromJson(
+    Map<String, dynamic> json) {
+  return _DocumentNextInstallment.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DocumentNextInstallment {
+  String? get label => throw _privateConstructorUsedError;
+  int get remaining => throw _privateConstructorUsedError;
+  String get dueDate => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DocumentNextInstallmentCopyWith<DocumentNextInstallment> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DocumentNextInstallmentCopyWith<$Res> {
+  factory $DocumentNextInstallmentCopyWith(DocumentNextInstallment value,
+          $Res Function(DocumentNextInstallment) then) =
+      _$DocumentNextInstallmentCopyWithImpl<$Res, DocumentNextInstallment>;
+  @useResult
+  $Res call({String? label, int remaining, String dueDate});
+}
+
+/// @nodoc
+class _$DocumentNextInstallmentCopyWithImpl<$Res,
+        $Val extends DocumentNextInstallment>
+    implements $DocumentNextInstallmentCopyWith<$Res> {
+  _$DocumentNextInstallmentCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? remaining = null,
+    Object? dueDate = null,
+  }) {
+    return _then(_value.copyWith(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      remaining: null == remaining
+          ? _value.remaining
+          : remaining // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DocumentNextInstallmentImplCopyWith<$Res>
+    implements $DocumentNextInstallmentCopyWith<$Res> {
+  factory _$$DocumentNextInstallmentImplCopyWith(
+          _$DocumentNextInstallmentImpl value,
+          $Res Function(_$DocumentNextInstallmentImpl) then) =
+      __$$DocumentNextInstallmentImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? label, int remaining, String dueDate});
+}
+
+/// @nodoc
+class __$$DocumentNextInstallmentImplCopyWithImpl<$Res>
+    extends _$DocumentNextInstallmentCopyWithImpl<$Res,
+        _$DocumentNextInstallmentImpl>
+    implements _$$DocumentNextInstallmentImplCopyWith<$Res> {
+  __$$DocumentNextInstallmentImplCopyWithImpl(
+      _$DocumentNextInstallmentImpl _value,
+      $Res Function(_$DocumentNextInstallmentImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = freezed,
+    Object? remaining = null,
+    Object? dueDate = null,
+  }) {
+    return _then(_$DocumentNextInstallmentImpl(
+      label: freezed == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String?,
+      remaining: null == remaining
+          ? _value.remaining
+          : remaining // ignore: cast_nullable_to_non_nullable
+              as int,
+      dueDate: null == dueDate
+          ? _value.dueDate
+          : dueDate // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DocumentNextInstallmentImpl implements _DocumentNextInstallment {
+  const _$DocumentNextInstallmentImpl(
+      {this.label, required this.remaining, required this.dueDate});
+
+  factory _$DocumentNextInstallmentImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DocumentNextInstallmentImplFromJson(json);
+
+  @override
+  final String? label;
+  @override
+  final int remaining;
+  @override
+  final String dueDate;
+
+  @override
+  String toString() {
+    return 'DocumentNextInstallment(label: $label, remaining: $remaining, dueDate: $dueDate)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocumentNextInstallmentImpl &&
+            (identical(other.label, label) || other.label == label) &&
+            (identical(other.remaining, remaining) ||
+                other.remaining == remaining) &&
+            (identical(other.dueDate, dueDate) || other.dueDate == dueDate));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, label, remaining, dueDate);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocumentNextInstallmentImplCopyWith<_$DocumentNextInstallmentImpl>
+      get copyWith => __$$DocumentNextInstallmentImplCopyWithImpl<
+          _$DocumentNextInstallmentImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DocumentNextInstallmentImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DocumentNextInstallment implements DocumentNextInstallment {
+  const factory _DocumentNextInstallment(
+      {final String? label,
+      required final int remaining,
+      required final String dueDate}) = _$DocumentNextInstallmentImpl;
+
+  factory _DocumentNextInstallment.fromJson(Map<String, dynamic> json) =
+      _$DocumentNextInstallmentImpl.fromJson;
+
+  @override
+  String? get label;
+  @override
+  int get remaining;
+  @override
+  String get dueDate;
+  @override
+  @JsonKey(ignore: true)
+  _$$DocumentNextInstallmentImplCopyWith<_$DocumentNextInstallmentImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+DocumentBusinessRef _$DocumentBusinessRefFromJson(Map<String, dynamic> json) {
+  return _DocumentBusinessRef.fromJson(json);
+}
+
+/// @nodoc
+mixin _$DocumentBusinessRef {
+  bool get momoEnabled => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $DocumentBusinessRefCopyWith<DocumentBusinessRef> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DocumentBusinessRefCopyWith<$Res> {
+  factory $DocumentBusinessRefCopyWith(
+          DocumentBusinessRef value, $Res Function(DocumentBusinessRef) then) =
+      _$DocumentBusinessRefCopyWithImpl<$Res, DocumentBusinessRef>;
+  @useResult
+  $Res call({bool momoEnabled});
+}
+
+/// @nodoc
+class _$DocumentBusinessRefCopyWithImpl<$Res, $Val extends DocumentBusinessRef>
+    implements $DocumentBusinessRefCopyWith<$Res> {
+  _$DocumentBusinessRefCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? momoEnabled = null,
+  }) {
+    return _then(_value.copyWith(
+      momoEnabled: null == momoEnabled
+          ? _value.momoEnabled
+          : momoEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DocumentBusinessRefImplCopyWith<$Res>
+    implements $DocumentBusinessRefCopyWith<$Res> {
+  factory _$$DocumentBusinessRefImplCopyWith(_$DocumentBusinessRefImpl value,
+          $Res Function(_$DocumentBusinessRefImpl) then) =
+      __$$DocumentBusinessRefImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({bool momoEnabled});
+}
+
+/// @nodoc
+class __$$DocumentBusinessRefImplCopyWithImpl<$Res>
+    extends _$DocumentBusinessRefCopyWithImpl<$Res, _$DocumentBusinessRefImpl>
+    implements _$$DocumentBusinessRefImplCopyWith<$Res> {
+  __$$DocumentBusinessRefImplCopyWithImpl(_$DocumentBusinessRefImpl _value,
+      $Res Function(_$DocumentBusinessRefImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? momoEnabled = null,
+  }) {
+    return _then(_$DocumentBusinessRefImpl(
+      momoEnabled: null == momoEnabled
+          ? _value.momoEnabled
+          : momoEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DocumentBusinessRefImpl implements _DocumentBusinessRef {
+  const _$DocumentBusinessRefImpl({this.momoEnabled = false});
+
+  factory _$DocumentBusinessRefImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DocumentBusinessRefImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final bool momoEnabled;
+
+  @override
+  String toString() {
+    return 'DocumentBusinessRef(momoEnabled: $momoEnabled)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocumentBusinessRefImpl &&
+            (identical(other.momoEnabled, momoEnabled) ||
+                other.momoEnabled == momoEnabled));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, momoEnabled);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocumentBusinessRefImplCopyWith<_$DocumentBusinessRefImpl> get copyWith =>
+      __$$DocumentBusinessRefImplCopyWithImpl<_$DocumentBusinessRefImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DocumentBusinessRefImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _DocumentBusinessRef implements DocumentBusinessRef {
+  const factory _DocumentBusinessRef({final bool momoEnabled}) =
+      _$DocumentBusinessRefImpl;
+
+  factory _DocumentBusinessRef.fromJson(Map<String, dynamic> json) =
+      _$DocumentBusinessRefImpl.fromJson;
+
+  @override
+  bool get momoEnabled;
+  @override
+  @JsonKey(ignore: true)
+  _$$DocumentBusinessRefImplCopyWith<_$DocumentBusinessRefImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 DocumentCustomerRef _$DocumentCustomerRefFromJson(Map<String, dynamic> json) {
   return _DocumentCustomerRef.fromJson(json);
 }
@@ -747,6 +1239,17 @@ mixin _$Document {
   int get subtotal => throw _privateConstructorUsedError;
   int get taxTotal => throw _privateConstructorUsedError;
   int get total => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: rateFromJson)
+  double? get exchangeRate => throw _privateConstructorUsedError;
+  List<DocumentInstallment> get installments =>
+      throw _privateConstructorUsedError;
+  String? get recurrenceInterval => throw _privateConstructorUsedError;
+  String? get recurrenceEndDate => throw _privateConstructorUsedError;
+  DocumentNextInstallment? get nextInstallment =>
+      throw _privateConstructorUsedError;
+  DocumentBusinessRef? get business => throw _privateConstructorUsedError;
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language => throw _privateConstructorUsedError;
   String? get sentAt => throw _privateConstructorUsedError;
@@ -792,6 +1295,14 @@ abstract class $DocumentCopyWith<$Res> {
       int subtotal,
       int taxTotal,
       int total,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      @JsonKey(fromJson: rateFromJson) double? exchangeRate,
+      List<DocumentInstallment> installments,
+      String? recurrenceInterval,
+      String? recurrenceEndDate,
+      DocumentNextInstallment? nextInstallment,
+      DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
@@ -812,6 +1323,8 @@ abstract class $DocumentCopyWith<$Res> {
       DocumentRef? referencedDocument});
 
   $DocumentCustomerRefCopyWith<$Res> get customer;
+  $DocumentNextInstallmentCopyWith<$Res>? get nextInstallment;
+  $DocumentBusinessRefCopyWith<$Res>? get business;
   $DocumentRefCopyWith<$Res>? get convertedFrom;
   $DocumentRefCopyWith<$Res>? get convertedTo;
   $DocumentRefCopyWith<$Res>? get referencedDocument;
@@ -843,6 +1356,13 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
     Object? subtotal = null,
     Object? taxTotal = null,
     Object? total = null,
+    Object? currency = null,
+    Object? exchangeRate = freezed,
+    Object? installments = null,
+    Object? recurrenceInterval = freezed,
+    Object? recurrenceEndDate = freezed,
+    Object? nextInstallment = freezed,
+    Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
     Object? publicToken = freezed,
@@ -912,6 +1432,34 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
           ? _value.total
           : total // ignore: cast_nullable_to_non_nullable
               as int,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      exchangeRate: freezed == exchangeRate
+          ? _value.exchangeRate
+          : exchangeRate // ignore: cast_nullable_to_non_nullable
+              as double?,
+      installments: null == installments
+          ? _value.installments
+          : installments // ignore: cast_nullable_to_non_nullable
+              as List<DocumentInstallment>,
+      recurrenceInterval: freezed == recurrenceInterval
+          ? _value.recurrenceInterval
+          : recurrenceInterval // ignore: cast_nullable_to_non_nullable
+              as String?,
+      recurrenceEndDate: freezed == recurrenceEndDate
+          ? _value.recurrenceEndDate
+          : recurrenceEndDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      nextInstallment: freezed == nextInstallment
+          ? _value.nextInstallment
+          : nextInstallment // ignore: cast_nullable_to_non_nullable
+              as DocumentNextInstallment?,
+      business: freezed == business
+          ? _value.business
+          : business // ignore: cast_nullable_to_non_nullable
+              as DocumentBusinessRef?,
       language: null == language
           ? _value.language
           : language // ignore: cast_nullable_to_non_nullable
@@ -985,6 +1533,31 @@ class _$DocumentCopyWithImpl<$Res, $Val extends Document>
 
   @override
   @pragma('vm:prefer-inline')
+  $DocumentNextInstallmentCopyWith<$Res>? get nextInstallment {
+    if (_value.nextInstallment == null) {
+      return null;
+    }
+
+    return $DocumentNextInstallmentCopyWith<$Res>(_value.nextInstallment!,
+        (value) {
+      return _then(_value.copyWith(nextInstallment: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $DocumentBusinessRefCopyWith<$Res>? get business {
+    if (_value.business == null) {
+      return null;
+    }
+
+    return $DocumentBusinessRefCopyWith<$Res>(_value.business!, (value) {
+      return _then(_value.copyWith(business: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
   $DocumentRefCopyWith<$Res>? get convertedFrom {
     if (_value.convertedFrom == null) {
       return null;
@@ -1044,6 +1617,14 @@ abstract class _$$DocumentImplCopyWith<$Res>
       int subtotal,
       int taxTotal,
       int total,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      Currency currency,
+      @JsonKey(fromJson: rateFromJson) double? exchangeRate,
+      List<DocumentInstallment> installments,
+      String? recurrenceInterval,
+      String? recurrenceEndDate,
+      DocumentNextInstallment? nextInstallment,
+      DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       DocumentLanguage language,
@@ -1065,6 +1646,10 @@ abstract class _$$DocumentImplCopyWith<$Res>
 
   @override
   $DocumentCustomerRefCopyWith<$Res> get customer;
+  @override
+  $DocumentNextInstallmentCopyWith<$Res>? get nextInstallment;
+  @override
+  $DocumentBusinessRefCopyWith<$Res>? get business;
   @override
   $DocumentRefCopyWith<$Res>? get convertedFrom;
   @override
@@ -1097,6 +1682,13 @@ class __$$DocumentImplCopyWithImpl<$Res>
     Object? subtotal = null,
     Object? taxTotal = null,
     Object? total = null,
+    Object? currency = null,
+    Object? exchangeRate = freezed,
+    Object? installments = null,
+    Object? recurrenceInterval = freezed,
+    Object? recurrenceEndDate = freezed,
+    Object? nextInstallment = freezed,
+    Object? business = freezed,
     Object? language = null,
     Object? sentAt = freezed,
     Object? publicToken = freezed,
@@ -1166,6 +1758,34 @@ class __$$DocumentImplCopyWithImpl<$Res>
           ? _value.total
           : total // ignore: cast_nullable_to_non_nullable
               as int,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as Currency,
+      exchangeRate: freezed == exchangeRate
+          ? _value.exchangeRate
+          : exchangeRate // ignore: cast_nullable_to_non_nullable
+              as double?,
+      installments: null == installments
+          ? _value._installments
+          : installments // ignore: cast_nullable_to_non_nullable
+              as List<DocumentInstallment>,
+      recurrenceInterval: freezed == recurrenceInterval
+          ? _value.recurrenceInterval
+          : recurrenceInterval // ignore: cast_nullable_to_non_nullable
+              as String?,
+      recurrenceEndDate: freezed == recurrenceEndDate
+          ? _value.recurrenceEndDate
+          : recurrenceEndDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      nextInstallment: freezed == nextInstallment
+          ? _value.nextInstallment
+          : nextInstallment // ignore: cast_nullable_to_non_nullable
+              as DocumentNextInstallment?,
+      business: freezed == business
+          ? _value.business
+          : business // ignore: cast_nullable_to_non_nullable
+              as DocumentBusinessRef?,
       language: null == language
           ? _value.language
           : language // ignore: cast_nullable_to_non_nullable
@@ -1249,6 +1869,15 @@ class _$DocumentImpl implements _Document {
       required this.subtotal,
       required this.taxTotal,
       required this.total,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      this.currency = Currency.rwf,
+      @JsonKey(fromJson: rateFromJson) this.exchangeRate,
+      final List<DocumentInstallment> installments =
+          const <DocumentInstallment>[],
+      this.recurrenceInterval,
+      this.recurrenceEndDate,
+      this.nextInstallment,
+      this.business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       this.language = DocumentLanguage.en,
@@ -1267,7 +1896,8 @@ class _$DocumentImpl implements _Document {
       this.convertedFrom,
       this.convertedTo,
       this.referencedDocument})
-      : _lines = lines;
+      : _installments = installments,
+        _lines = lines;
 
   factory _$DocumentImpl.fromJson(Map<String, dynamic> json) =>
       _$$DocumentImplFromJson(json);
@@ -1300,6 +1930,29 @@ class _$DocumentImpl implements _Document {
   final int taxTotal;
   @override
   final int total;
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  final Currency currency;
+  @override
+  @JsonKey(fromJson: rateFromJson)
+  final double? exchangeRate;
+  final List<DocumentInstallment> _installments;
+  @override
+  @JsonKey()
+  List<DocumentInstallment> get installments {
+    if (_installments is EqualUnmodifiableListView) return _installments;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_installments);
+  }
+
+  @override
+  final String? recurrenceInterval;
+  @override
+  final String? recurrenceEndDate;
+  @override
+  final DocumentNextInstallment? nextInstallment;
+  @override
+  final DocumentBusinessRef? business;
   @override
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   final DocumentLanguage language;
@@ -1342,7 +1995,7 @@ class _$DocumentImpl implements _Document {
 
   @override
   String toString() {
-    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
+    return 'Document(id: $id, type: $type, number: $number, status: $status, customerId: $customerId, customer: $customer, issueDate: $issueDate, dueDate: $dueDate, notes: $notes, customerReference: $customerReference, subtotal: $subtotal, taxTotal: $taxTotal, total: $total, currency: $currency, exchangeRate: $exchangeRate, installments: $installments, recurrenceInterval: $recurrenceInterval, recurrenceEndDate: $recurrenceEndDate, nextInstallment: $nextInstallment, business: $business, language: $language, sentAt: $sentAt, publicToken: $publicToken, amountPaid: $amountPaid, paymentStatus: $paymentStatus, writtenOffAt: $writtenOffAt, writeOffReason: $writeOffReason, createdAt: $createdAt, updatedAt: $updatedAt, convertedFromId: $convertedFromId, referencedDocumentId: $referencedDocumentId, lines: $lines, convertedFrom: $convertedFrom, convertedTo: $convertedTo, referencedDocument: $referencedDocument)';
   }
 
   @override
@@ -1369,6 +2022,20 @@ class _$DocumentImpl implements _Document {
             (identical(other.taxTotal, taxTotal) ||
                 other.taxTotal == taxTotal) &&
             (identical(other.total, total) || other.total == total) &&
+            (identical(other.currency, currency) ||
+                other.currency == currency) &&
+            (identical(other.exchangeRate, exchangeRate) ||
+                other.exchangeRate == exchangeRate) &&
+            const DeepCollectionEquality()
+                .equals(other._installments, _installments) &&
+            (identical(other.recurrenceInterval, recurrenceInterval) ||
+                other.recurrenceInterval == recurrenceInterval) &&
+            (identical(other.recurrenceEndDate, recurrenceEndDate) ||
+                other.recurrenceEndDate == recurrenceEndDate) &&
+            (identical(other.nextInstallment, nextInstallment) ||
+                other.nextInstallment == nextInstallment) &&
+            (identical(other.business, business) ||
+                other.business == business) &&
             (identical(other.language, language) ||
                 other.language == language) &&
             (identical(other.sentAt, sentAt) || other.sentAt == sentAt) &&
@@ -1416,6 +2083,13 @@ class _$DocumentImpl implements _Document {
         subtotal,
         taxTotal,
         total,
+        currency,
+        exchangeRate,
+        const DeepCollectionEquality().hash(_installments),
+        recurrenceInterval,
+        recurrenceEndDate,
+        nextInstallment,
+        business,
         language,
         sentAt,
         publicToken,
@@ -1464,6 +2138,14 @@ abstract class _Document implements Document {
       required final int subtotal,
       required final int taxTotal,
       required final int total,
+      @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+      final Currency currency,
+      @JsonKey(fromJson: rateFromJson) final double? exchangeRate,
+      final List<DocumentInstallment> installments,
+      final String? recurrenceInterval,
+      final String? recurrenceEndDate,
+      final DocumentNextInstallment? nextInstallment,
+      final DocumentBusinessRef? business,
       @JsonKey(
           fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
       final DocumentLanguage language,
@@ -1514,6 +2196,22 @@ abstract class _Document implements Document {
   int get taxTotal;
   @override
   int get total;
+  @override
+  @JsonKey(fromJson: currencyFromJson, toJson: currencyToJson)
+  Currency get currency;
+  @override
+  @JsonKey(fromJson: rateFromJson)
+  double? get exchangeRate;
+  @override
+  List<DocumentInstallment> get installments;
+  @override
+  String? get recurrenceInterval;
+  @override
+  String? get recurrenceEndDate;
+  @override
+  DocumentNextInstallment? get nextInstallment;
+  @override
+  DocumentBusinessRef? get business;
   @override
   @JsonKey(fromJson: documentLanguageFromJson, toJson: documentLanguageToJson)
   DocumentLanguage get language;
