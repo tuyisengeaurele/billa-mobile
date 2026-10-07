@@ -16,4 +16,9 @@ abstract class DocumentRepository {
   Future<Document> get(String id);
   Future<Document> create(DocumentDraftInput input);
   Future<Document> update(String id, DocumentDraftInput input);
+  Future<Document> finalize(String id);
+  Future<Document> convert(String id);
+  Future<String> send(String id);
+  Future<void> delete(String id);
+  Future<List<int>> fetchPdfBytes(String id);
 }

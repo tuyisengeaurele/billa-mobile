@@ -56,4 +56,33 @@ class DocumentRepositoryImpl implements DocumentRepository {
     final response = await _dio.patch<Map<String, dynamic>>('/documents/$id', data: input.toJson());
     return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
   }
+
+  @override
+  Future<Document> finalize(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$id/finalize');
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Document> convert(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$id/convert');
+    return Document.fromJson(response.data!['document'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<String> send(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/documents/$id/send');
+    return response.data!['sentAt'] as String;
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    await _dio.delete<void>('/documents/$id');
+  }
+
+  @override
+  Future<List<int>> fetchPdfBytes(String id) async {
+    final response = await _dio.get<List<int>>('/documents/$id/pdf', options: Options(responseType: ResponseType.bytes));
+    return response.data!;
+  }
 }
