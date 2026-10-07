@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1080574285488",
+    "project_id": "billa-7bfbd",
+    "storage_bucket": "billa-7bfbd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1080574285488:android:31bf7fdf41980122578d75",
+        "android_client_info": {
+          "package_name": "rw.billa.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1080574285488-l79prd6tdafqjgigqncjqjds0ghdrmvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "rw.billa.mobile",
+            "certificate_hash": "ebea77a4ede304df5e5474143a04234ac9723801"
+          }
+        },
+        {
+          "client_id": "1080574285488-6tl19tnhq5k5jb5n0eli9nq00k3msskb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeu5UeeIk-yutIMU3FrL-ZIpEuhWpNOEw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1080574285488-6tl19tnhq5k5jb5n0eli9nq00k3msskb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1080574285488-eh12afcbc1qhjfne06lompjrahs6sfrn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "rw.billa.mobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
