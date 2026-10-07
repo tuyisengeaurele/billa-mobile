@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -82,5 +83,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Check your connection and try again'), findsOneWidget);
+  });
+
+  testWidgets('cancelling the Google account picker shows no error and leaves the form usable', (tester) async {
+    when(() => firebaseAuthService.signInWithGoogle())
+        .thenAnswer((_) async => throw FirebaseAuthException(code: 'google-sign-in-cancelled'));
+
+    await tester.pumpWidget(buildApp());
+    await tester.tap(find.text('Continue with Google'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Something went wrong'), findsNothing);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    verifyNever(() => authRepository.exchangeSession(idToken: any(named: 'idToken'), businessName: any(named: 'businessName')));
   });
 }

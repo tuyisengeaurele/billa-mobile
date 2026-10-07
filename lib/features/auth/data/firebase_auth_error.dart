@@ -1,3 +1,7 @@
+/// Raised when the user closes the Google account picker. Not a failure: the
+/// screens stay quiet instead of telling someone they did something wrong.
+const googleSignInCancelledCode = 'google-sign-in-cancelled';
+
 const _messages = {
   'wrong-password': "That password doesn't match this account.",
   'user-not-found': 'No account found with that email.',
