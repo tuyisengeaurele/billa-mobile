@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/action_error_banner.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../providers/current_user_provider.dart';
@@ -52,9 +53,9 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
   Future<void> _deleteAccount() async {
     final email = ref.read(currentUserProvider)?.email;
     if (email == null) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => _DeleteAccountDialog(email: email),
+    final confirmed = await showAppSheet<bool>(
+      context,
+      builder: (context) => _DeleteAccountSheet(email: email),
     );
     if (confirmed != true) return;
     await _runAction(() async {
@@ -113,16 +114,16 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
 
 /// Typing the address is the only guard: deletion is irreversible, so a stray
 /// tap on a confirm button must not be enough.
-class _DeleteAccountDialog extends StatefulWidget {
-  const _DeleteAccountDialog({required this.email});
+class _DeleteAccountSheet extends StatefulWidget {
+  const _DeleteAccountSheet({required this.email});
 
   final String email;
 
   @override
-  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+  State<_DeleteAccountSheet> createState() => _DeleteAccountSheetState();
 }
 
-class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
   final _controller = TextEditingController();
 
   @override
@@ -134,30 +135,24 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
   @override
   Widget build(BuildContext context) {
     final matches = _controller.text.trim().toLowerCase() == widget.email.toLowerCase();
-    return AlertDialog(
-      title: const Text('Delete your account?'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('This permanently deletes your account and cannot be undone.'),
-          const SizedBox(height: 12),
-          Text('Type ${widget.email} to confirm.'),
-          TextField(
-            key: const Key('delete-email'),
-            controller: _controller,
-            autofocus: true,
-            keyboardType: TextInputType.emailAddress,
-            onChanged: (_) => setState(() {}),
-          ),
-        ],
+    return AppSheetContent(
+      title: 'Delete your account?',
+      message: 'This permanently deletes your account and cannot be undone. Type ${widget.email} to confirm.',
+      actions: SheetActions(
+        confirmKey: const Key('delete-confirm'),
+        confirmLabel: 'Delete account',
+        destructive: true,
+        onCancel: () => Navigator.pop(context, false),
+        onConfirm: matches ? () => Navigator.pop(context, true) : null,
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-        TextButton(
-          key: const Key('delete-confirm'),
-          onPressed: matches ? () => Navigator.pop(context, true) : null,
-          child: const Text('Delete account'),
+      children: [
+        TextField(
+          key: const Key('delete-email'),
+          controller: _controller,
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Your email'),
+          onChanged: (_) => setState(() {}),
         ),
       ],
     );

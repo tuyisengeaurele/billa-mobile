@@ -101,7 +101,7 @@ void main() {
     await tester.pumpAndSettle();
     await pasteAndContinue(tester);
 
-    expect(find.text("We couldn't find that — it may have been removed"), findsOneWidget);
+    expect(find.text("We couldn't find that. It may have been removed"), findsOneWidget);
   });
 
   testWidgets('a different-email invite shows the mismatch message on accept', (tester) async {

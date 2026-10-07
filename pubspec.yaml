@@ -80,14 +80,16 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "logo.png"
   remove_alpha_ios: true
 
+# Colour only, no logo: the animated splash inside the app is the one users
+# see, and a second logo screen before it would read as a flicker. Android 12+
+# always draws an icon, so it is given a fully transparent one.
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#131315"
-  image: "logo.png"
   android_12:
     color: "#FFFFFF"
     color_dark: "#131315"
-    image: "logo.png"
+    image: "assets/splash_blank.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

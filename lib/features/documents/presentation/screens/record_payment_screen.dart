@@ -1,3 +1,4 @@
+import '../../../../core/widgets/app_sheet.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,24 +47,24 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   String? _errorMessage;
 
   Future<void> _pickReceipt() async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Camera'),
-              onTap: () => Navigator.of(context).pop(ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
-              onTap: () => Navigator.of(context).pop(ImageSource.gallery),
-            ),
-          ],
-        ),
+    final source = await showAppSheet<ImageSource>(
+      context,
+      builder: (context) => AppSheetContent(
+        title: 'Add a receipt photo',
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: const Text('Camera'),
+            onTap: () => Navigator.of(context).pop(ImageSource.camera),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Gallery'),
+            onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+          ),
+        ],
       ),
     );
     if (source == null) return;

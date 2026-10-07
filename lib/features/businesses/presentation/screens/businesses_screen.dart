@@ -73,6 +73,7 @@ class _BusinessesScreenState extends ConsumerState<BusinessesScreen> {
       title: 'Leave this business?',
       content: "You'll lose access until someone invites you again.",
       confirmLabel: 'Leave',
+      destructive: true,
     );
     if (!confirmed) return;
     await _runAction(() async {

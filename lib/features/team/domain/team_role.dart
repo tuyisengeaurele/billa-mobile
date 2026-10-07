@@ -14,7 +14,7 @@ String teamRoleToJson(TeamRole value) => switch (value) {
     };
 
 // Requests use the backend's uppercase enum, unlike its lowercase responses,
-// and the owner is never assignable — failing loudly here beats sending a
+// and the owner is never assignable, failing loudly here beats sending a
 // request the server would reject.
 String teamRoleToRequest(TeamRole role) => switch (role) {
       TeamRole.member => 'MEMBER',

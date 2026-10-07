@@ -43,12 +43,30 @@ void main() {
     expect(textTheme.labelLarge!.fontFamily, startsWith('PlusJakartaSans'));
   });
 
-  test('inputs are filled and rounded, with an accent outline on focus', () {
+  test('inputs are filled and rounded with the label inside, and an accent underline on focus', () {
     for (final (theme, colors) in [(AppTheme.light, AppColors.light), (AppTheme.dark, AppColors.dark)]) {
       final input = theme.inputDecorationTheme;
       expect(input.filled, isTrue);
       expect(input.fillColor, colors.neutral100);
-      expect((input.focusedBorder as OutlineInputBorder).borderSide.color, colors.primary500);
+
+      final rest = input.enabledBorder as UnderlineInputBorder;
+      expect(rest.borderSide, BorderSide.none);
+      expect(rest.borderRadius, BorderRadius.circular(AppRadii.large));
+
+      final focused = input.focusedBorder as UnderlineInputBorder;
+      expect(focused.borderSide.color, colors.primary500);
+      expect(focused.borderSide.width, 2);
+    }
+  });
+
+  test('the app bar is neutral: page colour, no tint, no elevation', () {
+    for (final (theme, colors) in [(AppTheme.light, AppColors.light), (AppTheme.dark, AppColors.dark)]) {
+      final bar = theme.appBarTheme;
+      expect(bar.backgroundColor, colors.page);
+      expect(bar.surfaceTintColor, Colors.transparent);
+      expect(bar.elevation, 0);
+      expect(bar.scrolledUnderElevation, 0);
+      expect(bar.foregroundColor, colors.neutral900);
     }
   });
 }

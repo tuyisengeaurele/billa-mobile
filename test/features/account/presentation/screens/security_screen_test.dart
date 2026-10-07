@@ -74,7 +74,7 @@ void main() {
     await tester.tap(find.text('Turn off').last);
     await tester.pumpAndSettle();
 
-    expect(find.text("That code isn't right — try again"), findsOneWidget);
+    expect(find.text("That code isn't right. Try again"), findsOneWidget);
     expect(container(tester).read(currentUserProvider)!.totpEnabled, isTrue);
   });
 
@@ -95,10 +95,10 @@ void main() {
     await tester.tap(find.byKey(const Key('security-delete')));
     await tester.pumpAndSettle();
 
-    expect(tester.widget<TextButton>(find.byKey(const Key('delete-confirm'))).onPressed, isNull);
+    expect(tester.widget<FilledButton>(find.byKey(const Key('delete-confirm'))).onPressed, isNull);
     await tester.enterText(find.byKey(const Key('delete-email')), 'wrong@example.com');
     await tester.pumpAndSettle();
-    expect(tester.widget<TextButton>(find.byKey(const Key('delete-confirm'))).onPressed, isNull);
+    expect(tester.widget<FilledButton>(find.byKey(const Key('delete-confirm'))).onPressed, isNull);
 
     await tester.enterText(find.byKey(const Key('delete-email')), 'ada@example.com');
     await tester.pumpAndSettle();

@@ -147,7 +147,7 @@ void main() {
     await tester.tap(find.byKey(const Key('notification-n1')));
     await tester.pumpAndSettle();
 
-    expect(find.text("We couldn't find that — it may have been removed"), findsOneWidget);
+    expect(find.text("We couldn't find that. It may have been removed"), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
   });
 

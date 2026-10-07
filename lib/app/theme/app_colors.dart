@@ -80,7 +80,7 @@ class AppColors extends ThemeExtension<AppColors> {
     page: Color(0xFFFAFAFA),
   );
 
-  // primary500 and secondary are deliberately absent from this list — the
+  // primary500 and secondary are deliberately absent from this list, the
   // spec keeps them identical to light mode, so they fall through to light's.
   static const dark = AppColors(
     primary500: Color(0xFFC2185B),

@@ -210,7 +210,7 @@ void main() {
     await tester.tap(find.byKey(const Key('home-nav-receivables')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nothing outstanding — all invoices are paid up'), findsOneWidget);
+    expect(find.text('Nothing outstanding. All invoices are paid up'), findsOneWidget);
   });
 
   testWidgets('home shows the business name and an owner-only Team button', (tester) async {

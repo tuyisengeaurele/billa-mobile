@@ -9,7 +9,7 @@ String describeActionError(Object error) {
   // The server answers 429 with a plain body, not an error code, so the
   // status is the only reliable signal that the user is being rate limited.
   if (error is DioException && error.response?.statusCode == 429) {
-    return 'Too many attempts — wait a few minutes and try again';
+    return 'Too many attempts. Wait a few minutes and try again';
   }
   // Proxies and gateways answer with HTML or plain text, not a JSON body.
   final data = error is DioException ? error.response?.data : null;
@@ -40,16 +40,16 @@ String describeActionError(Object error) {
     'email_mismatch' => 'This invite was sent to a different email address',
     'expired' => 'This invite has expired',
     'already_accepted' => 'This invite was already accepted',
-    'not_found' => "We couldn't find that — it may have been removed",
-    'invalid_challenge' => 'This sign-in expired — log in again',
-    'invalid_code' => "That code isn't right — try again",
+    'not_found' => "We couldn't find that. It may have been removed",
+    'invalid_challenge' => 'This sign-in expired. Log in again',
+    'invalid_code' => "That code isn't right. Try again",
     'not_enabled' => "Two-factor sign-in isn't turned on",
     'has_admin_history' => "This account can't be deleted because it has administrator history",
-    'upload_failed' => 'The upload failed — try again',
+    'upload_failed' => 'The upload failed. Try again',
     'invalid_file_type' => 'Choose a PNG, JPG, or WebP image',
     'no_file' => 'Choose an image first',
     'not_owner' => 'Only the business owner can change this',
     'forbidden' => "You don't have permission to use that file",
-    _ => 'Something went wrong — try again',
+    _ => 'Something went wrong. Try again',
   };
 }

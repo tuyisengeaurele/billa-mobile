@@ -10,6 +10,7 @@ import 'package:billa_mobile/features/documents/domain/document_repository.dart'
 import 'package:billa_mobile/features/documents/domain/payment_input.dart';
 import 'package:billa_mobile/features/documents/presentation/providers/document_repository_provider.dart';
 import 'package:billa_mobile/features/documents/presentation/screens/record_payment_screen.dart';
+import '../../../../support/tall_screen.dart';
 
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
 class _FakePaymentInput extends Fake implements PaymentInput {}
@@ -90,6 +91,7 @@ void main() {
   });
 
   testWidgets('picking a receipt photo opens a camera/gallery choice', (tester) async {
+    useTallScreen(tester);
     await tester.pumpWidget(buildApp());
     router.push('/payment');
     await tester.pumpAndSettle();

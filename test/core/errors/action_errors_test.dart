@@ -49,14 +49,14 @@ void main() {
     );
     expect(describeActionError(_error('expired')), 'This invite has expired');
     expect(describeActionError(_error('already_accepted')), 'This invite was already accepted');
-    expect(describeActionError(_error('not_found')), "We couldn't find that — it may have been removed");
-    expect(describeActionError(_error('invalid_code')), "That code isn't right — try again");
+    expect(describeActionError(_error('not_found')), "We couldn't find that. It may have been removed");
+    expect(describeActionError(_error('invalid_code')), "That code isn't right. Try again");
     expect(describeActionError(_error('not_enabled')), "Two-factor sign-in isn't turned on");
     expect(
       describeActionError(_error('has_admin_history')),
       "This account can't be deleted because it has administrator history",
     );
-    expect(describeActionError(_error('upload_failed')), 'The upload failed — try again');
+    expect(describeActionError(_error('upload_failed')), 'The upload failed. Try again');
     expect(describeActionError(_error('invalid_file_type')), 'Choose a PNG, JPG, or WebP image');
     expect(describeActionError(_error('no_file')), 'Choose an image first');
     expect(describeActionError(_error('not_owner')), 'Only the business owner can change this');
@@ -64,11 +64,11 @@ void main() {
   });
 
   test('falls back to a generic message for an unknown code', () {
-    expect(describeActionError(_error('something_else')), 'Something went wrong — try again');
+    expect(describeActionError(_error('something_else')), 'Something went wrong. Try again');
   });
 
   test('falls back to a generic message for a non-Dio error', () {
-    expect(describeActionError(Exception('boom')), 'Something went wrong — try again');
+    expect(describeActionError(Exception('boom')), 'Something went wrong. Try again');
   });
 
   test('a request that never got a response asks the user to check their connection', () {
@@ -81,12 +81,12 @@ void main() {
   });
 
   test('an expired sign-in challenge and a rate limit each get their own message', () {
-    expect(describeActionError(_error('invalid_challenge')), 'This sign-in expired — log in again');
+    expect(describeActionError(_error('invalid_challenge')), 'This sign-in expired. Log in again');
 
     final limited = DioException(
       requestOptions: RequestOptions(path: '/x'),
       response: Response(requestOptions: RequestOptions(path: '/x'), statusCode: 429, data: 'Too many requests'),
     );
-    expect(describeActionError(limited), 'Too many attempts — wait a few minutes and try again');
+    expect(describeActionError(limited), 'Too many attempts. Wait a few minutes and try again');
   });
 }

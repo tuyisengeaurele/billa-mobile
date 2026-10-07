@@ -1,3 +1,4 @@
+import '../../../../core/widgets/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -97,18 +98,21 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
             ),
           ),
           Expanded(
+            child: PullToRefresh(
+            onRefresh: () => ref.read(itemListControllerProvider.notifier).pullToRefresh(),
             child: FadeSwitcher(
               child: KeyedSubtree(
                 key: ValueKey(asyncViewKind(state, isEmpty: (data) => data.items.isEmpty)),
                 child: switch (state) {
-              AsyncData(value: final data) when data.items.isEmpty => EmptyState(
+              AsyncData(value: final data) when data.items.isEmpty => ScrollableFill(child: EmptyState(
                   icon: Icons.inventory_2_outlined,
                   message: 'No items yet',
                   actionLabel: 'Add item',
                   onAction: () => context.push('/items/new'),
-                ),
+                )),
               AsyncData(value: final data) => ListView.builder(
                   controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: data.items.length + (data.isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index >= data.items.length) {
@@ -124,17 +128,18 @@ class _ItemListScreenState extends ConsumerState<ItemListScreen> {
                     );
                   },
                 ),
-              AsyncError() => ErrorState(
+              AsyncError() => ScrollableFill(child: ErrorState(
                   message: "Couldn't load your items",
                   onRetry: () => ref.read(itemListControllerProvider.notifier).refresh(),
-                ),
-              _ => const Padding(
+                )),
+              _ => ScrollableFill(child: const Padding(
                   padding: EdgeInsets.all(16),
                   child: Column(children: [LoadingSkeleton(height: 64), SizedBox(height: 12), LoadingSkeleton(height: 64)]),
-                ),
+                )),
             },
               ),
-            ),
+            )
+          ),
           ),
         ],
       ),

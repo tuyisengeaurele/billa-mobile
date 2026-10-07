@@ -101,7 +101,7 @@ void main() {
     await tester.tap(find.text('Sign out').last);
     await tester.pumpAndSettle();
 
-    expect(find.text("We couldn't find that — it may have been removed"), findsOneWidget);
+    expect(find.text("We couldn't find that. It may have been removed"), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
   });
 

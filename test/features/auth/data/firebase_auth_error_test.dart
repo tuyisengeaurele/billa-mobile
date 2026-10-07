@@ -8,7 +8,7 @@ void main() {
     'email-already-in-use': 'An account with that email already exists.',
     'weak-password': 'Choose a stronger password.',
     'network-request-failed': 'Check your connection and try again.',
-    'too-many-requests': 'Too many attempts — wait a moment and try again.',
+    'too-many-requests': 'Too many attempts. Wait a moment and try again.',
   };
 
   for (final entry in cases.entries) {
@@ -18,6 +18,6 @@ void main() {
   }
 
   test('falls back to a generic message for an unrecognized code', () {
-    expect(mapFirebaseAuthError('something-new'), 'Something went wrong — please try again.');
+    expect(mapFirebaseAuthError('something-new'), 'Something went wrong. Please try again.');
   });
 }
