@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,7 @@ import '../../domain/document_enums.dart';
 import '../../domain/payment.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
@@ -100,6 +102,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     await _runAction(() async {
       await ref.read(documentRepositoryProvider).finalize(widget.documentId);
       _reload();
+      if (mounted) unawaited(showSuccessCheck(context));
     });
   }
 

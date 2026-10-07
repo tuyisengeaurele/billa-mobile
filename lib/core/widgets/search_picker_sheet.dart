@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../errors/action_errors.dart';
+import 'error_state.dart';
+import 'loading_skeleton.dart';
 
 Future<T?> showSearchPickerSheet<T>({
   required BuildContext context,
@@ -28,6 +31,7 @@ class _SearchPickerSheet<T> extends StatefulWidget {
 class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
   static const _debounce = Duration(milliseconds: 300);
   Timer? _debounceTimer;
+  String _search = '';
   late Future<List<T>> _results = widget.fetch('');
 
   @override
@@ -41,6 +45,7 @@ class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
     _debounceTimer = Timer(_debounce, () {
       if (mounted) {
         setState(() {
+          _search = value;
           _results = widget.fetch(value);
         });
       }
@@ -72,7 +77,24 @@ class _SearchPickerSheetState<T> extends State<_SearchPickerSheet<T>> {
                 child: FutureBuilder<List<T>>(
                   future: _results,
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                    if (snapshot.hasError) {
+                      return ErrorState(
+                        message: describeActionError(snapshot.error!),
+                        onRetry: () => setState(() {
+                          _results = widget.fetch(_search);
+                        }),
+                      );
+                    }
+                    if (!snapshot.hasData) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(children: [
+                          LoadingSkeleton(height: 48),
+                          SizedBox(height: 8),
+                          LoadingSkeleton(height: 48),
+                        ]),
+                      );
+                    }
                     final items = snapshot.data!;
                     if (items.isEmpty) return const Center(child: Text('No results'));
                     return ListView.builder(

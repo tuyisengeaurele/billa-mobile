@@ -9,7 +9,10 @@ import '../providers/document_list_controller.dart';
 import '../widgets/document_list_tile.dart';
 
 class DocumentListScreen extends ConsumerStatefulWidget {
-  const DocumentListScreen({super.key});
+  const DocumentListScreen({super.key, this.initialTypes, this.initialStatus});
+
+  final List<DocumentType>? initialTypes;
+  final DocumentStatus? initialStatus;
 
   @override
   ConsumerState<DocumentListScreen> createState() => _DocumentListScreenState();
@@ -17,13 +20,23 @@ class DocumentListScreen extends ConsumerStatefulWidget {
 
 class _DocumentListScreenState extends ConsumerState<DocumentListScreen> {
   final _scrollController = ScrollController();
-  final Set<DocumentType> _selectedTypes = {};
-  DocumentStatus? _selectedStatus;
+  late final Set<DocumentType> _selectedTypes = {...?widget.initialTypes};
+  late DocumentStatus? _selectedStatus = widget.initialStatus;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // The list controller outlives this screen, so a filter from an earlier
+    // visit would otherwise survive while the chips start out cleared.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final controller = ref.read(documentListControllerProvider.notifier);
+      final types = _selectedTypes.isEmpty ? null : _selectedTypes.toList();
+      if (!controller.hasFilters(types: types, status: _selectedStatus)) {
+        controller.setFilters(types: types, status: _selectedStatus);
+      }
+    });
   }
 
   @override

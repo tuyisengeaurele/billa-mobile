@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,5 +65,22 @@ void main() {
 
     expect(find.text("Passwords don't match"), findsOneWidget);
     verifyNever(() => firebaseAuthService.registerWithEmailAndPassword(any(), any()));
+  });
+
+  testWidgets('a failed session request after registering shows a connection message', (tester) async {
+    when(() => firebaseAuthService.registerWithEmailAndPassword('a@b.com', 'Abcdef1!'))
+        .thenAnswer((_) async => 'id-token');
+    when(() => authRepository.exchangeSession(idToken: 'id-token', businessName: 'My Business')).thenAnswer(
+      (_) async => throw DioException(requestOptions: RequestOptions(path: '/auth/session'), type: DioExceptionType.connectionError),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.enterText(find.byKey(const Key('register-email')), 'a@b.com');
+    await tester.enterText(find.byKey(const Key('register-password')), 'Abcdef1!');
+    await tester.enterText(find.byKey(const Key('register-confirm-password')), 'Abcdef1!');
+    await tester.tap(find.byKey(const Key('register-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
   });
 }

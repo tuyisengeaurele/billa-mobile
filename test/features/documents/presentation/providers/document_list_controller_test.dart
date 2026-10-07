@@ -67,4 +67,44 @@ void main() {
     final state = container.read(documentListControllerProvider).value!;
     expect(state.items.single.id, 'd1');
   });
+
+  test('setFilters applies both filters with a single fetch', () async {
+    final repository = _MockDocumentRepository();
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
+    );
+    when(() => repository.list(types: [DocumentType.quote], status: DocumentStatus.finalized, search: null, page: 1, pageSize: 20))
+        .thenAnswer((_) async => const PaginatedResult(results: [_document], total: 1, page: 1, pageSize: 20));
+    final container = ProviderContainer(overrides: [documentRepositoryProvider.overrideWithValue(repository)]);
+    addTearDown(container.dispose);
+    await container.read(documentListControllerProvider.future);
+
+    await container
+        .read(documentListControllerProvider.notifier)
+        .setFilters(types: [DocumentType.quote], status: DocumentStatus.finalized);
+
+    verify(() => repository.list(types: [DocumentType.quote], status: DocumentStatus.finalized, search: null, page: 1, pageSize: 20))
+        .called(1);
+    expect(container.read(documentListControllerProvider).value!.items.single.id, 'd1');
+  });
+
+  test('hasFilters compares the current filters', () async {
+    final repository = _MockDocumentRepository();
+    when(() => repository.list(types: null, status: null, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
+    );
+    when(() => repository.list(types: null, status: DocumentStatus.draft, search: null, page: 1, pageSize: 20)).thenAnswer(
+      (_) async => const PaginatedResult(results: <Document>[], total: 0, page: 1, pageSize: 20),
+    );
+    final container = ProviderContainer(overrides: [documentRepositoryProvider.overrideWithValue(repository)]);
+    addTearDown(container.dispose);
+    await container.read(documentListControllerProvider.future);
+    final notifier = container.read(documentListControllerProvider.notifier);
+
+    expect(notifier.hasFilters(), isTrue);
+    await notifier.setFilters(status: DocumentStatus.draft);
+
+    expect(notifier.hasFilters(), isFalse);
+    expect(notifier.hasFilters(status: DocumentStatus.draft), isTrue);
+  });
 }

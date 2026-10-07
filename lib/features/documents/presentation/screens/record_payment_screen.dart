@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
@@ -104,6 +105,8 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               generateReceipt: _generateReceipt,
             ),
           );
+      if (!mounted) return;
+      await showSuccessCheck(context);
       if (mounted) context.pop(true);
     } catch (e) {
       setState(() => _errorMessage = describeActionError(e));

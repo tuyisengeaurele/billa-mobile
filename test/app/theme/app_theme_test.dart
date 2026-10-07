@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +23,14 @@ void main() {
     expect(AppTheme.light.scaffoldBackgroundColor, AppColors.light.page);
     expect(AppTheme.dark.brightness, Brightness.dark);
     expect(AppTheme.dark.scaffoldBackgroundColor, AppColors.dark.page);
+  });
+
+  test('both themes use shared-axis page transitions on Android and iOS', () {
+    for (final theme in [AppTheme.light, AppTheme.dark]) {
+      for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+        expect(theme.pageTransitionsTheme.builders[platform], isA<SharedAxisPageTransitionsBuilder>());
+      }
+    }
   });
 
   test('display styles use Fraunces and body styles use Plus Jakarta Sans', () {

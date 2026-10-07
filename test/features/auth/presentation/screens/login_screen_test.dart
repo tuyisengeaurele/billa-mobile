@@ -1,9 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import 'package:billa_mobile/core/widgets/app_button.dart';
 import 'package:billa_mobile/features/auth/data/firebase_auth_service.dart';
 import 'package:billa_mobile/features/auth/domain/auth_repository.dart';
 import 'package:billa_mobile/features/auth/domain/auth_status.dart';
@@ -74,5 +76,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Check your email for a link to reset your password.'), findsOneWidget);
+  });
+
+  testWidgets('a failed session request after a good sign-in shows a connection message', (tester) async {
+    when(() => firebaseAuthService.signInWithEmailAndPassword('a@b.com', 'correct'))
+        .thenAnswer((_) async => 'id-token');
+    when(() => authRepository.exchangeSession(idToken: 'id-token', businessName: null)).thenAnswer(
+      (_) async => throw DioException(requestOptions: RequestOptions(path: '/auth/session'), type: DioExceptionType.connectionError),
+    );
+
+    await tester.pumpWidget(buildApp());
+    await tester.enterText(find.byKey(const Key('login-email')), 'a@b.com');
+    await tester.enterText(find.byKey(const Key('login-password')), 'correct');
+    await tester.tap(find.byKey(const Key('login-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(tester.widget<AppButton>(find.byKey(const Key('login-submit'))).isLoading, isFalse);
   });
 }

@@ -5,9 +5,9 @@ import '../../../../core/media/image_picker_provider.dart';
 import '../../../../core/network/asset_url.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import '../../../onboarding/domain/logo_pipeline_step.dart';
+import '../../../onboarding/presentation/providers/logo_pipeline_provider.dart';
 import '../../domain/business_settings.dart';
 import '../providers/business_settings_provider.dart';
-import '../providers/logo_pipeline_provider.dart';
 import '../widgets/settings_section_scaffold.dart';
 
 class LogoScreen extends StatelessWidget {

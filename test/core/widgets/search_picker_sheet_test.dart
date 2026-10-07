@@ -1,11 +1,14 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:billa_mobile/app/theme/app_theme.dart';
 import 'package:billa_mobile/core/widgets/search_picker_sheet.dart';
 
 void main() {
   testWidgets('shows fetched results and returns the tapped item', (tester) async {
     String? selected;
     await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
       home: Builder(
         builder: (context) => ElevatedButton(
           onPressed: () async {
@@ -37,6 +40,7 @@ void main() {
   testWidgets('debounces search input to a single fetch per pause', (tester) async {
     var fetchCount = 0;
     await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
       home: Builder(
         builder: (context) => ElevatedButton(
           onPressed: () => showSearchPickerSheet<String>(
@@ -62,5 +66,40 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(fetchCount, 2);
+  });
+
+  testWidgets('a failed fetch shows a message and Retry loads the results', (tester) async {
+    var failing = true;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () => showSearchPickerSheet<String>(
+            context: context,
+            title: 'Pick one',
+            fetch: (search) async {
+              if (failing) {
+                throw DioException(requestOptions: RequestOptions(path: '/x'), type: DioExceptionType.connectionError);
+              }
+              return ['Acme'];
+            },
+            itemBuilder: (item) => ListTile(title: Text(item)),
+          ),
+          child: const Text('Open'),
+        ),
+      ),
+    ));
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your connection and try again'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    failing = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Acme'), findsOneWidget);
   });
 }
