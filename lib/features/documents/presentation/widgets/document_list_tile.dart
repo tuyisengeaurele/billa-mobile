@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/money_text.dart';
+import '../../../../core/widgets/swipe_row.dart';
 import '../../domain/document.dart';
 import '../../domain/document_enums.dart';
 import 'document_status_pill.dart';
@@ -23,14 +24,16 @@ IconData documentTypeIcon(DocumentType type) => switch (type) {
     };
 
 class DocumentListTile extends StatelessWidget {
-  const DocumentListTile({super.key, required this.document, required this.onTap});
+  const DocumentListTile({super.key, required this.document, required this.onTap, this.onDuplicate, this.onContact});
 
   final Document document;
   final VoidCallback onTap;
+  final VoidCallback? onDuplicate;
+  final VoidCallback? onContact;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    final tile = ListTile(
       onTap: onTap,
       title: Text(document.number ?? 'Draft ${documentTypeLabel(document.type)}'),
       subtitle: Text('${documentTypeLabel(document.type)} · ${document.customer.name}'),
@@ -43,6 +46,29 @@ class DocumentListTile extends StatelessWidget {
           DocumentStatusPill(status: document.status, paymentStatus: document.paymentStatus),
         ],
       ),
+    );
+
+    if (onDuplicate == null && onContact == null) return tile;
+    return SwipeRow(
+      startActions: [
+        if (onDuplicate != null)
+          SwipeAction(
+            key: Key('document-swipe-duplicate-${document.id}'),
+            label: 'Duplicate',
+            icon: Icons.copy_outlined,
+            onPressed: onDuplicate!,
+          ),
+      ],
+      endActions: [
+        if (onContact != null)
+          SwipeAction(
+            key: Key('document-swipe-contact-${document.id}'),
+            label: 'Contact',
+            icon: Icons.chat_outlined,
+            onPressed: onContact!,
+          ),
+      ],
+      child: tile,
     );
   }
 }

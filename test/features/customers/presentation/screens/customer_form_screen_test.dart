@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:billa_mobile/app/theme/app_theme.dart';
+import 'package:billa_mobile/core/platform/contact_picker.dart';
 import 'package:billa_mobile/features/customers/domain/customer.dart';
 import 'package:billa_mobile/features/customers/domain/customer_repository.dart';
 import 'package:billa_mobile/features/customers/presentation/providers/customer_repository_provider.dart';
@@ -12,11 +13,26 @@ import 'package:billa_mobile/features/customers/presentation/screens/customer_fo
 
 class _MockCustomerRepository extends Mock implements CustomerRepository {}
 
+class _FakePicker implements ContactPicker {
+  _FakePicker(this.result, {this.error});
+
+  final PickedContact? result;
+  final Object? error;
+
+  @override
+  Future<PickedContact?> pick() async {
+    if (error != null) throw error!;
+    return result;
+  }
+}
+
 void main() {
   late _MockCustomerRepository repository;
+  _FakePicker? picker;
 
   setUp(() {
     repository = _MockCustomerRepository();
+    picker = null;
   });
 
   Widget buildApp(Widget home) {
@@ -24,7 +40,10 @@ void main() {
       GoRoute(path: '/', builder: (context, state) => home),
     ]);
     return ProviderScope(
-      overrides: [customerRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        customerRepositoryProvider.overrideWithValue(repository),
+        if (picker != null) contactPickerProvider.overrideWithValue(picker!),
+      ],
       child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
     );
   }
@@ -80,5 +99,50 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => repository.create(name: 'Acme', tin: null, address: null, phone: '0788000000', email: null)).called(2);
+  });
+
+  testWidgets('From contacts fills the name and number of the chosen person', (tester) async {
+    picker = _FakePicker(const PickedContact(name: 'Ada Lovelace', phone: '0788 123 456'));
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.tap(find.byKey(const Key('customer-form-import')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ada Lovelace'), findsOneWidget);
+    expect(find.text('0788 123 456'), findsOneWidget);
+  });
+
+  testWidgets('choosing a contact keeps a name that was already typed and fills the number', (tester) async {
+    picker = _FakePicker(const PickedContact(name: 'Ada Lovelace', phone: '0788123456'));
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.enterText(find.byKey(const Key('customer-form-name')), 'Acme Ltd');
+    await tester.tap(find.byKey(const Key('customer-form-import')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Acme Ltd'), findsOneWidget);
+    expect(find.text('0788123456'), findsOneWidget);
+    expect(find.text('Ada Lovelace'), findsNothing);
+  });
+
+  testWidgets('backing out of the picker changes nothing', (tester) async {
+    picker = _FakePicker(null);
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.enterText(find.byKey(const Key('customer-form-name')), 'Acme Ltd');
+    await tester.tap(find.byKey(const Key('customer-form-import')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Acme Ltd'), findsOneWidget);
+  });
+
+  testWidgets('a phone with no contacts app says so', (tester) async {
+    picker = _FakePicker(null, error: const ContactPickerUnavailable());
+
+    await tester.pumpWidget(buildApp(const CustomerFormScreen()));
+    await tester.tap(find.byKey(const Key('customer-form-import')));
+    await tester.pumpAndSettle();
+
+    expect(find.text("This phone has no contacts app. Type the details instead"), findsOneWidget);
   });
 }

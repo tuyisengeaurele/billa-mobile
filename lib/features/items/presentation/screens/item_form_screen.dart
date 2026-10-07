@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/action_error_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,24 +87,28 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(key: const Key('item-form-description'), controller: _descriptionController, decoration: const InputDecoration(labelText: 'Description')),
+              TextField(key: const Key('item-form-description'), controller: _descriptionController, textCapitalization: TextCapitalization.sentences, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'Description')),
               const SizedBox(height: 12),
               TextField(
                 key: const Key('item-form-unit-price'),
                 controller: _unitPriceController,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Unit price (RWF)'),
               ),
               const SizedBox(height: 12),
-              TextField(key: const Key('item-form-unit'), controller: _unitController, decoration: const InputDecoration(labelText: 'Unit (e.g. piece, hour)')),
+              TextField(key: const Key('item-form-unit'), controller: _unitController, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'Unit (e.g. piece, hour)')),
               const SizedBox(height: 12),
               TextField(
+                key: const Key('item-form-tax-rate'),
                 controller: _taxRateController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Tax rate (%)'),
               ),
               const SizedBox(height: 12),
-              TextField(controller: _categoryController, decoration: const InputDecoration(labelText: 'Category (optional)')),
+              TextField(controller: _categoryController, textCapitalization: TextCapitalization.words, textInputAction: TextInputAction.done, decoration: const InputDecoration(labelText: 'Category (optional)')),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 8),
                 Text(_errorMessage!),

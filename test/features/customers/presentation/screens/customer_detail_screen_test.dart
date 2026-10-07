@@ -57,4 +57,28 @@ void main() {
 
     verify(() => repository.update('c1', isActive: false)).called(1);
   });
+
+  testWidgets('Contact opens the call, sms and whatsapp sheet for their number', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('customer-contact')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('contact-whatsapp')), findsOneWidget);
+    expect(find.text('Hello Acme,'), findsOneWidget);
+  });
+
+  testWidgets('Contact on a customer with no number explains why the actions are off', (tester) async {
+    when(() => repository.get('c1')).thenAnswer(
+      (_) async => const Customer(id: 'c1', name: 'Acme', isActive: true, createdAt: '2026-01-01T00:00:00.000Z'),
+    );
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('customer-contact')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No phone number saved'), findsNWidgets(3));
+  });
 }

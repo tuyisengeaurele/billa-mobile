@@ -17,7 +17,9 @@ import 'package:billa_mobile/features/documents/presentation/screens/document_ed
 import 'package:billa_mobile/features/documents/presentation/widgets/item_search_field.dart';
 import 'package:billa_mobile/features/items/domain/item.dart';
 import 'package:billa_mobile/features/items/domain/item_repository.dart';
+import 'package:billa_mobile/features/auth/presentation/providers/active_business_provider.dart';
 import 'package:billa_mobile/features/items/presentation/providers/item_repository_provider.dart';
+import 'package:billa_mobile/features/items/presentation/providers/recent_items_provider.dart';
 import '../../../../support/tall_screen.dart';
 
 class _MockDocumentRepository extends Mock implements DocumentRepository {}
@@ -164,5 +166,61 @@ void main() {
 
     expect(find.text('Check your connection and try again'), findsNothing);
     verify(() => documentRepository.create(any())).called(2);
+  });
+
+  group('recent items', () {
+    Widget buildWithRecents(Widget screen, InMemoryRecentItemsStore store) => ProviderScope(
+          overrides: [
+            documentRepositoryProvider.overrideWithValue(documentRepository),
+            customerRepositoryProvider.overrideWithValue(customerRepository),
+            itemRepositoryProvider.overrideWithValue(itemRepository),
+            recentItemsStoreProvider.overrideWithValue(store),
+            activeBusinessIdProvider.overrideWith((ref) => 'b1'),
+          ],
+          child: MaterialApp(theme: AppTheme.light, home: screen),
+        );
+
+    testWidgets('an empty line offers the recently used items and a tap fills it', (tester) async {
+      final store = InMemoryRecentItemsStore();
+      await store.write('b1', [_item]);
+      when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+
+      useTallScreen(tester);
+      await tester.pumpWidget(buildWithRecents(DocumentEditorScreen.create(type: DocumentType.invoice), store));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add line'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('recent-item-i1')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(TextField, 'Printing'), findsOneWidget);
+      expect(find.byKey(const Key('recent-item-i1')), findsNothing);
+    });
+
+    testWidgets('an item chosen from the search is remembered for next time', (tester) async {
+      final store = InMemoryRecentItemsStore();
+      when(() => documentRepository.create(any())).thenAnswer((_) async => _savedDocument());
+
+      useTallScreen(tester);
+      await tester.pumpWidget(buildWithRecents(DocumentEditorScreen.create(type: DocumentType.invoice), store));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add line'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('line-description-0')), 'Prin');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Printing').last);
+      await tester.pumpAndSettle();
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(store.read('b1').map((i) => i.id), ['i1']);
+    });
   });
 }

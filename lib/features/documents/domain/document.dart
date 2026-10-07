@@ -73,6 +73,7 @@ class Document with _$Document {
     @Default(DocumentLanguage.en)
     DocumentLanguage language,
     String? sentAt,
+    String? publicToken,
     required int amountPaid,
     @JsonKey(fromJson: paymentStatusFromJson, toJson: paymentStatusToJson) PaymentStatus? paymentStatus,
     String? writtenOffAt,

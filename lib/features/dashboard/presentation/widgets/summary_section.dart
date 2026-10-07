@@ -6,7 +6,7 @@ import '../../../../app/theme/app_theme.dart';
 import '../../../../core/widgets/fade_switcher.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../documents/domain/document_enums.dart';
-import '../../../documents/presentation/widgets/document_list_tile.dart' show documentTypeLabel;
+import '../../../documents/presentation/widgets/document_list_tile.dart' show documentTypeIcon, documentTypeLabel;
 import '../../../documents/presentation/widgets/document_status_pill.dart';
 import '../../domain/dashboard_summary.dart';
 import '../providers/dashboard_provider.dart';
@@ -54,6 +54,10 @@ class _SummaryContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_newestDraft(summary) case final draft?) ...[
+          _ContinueDraftCard(draft: draft),
+          const SizedBox(height: 24),
+        ],
         Text('Needs attention', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 12),
         Row(
@@ -116,6 +120,57 @@ class _SummaryContent extends StatelessWidget {
               onTap: () => context.push('/documents/${document.id}'),
             ),
       ],
+    );
+  }
+}
+
+RecentDocument? _newestDraft(DashboardSummary summary) {
+  for (final document in summary.recentDocuments) {
+    if (document.status == DocumentStatus.draft) return document;
+  }
+  return null;
+}
+
+class _ContinueDraftCard extends StatelessWidget {
+  const _ContinueDraftCard({required this.draft});
+
+  final RecentDocument draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final textTheme = Theme.of(context).textTheme;
+    return Material(
+      color: colors.primary100,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        key: const Key('home-continue-draft'),
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/documents/${draft.id}/edit'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(documentTypeIcon(draft.type), color: colors.primary700),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Continue your draft', style: textTheme.labelMedium?.copyWith(color: colors.primary700)),
+                    Text(
+                      '${documentTypeLabel(draft.type)} · ${draft.customerName}',
+                      style: textTheme.titleSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: colors.primary700),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

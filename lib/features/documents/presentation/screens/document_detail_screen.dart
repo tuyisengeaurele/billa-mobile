@@ -19,6 +19,8 @@ import '../../../../core/errors/action_errors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/success_check.dart';
 import '../../../../core/widgets/text_prompt_dialog.dart';
+import '../providers/document_contact.dart';
+import '../providers/document_duplicate.dart';
 import '../providers/document_list_controller.dart';
 import '../providers/document_repository_provider.dart';
 import '../widgets/document_status_pill.dart';
@@ -228,6 +230,12 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
           appBar: AppBar(
             title: const Text('Document'),
             actions: [
+              IconButton(
+                key: const Key('document-duplicate'),
+                icon: const Icon(Icons.copy_outlined),
+                tooltip: 'Duplicate',
+                onPressed: () => duplicateDocument(context, ref, documentId: document.id),
+              ),
               if (isDraft)
                 IconButton(
                   icon: const Icon(Icons.edit),
@@ -404,6 +412,15 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ],
+                if (isFinalized) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    key: const Key('document-contact'),
+                    onPressed: () => startDocumentContact(context, ref, documentId: document.id),
+                    icon: const Icon(Icons.chat_outlined),
+                    label: const Text('Contact customer'),
                   ),
                 ],
                 if (canWriteOff) ...[

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/contact_actions.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../domain/customer.dart';
@@ -89,6 +90,19 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 if (stats.averageDaysToPay != null) Text('Average ${stats.averageDaysToPay} days to pay'),
                 if (stats.onTimeRate != null) Text('${stats.onTimeRate}% paid on time'),
                 const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  key: const Key('customer-contact'),
+                  onPressed: () => showContactActions(
+                    context,
+                    ref,
+                    title: customer.name,
+                    phone: customer.phone,
+                    message: 'Hello ${customer.name},',
+                  ),
+                  icon: const Icon(Icons.chat_outlined),
+                  label: const Text('Contact'),
+                ),
+                const SizedBox(height: 8),
                 AppButton(
                   key: const Key('customer-toggle-active'),
                   label: customer.isActive ? 'Deactivate customer' : 'Reactivate customer',

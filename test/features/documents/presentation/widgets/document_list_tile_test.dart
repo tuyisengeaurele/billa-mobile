@@ -57,4 +57,41 @@ void main() {
 
     expect(find.text('Draft Invoice'), findsOneWidget);
   });
+
+  testWidgets('with actions given, swiping right duplicates and swiping left contacts', (tester) async {
+    var duplicated = 0;
+    var contacted = 0;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: DocumentListTile(
+          document: _document,
+          onTap: () {},
+          onDuplicate: () => duplicated++,
+          onContact: () => contacted++,
+        ),
+      ),
+    ));
+
+    await tester.drag(find.text('INV-0001'), const Offset(400, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-swipe-duplicate-d1')));
+    await tester.pumpAndSettle();
+    await tester.drag(find.text('INV-0001'), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('document-swipe-contact-d1')));
+    await tester.pumpAndSettle();
+
+    expect(duplicated, 1);
+    expect(contacted, 1);
+  });
+
+  testWidgets('without actions the tile does not swipe', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: DocumentListTile(document: _document, onTap: () {})),
+    ));
+
+    expect(find.byKey(const Key('document-swipe-duplicate-d1')), findsNothing);
+  });
 }
